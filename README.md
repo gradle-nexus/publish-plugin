@@ -1,6 +1,6 @@
 # Nexus Publish Plugin
 
-Gradle Plugin that explicitly creates a Staging Repository before publishing to Nexus.
+Gradle Plugin that explicitly creates a Staging Repository before publishing to Nexus. This solves the problem that frequently occurs when uploading to Nexus from Travis, namely split staging repositories.
 
 ## Usage
 
