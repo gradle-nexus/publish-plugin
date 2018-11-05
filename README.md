@@ -8,9 +8,9 @@ The plugin does the following:
 
 - Apply the `maven-publish` plugin
 - configure a Maven artifact repository called `nexus` (customizable via the `repositoryName` property)
-- creates a `initializeNexusStagingRepository` task that starts a new staging repository in case the project's version does not end with `-SNAPSHOT` (customizable via the `useStaging` property) and sets the URL of the `nexus` repository accordingly. In case of a multi-project build, all subprojects with the same `serverUrl` will use the same staging repository.
-- makes all publishing tasks for the `nexus` repository depend on the `initializeNexusStagingRepository` task.
-- creates a `publishToNexus` lifecycle task that depends on all publishing tasks for the `nexus` repository.
+- create a `initializeNexusStagingRepository` task that starts a new staging repository in case the project's version does not end with `-SNAPSHOT` (customizable via the `useStaging` property) and sets the URL of the `nexus` repository accordingly. In case of a multi-project build, all subprojects with the same `serverUrl` will use the same staging repository.
+- make all publishing tasks for the `nexus` repository depend on the `initializeNexusStagingRepository` task.
+- create a `publishToNexus` lifecycle task that depends on all publishing tasks for the `nexus` repository.
 
 ```gradle
 plugins {
