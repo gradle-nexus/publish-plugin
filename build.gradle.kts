@@ -3,18 +3,30 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 plugins {
     `java-gradle-plugin`
     `maven-publish`
+    id("com.gradle.plugin-publish") version "0.10.0"
     id("com.diffplug.gradle.spotless") version "3.16.0"
     id("com.github.johnrengelman.shadow") version "4.0.2"
 }
 
 group = "de.marcphilipp.gradle"
 version = "0.0.1-SNAPSHOT"
+
+val readableName = "Nexus Publish Plugin"
 description = "Gradle Plugin for publishing to Nexus repositories"
+val repoUrl = "https://github.com/marcphilipp/nexus-publish-plugin"
+
+pluginBundle {
+    description = project.description
+    website = repoUrl
+    vcsUrl = repoUrl
+    tags = listOf("publishing", "maven", "nexus", "travis")
+}
 
 gradlePlugin {
     plugins {
         create("nexus-publish") {
             id = "de.marcphilipp.nexus-publish"
+            displayName = readableName
             implementationClass = "de.marcphilipp.gradle.nexus.NexusPublishPlugin"
         }
     }
@@ -33,6 +45,12 @@ tasks.named<JavaCompile>("compileTestJava") {
     targetCompatibility = "11"
 }
 
+spotless {
+    java {
+        licenseHeaderFile(file("gradle/license-header.txt"))
+    }
+}
+
 val shadowed by configurations.creating
 sourceSets["main"].apply {
     compileClasspath = files(compileClasspath, shadowed)
@@ -49,15 +67,16 @@ dependencies {
     testImplementation("org.assertj:assertj-core:3.11.1")
 }
 
-tasks {
-    val shadowJar by existing(ShadowJar::class) {
-        classifier = ""
-        configurations = listOf(shadowed)
-        exclude("META-INF/maven/**")
-        listOf("retrofit2", "okhttp3", "okio", "com").forEach {
-            relocate(it, "${project.group}.nexus.shadow.$it")
-        }
+val shadowJar by tasks.existing(ShadowJar::class) {
+    classifier = ""
+    configurations = listOf(shadowed)
+    exclude("META-INF/maven/**")
+    listOf("retrofit2", "okhttp3", "okio", "com").forEach {
+        relocate(it, "${project.group}.nexus.shadow.$it")
     }
+}
+
+tasks {
     "jar" {
         enabled = false
         dependsOn(shadowJar)
@@ -77,10 +96,12 @@ val javadocJar by tasks.creating(Jar::class) {
     from(tasks.named("javadoc"))
 }
 
-spotless {
-    java {
-        licenseHeaderFile(file("gradle/license-header.txt"))
-    }
+// used by com.gradle.plugin-publish plugin
+configurations.archives.artifacts.clear()
+artifacts {
+    add("archives", shadowJar)
+    add("archives", sourcesJar)
+    add("archives", javadocJar)
 }
 
 publishing {
@@ -90,10 +111,10 @@ publishing {
                 artifact(sourcesJar)
                 artifact(javadocJar)
                 pom {
-                    name.set(project.name)
+                    name.set(readableName)
                     description.set(project.description)
                     inceptionYear.set("2018")
-                    url.set("https://github.com/marcphilipp/nexus-publish-plugin")
+                    url.set(repoUrl)
                     developers {
                         developer {
                             name.set("Marc Philipp")
@@ -109,8 +130,5 @@ publishing {
                 }
             }
         }
-    }
-    repositories {
-        maven(url = uri(file("$buildDir/repo")))
     }
 }
