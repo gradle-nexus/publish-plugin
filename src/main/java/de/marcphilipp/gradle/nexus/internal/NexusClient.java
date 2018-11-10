@@ -24,6 +24,7 @@ import com.google.gson.TypeAdapterFactory;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
+import lombok.Data;
 import okhttp3.Credentials;
 import okhttp3.OkHttpClient;
 import retrofit2.Call;
@@ -124,49 +125,20 @@ public class NexusClient {
 
     }
 
+    @Data
     public static class StagingProfile {
         private String id;
         private String name;
-
-        public String getId() {
-            return id;
-        }
-
-        public void setId(String id) {
-            this.id = id;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
     }
 
+    @Data
     public static class Description {
         private final String description;
-
-        public Description(String description) {
-            this.description = description;
-        }
-
-        public String getDescription() {
-            return description;
-        }
     }
 
+    @Data
     public static class StagingRepository {
         private String stagedRepositoryId;
-
-        public String getStagedRepositoryId() {
-            return stagedRepositoryId;
-        }
-
-        public void setStagedRepositoryId(String stagedRepositoryId) {
-            this.stagedRepositoryId = stagedRepositoryId;
-        }
     }
 
     private static class WrappingTypeAdapterFactory implements TypeAdapterFactory {

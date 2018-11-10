@@ -15,12 +15,14 @@
  */
 package de.marcphilipp.gradle.nexus;
 
+import lombok.Data;
 import org.gradle.api.Project;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Property;
 
 import java.net.URI;
 
+@Data
 @SuppressWarnings("UnstableApiUsage")
 public class NexusPublishExtension {
 
@@ -52,37 +54,5 @@ public class NexusPublishExtension {
         packageGroup = objectFactory.property(String.class);
         packageGroup.set(project.provider(() -> project.getGroup().toString()));
         stagingProfileId = objectFactory.property(String.class);
-    }
-
-    public Property<Boolean> getUseStaging() {
-        return useStaging;
-    }
-
-    public Property<URI> getServerUrl() {
-        return serverUrl;
-    }
-
-    public Property<URI> getSnapshotRepositoryUrl() {
-        return snapshotRepositoryUrl;
-    }
-
-    public Property<String> getUsername() {
-        return username;
-    }
-
-    public Property<String> getPassword() {
-        return password;
-    }
-
-    public Property<String> getRepositoryName() {
-        return repositoryName;
-    }
-
-    public Property<String> getPackageGroup() {
-        return packageGroup;
-    }
-
-    public Property<String> getStagingProfileId() {
-        return stagingProfileId;
     }
 }

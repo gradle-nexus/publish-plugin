@@ -16,6 +16,7 @@
 package de.marcphilipp.gradle.nexus;
 
 import de.marcphilipp.gradle.nexus.internal.NexusClient;
+import lombok.Getter;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
@@ -33,6 +34,7 @@ import javax.inject.Inject;
 import java.net.URI;
 import java.util.Map;
 
+@Getter
 @SuppressWarnings({"UnstableApiUsage", "WeakerAccess"})
 public class InitializeNexusStagingRepository extends DefaultTask {
 
@@ -41,11 +43,21 @@ public class InitializeNexusStagingRepository extends DefaultTask {
     private static final Logger logger = LoggerFactory.getLogger(InitializeNexusStagingRepository.class);
 
     private final Map<URI, URI> serverUrlToStagingRepoUrl;
+    @Input
     private final Property<URI> serverUrl;
+    @Optional
+    @Input
     private final Property<String> username;
+    @Optional
+    @Input
     private final Property<String> password;
+    @Optional
+    @Input
     private final Property<String> packageGroup;
+    @Optional
+    @Input
     private final Property<String> stagingProfileId;
+    @Input
     private final Property<String> repositoryName;
 
     @Inject
@@ -65,40 +77,6 @@ public class InitializeNexusStagingRepository extends DefaultTask {
         repositoryName = objectFactory.property(String.class);
         repositoryName.set(extension.getRepositoryName());
         onlyIf(t -> extension.getUseStaging().getOrElse(false));
-    }
-
-    @Input
-    public Property<URI> getServerUrl() {
-        return serverUrl;
-    }
-
-    @Input
-    @Optional
-    public Property<String> getUsername() {
-        return username;
-    }
-
-    @Input
-    @Optional
-    public Property<String> getPassword() {
-        return password;
-    }
-
-    @Input
-    @Optional
-    public Property<String> getPackageGroup() {
-        return packageGroup;
-    }
-
-    @Input
-    @Optional
-    public Property<String> getStagingProfileId() {
-        return stagingProfileId;
-    }
-
-    @Input
-    public Property<String> getRepositoryName() {
-        return repositoryName;
     }
 
     @TaskAction
