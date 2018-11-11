@@ -1,4 +1,4 @@
 language: java
 jdk: openjdk11
 install: ./gradlew --version
-script: ./gradlew --daemon build
+script: ./gradlew --daemon --scan --stacktrace build
