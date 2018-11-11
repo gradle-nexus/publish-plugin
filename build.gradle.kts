@@ -77,6 +77,9 @@ dependencies {
     shadowed("com.squareup.retrofit2:retrofit:2.4.0")
     shadowed("com.squareup.retrofit2:converter-gson:2.4.0")
 
+    compileOnly("io.codearte.gradle.nexus:gradle-nexus-staging-plugin:0.12.0")
+    testImplementation("io.codearte.gradle.nexus:gradle-nexus-staging-plugin:0.12.0")
+
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.3.1")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.3.1")
     testImplementation("org.junit-pioneer:junit-pioneer:0.3.0")

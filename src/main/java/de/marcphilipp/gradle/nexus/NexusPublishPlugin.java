@@ -15,6 +15,7 @@
  */
 package de.marcphilipp.gradle.nexus;
 
+import io.codearte.gradle.nexus.NexusStagingExtension;
 import org.gradle.BuildAdapter;
 import org.gradle.BuildResult;
 import org.gradle.api.Plugin;
@@ -60,6 +61,15 @@ class NexusPublishPlugin implements Plugin<Project> {
         project.afterEvaluate(evaluatedProject -> {
             MavenArtifactRepository nexusRepository = addMavenRepository(evaluatedProject, extension);
             configureTaskDependencies(evaluatedProject, publishToNexusTask, initializeTask, nexusRepository);
+        });
+
+        project.getRootProject().getPlugins().withId("io.codearte.nexus-staging", nexusStagingPlugin -> {
+            NexusStagingExtension nexusStagingExtension = project.getRootProject().getExtensions().getByType(NexusStagingExtension.class);
+
+            extension.getPackageGroup().set(project.provider(nexusStagingExtension::getPackageGroup));
+            extension.getStagingProfileId().set(project.provider(nexusStagingExtension::getStagingProfileId));
+            extension.getUsername().set(project.provider(nexusStagingExtension::getUsername));
+            extension.getPassword().set(project.provider(nexusStagingExtension::getPassword));
         });
     }
 

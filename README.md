@@ -35,3 +35,14 @@ nexusPublishing {
     password = "your-password" // defaults to project.properties["nexusPassword"]
 }
 ```
+
+If the [`io.codearte.nexus-staging` plugin]() is applied on the root project, the following default values change:
+```gradle
+nexusPublishing {
+    packageGroup = rootProject.nexusStaging.packageGroup
+    stagingProfileId = rootProject.nexusStaging.stagingProfileId
+    username = rootProject.nexusStaging.username
+    password = rootProject.nexusStaging.password
+}
+```
+This reuses the values specified for the `nexusStaging` block, so you don't have to specify them twice.
