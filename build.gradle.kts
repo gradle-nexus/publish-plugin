@@ -67,6 +67,12 @@ sourceSets["test"].apply {
     runtimeClasspath = files(runtimeClasspath, shadowed)
 }
 
+configurations {
+    "testImplementation" {
+        exclude(group = "junit", module = "junit")
+    }
+}
+
 dependencies {
     shadowed("com.squareup.retrofit2:retrofit:2.4.0")
     shadowed("com.squareup.retrofit2:converter-gson:2.4.0")
