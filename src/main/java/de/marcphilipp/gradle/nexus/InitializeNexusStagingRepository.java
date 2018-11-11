@@ -34,7 +34,6 @@ import javax.inject.Inject;
 import java.net.URI;
 import java.util.Map;
 
-@Getter
 @SuppressWarnings({"UnstableApiUsage", "WeakerAccess"})
 public class InitializeNexusStagingRepository extends DefaultTask {
 
@@ -43,21 +42,17 @@ public class InitializeNexusStagingRepository extends DefaultTask {
     private static final Logger logger = LoggerFactory.getLogger(InitializeNexusStagingRepository.class);
 
     private final Map<URI, URI> serverUrlToStagingRepoUrl;
-    @Input
+    @Getter(onMethod_ = { @Input })
     private final Property<URI> serverUrl;
-    @Optional
-    @Input
+    @Getter(onMethod_ = { @Optional, @Input })
     private final Property<String> username;
-    @Optional
-    @Input
+    @Getter(onMethod_ = { @Optional, @Input })
     private final Property<String> password;
-    @Optional
-    @Input
+    @Getter(onMethod_ = { @Optional, @Input })
     private final Property<String> packageGroup;
-    @Optional
-    @Input
+    @Getter(onMethod_ = { @Optional, @Input })
     private final Property<String> stagingProfileId;
-    @Input
+    @Getter(onMethod_ = { @Input })
     private final Property<String> repositoryName;
 
     @Inject
