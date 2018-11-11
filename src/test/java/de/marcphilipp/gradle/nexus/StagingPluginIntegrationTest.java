@@ -25,19 +25,19 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class StagingPluginIntegrationTest {
+class StagingPluginIntegrationTest {
 
     private Project project;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         project = ProjectBuilder.builder().build();
         project.getPlugins().apply(NexusPublishPlugin.class);
         project.getPlugins().apply(NexusStagingPlugin.class);
     }
 
     @Test
-    public void defaultWireing() {
+    void defaultWiring() {
         NexusPublishExtension ourExtension = project.getExtensions().getByType(NexusPublishExtension.class);
         NexusStagingExtension theirExtension = project.getExtensions().getByType(NexusStagingExtension.class);
 
@@ -55,7 +55,7 @@ public class StagingPluginIntegrationTest {
     }
 
     @Test
-    public void explicitValuesWin() {
+    void explicitValuesWin() {
         NexusPublishExtension ourExtension = project.getExtensions().getByType(NexusPublishExtension.class);
         NexusStagingExtension theirExtension = project.getExtensions().getByType(NexusStagingExtension.class);
 
