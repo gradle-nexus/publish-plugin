@@ -8,6 +8,7 @@ plugins {
     id("com.diffplug.gradle.spotless") version "3.16.0"
     id("com.github.johnrengelman.shadow") version "4.0.2"
     id("io.freefair.lombok") version "2.8.1"
+    id("org.jetbrains.gradle.plugin.idea-ext")
 }
 
 buildScan {
@@ -52,9 +53,26 @@ tasks.named<JavaCompile>("compileTestJava") {
     targetCompatibility = "11"
 }
 
+val licenseHeaderFile = file("gradle/license-header.txt")
 spotless {
     java {
-        licenseHeaderFile(file("gradle/license-header.txt"))
+        licenseHeaderFile(licenseHeaderFile)
+    }
+}
+
+idea {
+    project {
+        settings {
+            copyright {
+                useDefault = "Apache-2.0"
+                profiles {
+                    create("Apache-2.0") {
+                        notice = readCopyrightHeader(licenseHeaderFile)
+                        keyword = "Copyright"
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -117,7 +135,7 @@ val sourcesJar by tasks.creating(Jar::class) {
 }
 
 val javadoc by tasks.existing(Javadoc::class) {
-    classpath = files(sourceSets["main"].compileClasspath, shadowed)
+    classpath = sourceSets["main"].compileClasspath
 }
 
 val javadocJar by tasks.creating(Jar::class) {
@@ -125,7 +143,7 @@ val javadocJar by tasks.creating(Jar::class) {
     from(javadoc)
 }
 
-// used by com.gradle.plugin-publish plugin
+// used by plugin-publish plugin
 configurations.archives.artifacts.clear()
 artifacts {
     add("archives", shadowJar)
