@@ -107,9 +107,13 @@ val sourcesJar by tasks.creating(Jar::class) {
     from(sourceSets["main"].allSource)
 }
 
+val javadoc by tasks.existing(Javadoc::class) {
+    classpath = files(sourceSets["main"].compileClasspath, shadowed)
+}
+
 val javadocJar by tasks.creating(Jar::class) {
     classifier = "javadoc"
-    from(tasks.named("javadoc"))
+    from(javadoc)
 }
 
 // used by com.gradle.plugin-publish plugin
