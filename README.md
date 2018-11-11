@@ -1,5 +1,7 @@
 # Nexus Publish Plugin
 
+[![Build Status](https://travis-ci.org/marcphilipp/nexus-publish-plugin.svg?branch=master)](https://travis-ci.org/marcphilipp/nexus-publish-plugin)
+
 Gradle Plugin that explicitly creates a Staging Repository before publishing to Nexus. This solves the problem that frequently occurs when uploading to Nexus from Travis, namely split staging repositories.
 
 ## Usage
