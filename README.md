@@ -36,7 +36,7 @@ nexusPublishing {
 }
 ```
 
-If the [`io.codearte.nexus-staging` plugin]() is applied on the root project, the following default values change:
+If the [`io.codearte.nexus-staging` plugin](https://github.com/Codearte/gradle-nexus-staging-plugin) is applied on the root project, the following default values change:
 ```gradle
 nexusPublishing {
     packageGroup = rootProject.nexusStaging.packageGroup
