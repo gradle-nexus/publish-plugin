@@ -21,11 +21,13 @@ import com.google.gson.Gson;
 import org.gradle.testkit.runner.BuildResult;
 import org.gradle.testkit.runner.BuildTask;
 import org.gradle.testkit.runner.GradleRunner;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junitpioneer.jupiter.TempDirectory;
 import org.junitpioneer.jupiter.TempDirectory.TempDir;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -39,6 +41,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.put;
 import static com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
+import static java.util.stream.Collectors.joining;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.gradle.testkit.runner.TaskOutcome.SUCCESS;
 
@@ -51,9 +54,18 @@ class NexusPublishPluginTests {
 
     private Gson gson = new Gson();
 
-    @Test
-    void publishesToNexus(@TempDir Path projectDir, WireMockServer wireMockServer) throws IOException {
-        Files.writeString(projectDir.resolve("settings.gradle"), "rootProject.name = 'sample'");
+    private static List<String> publishingSettings() {
+        return List.of("// no extra settings", "enableFeaturePreview('STABLE_PUBLISHING')");
+    }
+
+    @ParameterizedTest
+    @MethodSource("publishingSettings")
+    void publishesToNexus(String extraSettings, @TempDir Path projectDir, WireMockServer wireMockServer) throws IOException {
+        Files.write(projectDir.resolve("settings.gradle"), List.of(
+                "rootProject.name = 'sample'",
+                extraSettings
+        ));
+
         Files.write(projectDir.resolve("build.gradle"), List.of(
                 "plugins {",
                 "    id('java-library')",
@@ -86,32 +98,50 @@ class NexusPublishPluginTests {
         assertUploadedToStagingRepo(wireMockServer, "/org/example/sample/0.0.1/sample-0.0.1.jar");
     }
 
-    @Test
-    void canBeUsedWithGradlePluginDevelopmentPlugin(@TempDir Path projectDir, WireMockServer wireMockServer) throws IOException {
-        Files.writeString(projectDir.resolve("settings.gradle"), "rootProject.name = 'sample'");
+    @ParameterizedTest
+    @MethodSource("publishingSettings")
+    void canBeUsedWithLazilyAppliedGradlePluginDevelopmentPlugin(String extraSettings, @TempDir Path projectDir, WireMockServer wireMockServer) throws IOException {
+        Files.write(projectDir.resolve("settings.gradle"), List.of(
+                "rootProject.name = 'sample'",
+                extraSettings,
+                "include 'gradle-plugin'"
+        ));
+
         Files.write(projectDir.resolve("build.gradle"), List.of(
+                "buildscript {",
+                "    dependencies {",
+                "        classpath files(" + getPluginClasspathAsString() + ")",
+                "    }",
+                "}",
+                "allprojects {",
+                "    plugins.withId('maven-publish') {",
+                "        project.apply plugin: 'de.marcphilipp.nexus-publish'",
+                "        project.extensions.configure('nexusPublishing') { ext ->",
+                "            ext.serverUrl = uri('" + wireMockServer.baseUrl() + "')",
+                "            ext.stagingProfileId = '" + STAGING_PROFILE_ID + "'",
+                "            ext.username = 'username'",
+                "            ext.password = 'password'",
+                "        }",
+                "    }",
+                "}"));
+
+        Path pluginDir = Files.createDirectories(projectDir.resolve("gradle-plugin"));
+        Files.write(pluginDir.resolve("build.gradle"), List.of(
                 "plugins {",
+                "    id('maven-publish')",
                 "    id('java-gradle-plugin')",
-                "    id('de.marcphilipp.nexus-publish')",
                 "}",
                 "gradlePlugin {",
                 "    plugins {",
-                "        'foo' {",
+                "        foo {",
                 "            id = 'org.example.foo'",
                 "            implementationClass = 'org.example.FooPlugin'",
                 "        }",
                 "    }",
                 "}",
                 "group = 'org.example'",
-                "version = '0.0.1'",
-                "nexusPublishing {",
-                "    serverUrl = uri('" + wireMockServer.baseUrl() + "')",
-                "    stagingProfileId = '" + STAGING_PROFILE_ID + "'",
-                "    username = 'username'",
-                "    password = 'password'",
-                "}"));
-
-        Path srcDir = Files.createDirectories(projectDir.resolve("src/main/java/org/example/"));
+                "version = '0.0.1'"));
+        Path srcDir = Files.createDirectories(pluginDir.resolve("src/main/java/org/example/"));
         Files.write(srcDir.resolve("FooPlugin.java"), List.of(
                 "import org.gradle.api.*;",
                 "public class FooPlugin implements Plugin<Project> {",
@@ -123,18 +153,30 @@ class NexusPublishPluginTests {
 
         BuildResult result = runGradleBuild(projectDir, "publishToNexus");
 
-        assertThat(result.task(":initializeNexusStagingRepository")).isNotNull()
+        assertThat(result.task(":gradle-plugin:initializeNexusStagingRepository")).isNotNull()
                 .extracting(BuildTask::getOutcome).isEqualTo(SUCCESS);
-        assertUploadedToStagingRepo(wireMockServer, "/org/example/sample/0.0.1/sample-0.0.1.pom");
+        assertUploadedToStagingRepo(wireMockServer, "/org/example/gradle-plugin/0.0.1/gradle-plugin-0.0.1.pom");
         assertUploadedToStagingRepo(wireMockServer, "/org/example/foo/org.example.foo.gradle.plugin/0.0.1/org.example.foo.gradle.plugin-0.0.1.pom");
     }
 
-    private BuildResult runGradleBuild(@TempDir Path projectDir, String task) {
-        return GradleRunner.create()
+    private BuildResult runGradleBuild(Path projectDir, String task) {
+        return getGradleRunner()
                 .withProjectDir(projectDir.toFile())
-                .withPluginClasspath()
-                .withArguments(task, "--info", "--stacktrace")
+                .withArguments(task)
+                .forwardOutput()
                 .build();
+    }
+
+    private String getPluginClasspathAsString() {
+        return getGradleRunner()
+                .getPluginClasspath().stream()
+                .map(File::getAbsolutePath)
+                .map(path -> path.replace('\\', '/'))
+                .collect(joining("', '", "'", "'"));
+    }
+
+    private GradleRunner getGradleRunner() {
+        return GradleRunner.create().withPluginClasspath();
     }
 
     private static void assertUploadedToStagingRepo(WireMockServer wireMockServer, String path) {
