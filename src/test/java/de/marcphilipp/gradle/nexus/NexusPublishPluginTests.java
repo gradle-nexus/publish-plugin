@@ -21,6 +21,7 @@ import com.google.gson.Gson;
 import org.gradle.testkit.runner.BuildResult;
 import org.gradle.testkit.runner.BuildTask;
 import org.gradle.testkit.runner.GradleRunner;
+import org.gradle.testkit.runner.TaskOutcome;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -37,12 +38,14 @@ import java.util.Map;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.put;
 import static com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static java.util.stream.Collectors.joining;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.gradle.testkit.runner.TaskOutcome.SKIPPED;
 import static org.gradle.testkit.runner.TaskOutcome.SUCCESS;
 
 @ExtendWith(TempDirectory.class)
@@ -60,7 +63,7 @@ class NexusPublishPluginTests {
 
     @ParameterizedTest
     @MethodSource("publishingSettings")
-    void publishesToNexus(String extraSettings, @TempDir Path projectDir, WireMockServer wireMockServer) throws IOException {
+    void publishesToNexus(String extraSettings, @TempDir Path projectDir, WireMockServer server) throws IOException {
         Files.write(projectDir.resolve("settings.gradle"), List.of(
                 "rootProject.name = 'sample'",
                 extraSettings
@@ -81,26 +84,25 @@ class NexusPublishPluginTests {
                 "    }",
                 "}",
                 "nexusPublishing {",
-                "    serverUrl = uri('" + wireMockServer.baseUrl() + "')",
+                "    serverUrl = uri('" + server.baseUrl() + "')",
                 "    username = 'username'",
                 "    password = 'password'",
                 "}"));
 
-        stubStagingProfileRequest(wireMockServer, Map.of("id", STAGING_PROFILE_ID, "name", "org.example"));
-        stubCreateStagingRepoRequest(wireMockServer);
-        expectArtifactUploads(wireMockServer);
+        stubStagingProfileRequest(server, "/staging/profiles", Map.of("id", STAGING_PROFILE_ID, "name", "org.example"));
+        stubCreateStagingRepoRequest(server, "/staging/profiles/" + STAGING_PROFILE_ID + "/start", STAGED_REPOSITORY_ID);
+        expectArtifactUploads(server, "/staging/deployByRepositoryId/" + STAGED_REPOSITORY_ID);
 
         BuildResult result = runGradleBuild(projectDir, "publishToNexus");
 
-        assertThat(result.task(":initializeNexusStagingRepository")).isNotNull()
-                .extracting(BuildTask::getOutcome).isEqualTo(SUCCESS);
-        assertUploadedToStagingRepo(wireMockServer, "/org/example/sample/0.0.1/sample-0.0.1.pom");
-        assertUploadedToStagingRepo(wireMockServer, "/org/example/sample/0.0.1/sample-0.0.1.jar");
+        assertSuccess(result, ":initializeNexusStagingRepository");
+        assertUploadedToStagingRepo(server, "/org/example/sample/0.0.1/sample-0.0.1.pom");
+        assertUploadedToStagingRepo(server, "/org/example/sample/0.0.1/sample-0.0.1.jar");
     }
 
     @ParameterizedTest
     @MethodSource("publishingSettings")
-    void canBeUsedWithLazilyAppliedGradlePluginDevelopmentPlugin(String extraSettings, @TempDir Path projectDir, WireMockServer wireMockServer) throws IOException {
+    void canBeUsedWithLazilyAppliedGradlePluginDevelopmentPlugin(String extraSettings, @TempDir Path projectDir, WireMockServer server) throws IOException {
         Files.write(projectDir.resolve("settings.gradle"), List.of(
                 "rootProject.name = 'sample'",
                 extraSettings,
@@ -117,7 +119,7 @@ class NexusPublishPluginTests {
                 "    plugins.withId('maven-publish') {",
                 "        project.apply plugin: 'de.marcphilipp.nexus-publish'",
                 "        project.extensions.configure('nexusPublishing') { ext ->",
-                "            ext.serverUrl = uri('" + wireMockServer.baseUrl() + "')",
+                "            ext.serverUrl = uri('" + server.baseUrl() + "')",
                 "            ext.stagingProfileId = '" + STAGING_PROFILE_ID + "'",
                 "            ext.username = 'username'",
                 "            ext.password = 'password'",
@@ -148,21 +150,114 @@ class NexusPublishPluginTests {
                 "    public void apply(Project p) {}",
                 "}"));
 
-        stubCreateStagingRepoRequest(wireMockServer);
-        expectArtifactUploads(wireMockServer);
+        stubCreateStagingRepoRequest(server, "/staging/profiles/" + STAGING_PROFILE_ID + "/start", STAGED_REPOSITORY_ID);
+        expectArtifactUploads(server, "/staging/deployByRepositoryId/" + STAGED_REPOSITORY_ID);
 
         BuildResult result = runGradleBuild(projectDir, "publishToNexus");
 
-        assertThat(result.task(":gradle-plugin:initializeNexusStagingRepository")).isNotNull()
-                .extracting(BuildTask::getOutcome).isEqualTo(SUCCESS);
-        assertUploadedToStagingRepo(wireMockServer, "/org/example/gradle-plugin/0.0.1/gradle-plugin-0.0.1.pom");
-        assertUploadedToStagingRepo(wireMockServer, "/org/example/foo/org.example.foo.gradle.plugin/0.0.1/org.example.foo.gradle.plugin-0.0.1.pom");
+        assertSuccess(result, ":gradle-plugin:initializeNexusStagingRepository");
+        assertUploadedToStagingRepo(server, "/org/example/gradle-plugin/0.0.1/gradle-plugin-0.0.1.pom");
+        assertUploadedToStagingRepo(server, "/org/example/foo/org.example.foo.gradle.plugin/0.0.1/org.example.foo.gradle.plugin-0.0.1.pom");
     }
 
-    private BuildResult runGradleBuild(Path projectDir, String task) {
+    @ParameterizedTest
+    @MethodSource("publishingSettings")
+    void publishesSnapshots(String extraSettings, @TempDir Path projectDir, WireMockServer server) throws IOException {
+        Files.write(projectDir.resolve("settings.gradle"), List.of(
+                "rootProject.name = 'sample'",
+                extraSettings
+        ));
+
+        Files.write(projectDir.resolve("build.gradle"), List.of(
+                "plugins {",
+                "    id('java-library')",
+                "    id('de.marcphilipp.nexus-publish')",
+                "}",
+                "group = 'org.example'",
+                "version = '0.0.1-SNAPSHOT'",
+                "publishing {",
+                "    publications {",
+                "        mavenJava(MavenPublication) {",
+                "            from(components.java)",
+                "        }",
+                "    }",
+                "}",
+                "nexusPublishing {",
+                "    serverUrl = uri('" + server.baseUrl() + "/shouldNotBeUsed')",
+                "    snapshotRepositoryUrl = uri('" + server.baseUrl() + "/snapshots')",
+                "    username = 'username'",
+                "    password = 'password'",
+                "}"));
+
+        expectArtifactUploads(server, "/snapshots");
+
+        BuildResult result = runGradleBuild(projectDir, "publishToNexus");
+
+        assertSkipped(result, ":initializeNexusStagingRepository");
+        assertUploaded(server, "/snapshots/org/example/sample/0.0.1-SNAPSHOT/sample-0.0.1-.*.pom");
+        assertUploaded(server, "/snapshots/org/example/sample/0.0.1-SNAPSHOT/sample-0.0.1-.*.jar");
+    }
+
+    @ParameterizedTest
+    @MethodSource("publishingSettings")
+    void createsSingleStagingRepositoryPerServerUrl(String extraSettings, @TempDir Path projectDir, WireMockServer server) throws IOException {
+        Files.write(projectDir.resolve("settings.gradle"), List.of(
+                "rootProject.name = 'sample'",
+                extraSettings,
+                "include 'a1', 'a2', 'b'"
+        ));
+
+        Files.write(projectDir.resolve("build.gradle"), List.of(
+                "plugins {",
+                "    id('de.marcphilipp.nexus-publish') apply false",
+                "}",
+                "subprojects {",
+                "    apply plugin: 'java-library'",
+                "    apply plugin: 'de.marcphilipp.nexus-publish'",
+                "    group = 'org.example'",
+                "    version = '0.0.1'",
+                "    publishing {",
+                "        publications {",
+                "            mavenJava(MavenPublication) {",
+                "                from(components.java)",
+                "            }",
+                "        }",
+                "    }",
+                "    nexusPublishing {",
+                "        serverUrl = uri('" + server.baseUrl() + "/a/')",
+                "        stagingProfileId = 'profile-a'",
+                "        username = 'username'",
+                "        password = 'password'",
+                "    }",
+                "}",
+                "project(':b:') {",
+                "    nexusPublishing {",
+                "        serverUrl = uri('" + server.baseUrl() + "/b/')",
+                "        stagingProfileId = 'profile-b'",
+                "    }",
+                "}"));
+
+        stubCreateStagingRepoRequest(server, "/a/staging/profiles/profile-a/start", "orgexample-a");
+        expectArtifactUploads(server, "/a/staging/deployByRepositoryId/orgexample-a");
+        stubCreateStagingRepoRequest(server, "/b/staging/profiles/profile-b/start", "orgexample-b");
+        expectArtifactUploads(server, "/b/staging/deployByRepositoryId/orgexample-b");
+
+        BuildResult result = runGradleBuild(projectDir, "publishToNexus", "--parallel");
+
+        server.verify(1, postRequestedFor(urlEqualTo("/a/staging/profiles/profile-a/start")));
+        server.verify(1, postRequestedFor(urlEqualTo("/b/staging/profiles/profile-b/start")));
+        assertSuccess(result, ":a1:initializeNexusStagingRepository");
+        assertSuccess(result, ":a2:initializeNexusStagingRepository");
+        assertSuccess(result, ":b:initializeNexusStagingRepository");
+        assertUploaded(server, "/a/staging/deployByRepositoryId/orgexample-a/org/example/a1/0.0.1/a1-0.0.1.pom");
+        assertUploaded(server, "/a/staging/deployByRepositoryId/orgexample-a/org/example/a2/0.0.1/a2-0.0.1.pom");
+        assertUploaded(server, "/b/staging/deployByRepositoryId/orgexample-b/org/example/b/0.0.1/b-0.0.1.jar");
+    }
+
+    private BuildResult runGradleBuild(Path projectDir, String... arguments) {
         return getGradleRunner()
                 .withProjectDir(projectDir.toFile())
-                .withArguments(task)
+                .withArguments(arguments)
                 .forwardOutput()
                 .build();
     }
@@ -179,25 +274,42 @@ class NexusPublishPluginTests {
         return GradleRunner.create().withPluginClasspath();
     }
 
-    private static void assertUploadedToStagingRepo(WireMockServer wireMockServer, String path) {
-        wireMockServer.verify(putRequestedFor(urlEqualTo("/staging/deployByRepositoryId/" + STAGED_REPOSITORY_ID + path)));
+    private static void assertSuccess(BuildResult result, String taskPath) {
+        assertOutcome(result, taskPath, SUCCESS);
+    }
+
+    private static void assertSkipped(BuildResult result, String taskPath) {
+        assertOutcome(result, taskPath, SKIPPED);
+    }
+
+    private static void assertOutcome(BuildResult result, String taskPath, TaskOutcome outcome) {
+        assertThat(result.task(taskPath)).isNotNull()
+                .extracting(BuildTask::getOutcome).isEqualTo(outcome);
+    }
+
+    private static void assertUploadedToStagingRepo(WireMockServer server, String path) {
+        assertUploaded(server, "/staging/deployByRepositoryId/" + STAGED_REPOSITORY_ID + path);
+    }
+
+    private static void assertUploaded(WireMockServer server, String testUrl) {
+        server.verify(putRequestedFor(urlMatching(testUrl)));
     }
 
     @SafeVarargs
-    private void stubStagingProfileRequest(WireMockServer wireMockServer, Map<String, String>... stagingProfiles) {
-        wireMockServer.stubFor(get(urlEqualTo("/staging/profiles"))
+    private void stubStagingProfileRequest(WireMockServer server, String url, Map<String, String>... stagingProfiles) {
+        server.stubFor(get(urlEqualTo(url))
                 .willReturn(aResponse().withBody(gson.toJson(Map.of("data", List.of(stagingProfiles))))));
     }
 
-    private void stubCreateStagingRepoRequest(WireMockServer wireMockServer) {
-        wireMockServer.stubFor(post(urlEqualTo("/staging/profiles/" + STAGING_PROFILE_ID + "/start"))
-                .willReturn(aResponse().withBody(gson.toJson(Map.of("data", Map.of("stagedRepositoryId", STAGED_REPOSITORY_ID))))));
+    private void stubCreateStagingRepoRequest(WireMockServer server, String url, String stagedRepositoryId) {
+        server.stubFor(post(urlEqualTo(url))
+                .willReturn(aResponse().withBody(gson.toJson(Map.of("data", Map.of("stagedRepositoryId", stagedRepositoryId))))));
     }
 
-    private void expectArtifactUploads(WireMockServer wireMockServer) {
-        wireMockServer.stubFor(put(urlMatching("/staging/deployByRepositoryId/" + STAGED_REPOSITORY_ID + "/.+"))
+    private void expectArtifactUploads(WireMockServer server, String prefix) {
+        server.stubFor(put(urlMatching(prefix + "/.+"))
                 .willReturn(aResponse().withStatus(201)));
-        wireMockServer.stubFor(get(urlMatching("/staging/deployByRepositoryId/" + STAGED_REPOSITORY_ID + "/.+/maven-metadata.xml"))
+        server.stubFor(get(urlMatching(prefix + "/.+/maven-metadata.xml"))
                 .willReturn(aResponse().withStatus(404)));
     }
 }
