@@ -1,4 +1,5 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import kotlin.text.Typography.copyright
 
 plugins {
     `java-gradle-plugin`
@@ -17,7 +18,7 @@ buildScan {
 }
 
 group = "de.marcphilipp.gradle"
-version = "0.1.1-SNAPSHOT"
+version = "0.1.1"
 
 val readableName = "Nexus Publish Plugin"
 description = "Gradle Plugin for publishing to Nexus repositories"
