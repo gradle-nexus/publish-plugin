@@ -27,6 +27,7 @@ import org.gradle.api.publish.PublishingExtension;
 import org.gradle.api.publish.maven.plugins.MavenPublishPlugin;
 import org.gradle.api.publish.maven.tasks.PublishToMavenRepository;
 import org.gradle.api.publish.plugins.PublishingPlugin;
+import org.gradle.api.tasks.TaskCollection;
 import org.gradle.api.tasks.TaskProvider;
 
 import javax.annotation.Nonnull;
@@ -87,17 +88,15 @@ class NexusPublishPlugin implements Plugin<Project> {
     }
 
     private void configureTaskDependencies(@Nonnull Project project, TaskProvider<Task> publishToNexusTask, TaskProvider<InitializeNexusStagingRepository> initializeTask, MavenArtifactRepository nexusRepository) {
-        project.getTasks()
-                .withType(PublishToMavenRepository.class)
-                .configureEach(publishTask -> {
-                    project.afterEvaluate(p -> {
-                        if (publishTask.getRepository().equals(nexusRepository)) {
-                            publishTask.dependsOn(initializeTask);
-                            publishTask.doFirst(t -> System.out.println("Uploading to " + publishTask.getRepository().getUrl()));
-                            publishToNexusTask.configure(task -> task.dependsOn(publishTask));
-                        }
-                    });
-                });
+        TaskCollection<PublishToMavenRepository> publishTasks = project.getTasks().withType(PublishToMavenRepository.class);
+        publishToNexusTask.configure(task -> task.dependsOn(publishTasks));
+        // PublishToMavenRepository tasks may not yet have been initialized
+        project.afterEvaluate(p -> publishTasks.configureEach(task -> {
+            if (task.getRepository().equals(nexusRepository)) {
+                task.dependsOn(initializeTask);
+                task.doFirst(t -> System.out.println("Uploading to " + task.getRepository().getUrl()));
+            }
+        }));
     }
 
     private URI getRepoUrl(NexusPublishExtension nexusPublishExtension) {
