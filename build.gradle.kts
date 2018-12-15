@@ -2,7 +2,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import kotlin.text.Typography.copyright
 
 plugins {
-    `java-gradle-plugin`
+    `kotlin-dsl`
     `maven-publish`
     id("com.gradle.build-scan") version "2.1"
     id("com.gradle.plugin-publish") version "0.10.0"
@@ -57,6 +57,9 @@ tasks.named<JavaCompile>("compileTestJava") {
 val licenseHeaderFile = file("gradle/license-header.txt")
 spotless {
     java {
+        licenseHeaderFile(licenseHeaderFile)
+    }
+    kotlin {
         licenseHeaderFile(licenseHeaderFile)
     }
 }
