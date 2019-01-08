@@ -29,6 +29,8 @@ import org.gradle.api.publish.maven.tasks.PublishToMavenRepository;
 import org.gradle.api.publish.plugins.PublishingPlugin;
 import org.gradle.api.tasks.TaskCollection;
 import org.gradle.api.tasks.TaskProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import java.net.URI;
@@ -39,6 +41,7 @@ import java.util.concurrent.ConcurrentHashMap;
 class NexusPublishPlugin implements Plugin<Project> {
 
     private static final String PUBLISH_TO_NEXUS_LIFECYCLE_TASK_NAME = "publishToNexus";
+    private static final Logger LOGGER = LoggerFactory.getLogger(NexusPublishPlugin.class);
     private static final Map<URI, URI> serverUrlToStagingRepoUrl = new ConcurrentHashMap<>();
 
     @Override
@@ -94,7 +97,7 @@ class NexusPublishPlugin implements Plugin<Project> {
         project.afterEvaluate(p -> publishTasks.configureEach(task -> {
             if (task.getRepository().equals(nexusRepository)) {
                 task.dependsOn(initializeTask);
-                task.doFirst(t -> System.out.println("Uploading to " + task.getRepository().getUrl()));
+                task.doFirst(t -> LOGGER.info("Uploading to {}", task.getRepository().getUrl()));
             }
         }));
     }
