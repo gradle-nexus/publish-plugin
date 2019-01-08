@@ -17,6 +17,7 @@
 package de.marcphilipp.gradle.nexus;
 
 import de.marcphilipp.gradle.nexus.internal.NexusClient;
+import io.codearte.gradle.nexus.NexusStagingExtension;
 import lombok.Getter;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
@@ -32,7 +33,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.Map;
 
 @SuppressWarnings({"UnstableApiUsage", "WeakerAccess"})
@@ -87,7 +91,28 @@ public class InitializeNexusStagingRepository extends DefaultTask {
                         .orElseThrow(() -> new GradleException("Failed to find staging profile for package group: " + packageGroup));
             }
             logger.info("Creating staging repository for stagingProfileId '{}'", stagingProfileId);
-            return client.createStagingRepository(stagingProfileId);
+            String stagingRepositoryId = client.createStagingRepository(stagingProfileId);
+            getProject()
+                    .getRootProject()
+                    .getPlugins()
+                    .withId("io.codearte.nexus-staging", nexusStagingPlugin -> {
+                        NexusStagingExtension nexusStagingExtension = getProject()
+                                .getRootProject()
+                                .getExtensions()
+                                .getByType(NexusStagingExtension.class);
+                        Property<String> stagingRepositoryIdProperty;
+                        try {
+                            stagingRepositoryIdProperty = nexusStagingExtension.getStagingRepositoryId();
+                        } catch (NoSuchMethodError nsme) {
+                            logger.warn("For increased publishing reliability please update the io.codearte.nexus-staging plugin to at least version 0.20.0.\n" +
+                                    "If your version is at least 0.20.0, try to update the de.marcphilipp.nexus-publish plugin to its latest version.\n" +
+                                    "If this also does not make this warning go away, please report an issue for de.marcphilipp.nexus-publish.");
+                            logger.debug("getStagingRepositoryId method not found on nexusStagingExtension", nsme);
+                            return;
+                        }
+                        stagingRepositoryIdProperty.set(stagingRepositoryId);
+                    });
+            return client.getStagingRepositoryUri(stagingRepositoryId);
         });
         PublishingExtension publishing = getProject().getExtensions().getByType(PublishingExtension.class);
         MavenArtifactRepository repository = (MavenArtifactRepository) publishing.getRepositories().getByName(getRepositoryName().get());

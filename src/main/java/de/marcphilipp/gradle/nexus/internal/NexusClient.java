@@ -86,20 +86,24 @@ public class NexusClient {
         }
     }
 
-    public URI createStagingRepository(String stagingProfileId) {
+    public String createStagingRepository(String stagingProfileId) {
         try {
             Response<StagingRepository> response = api.startStagingRepo(stagingProfileId, new Description("publishing")).execute();
             if (!response.isSuccessful()) {
                 throw failure("create staging repository", response);
             }
-            String baseUrl = this.baseUrl.toString();
-            if (!baseUrl.endsWith("/")) {
-                baseUrl += "/";
-            }
-            return URI.create(baseUrl + "staging/deployByRepositoryId/" + response.body().getStagedRepositoryId());
+            return response.body().getStagedRepositoryId();
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
+    }
+
+    public URI getStagingRepositoryUri(String stagingRepositoryId) {
+        String baseUrl = this.baseUrl.toString();
+        if (!baseUrl.endsWith("/")) {
+            baseUrl += "/";
+        }
+        return URI.create(baseUrl + "staging/deployByRepositoryId/" + stagingRepositoryId);
     }
 
     private RuntimeException failure(String action, Response<?> response) {

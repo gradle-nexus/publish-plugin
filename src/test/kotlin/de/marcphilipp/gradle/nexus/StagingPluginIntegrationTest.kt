@@ -16,6 +16,11 @@
 
 package de.marcphilipp.gradle.nexus
 
+import com.github.tomakehurst.wiremock.WireMockServer
+import com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import com.github.tomakehurst.wiremock.client.WireMock.post
+import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
+import com.google.gson.Gson
 import io.codearte.gradle.nexus.NexusStagingExtension
 import io.codearte.gradle.nexus.NexusStagingPlugin
 import org.gradle.api.Project
@@ -24,8 +29,18 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.extension.ExtendWith
+import java.net.URI
 
+@ExtendWith(WireMockExtension::class)
 class StagingPluginIntegrationTest {
+
+    companion object {
+        private const val STAGING_PROFILE_ID = "someProfileId"
+        private const val STAGED_REPOSITORY_ID = "orgexample-42"
+    }
+
+    private val gson = Gson()
 
     private lateinit var project: Project
 
@@ -66,6 +81,21 @@ class StagingPluginIntegrationTest {
         theirExtension.password = "secret1"
         ourExtension.password.set("secret2")
         assertThat(ourExtension.password.orNull).isEqualTo("secret2")
+    }
+
+    @Test
+    fun `staged repository id is forwarded`(server: WireMockServer) {
+        val ourExtension = project.extensions.getByType(NexusPublishExtension::class.java)
+        val theirExtension = project.extensions.getByType(NexusStagingExtension::class.java)
+
+        ourExtension.serverUrl.set(URI.create(server.baseUrl()))
+        ourExtension.stagingProfileId.set(STAGING_PROFILE_ID)
+
+        server.stubFor(post(urlEqualTo("/staging/profiles/$STAGING_PROFILE_ID/start"))
+                .willReturn(aResponse().withBody(gson.toJson(mapOf("data" to mapOf("stagedRepositoryId" to STAGED_REPOSITORY_ID))))))
+
+        (project.getTasksByName("initializeNexusStagingRepository", false).first() as InitializeNexusStagingRepository).createStagingRepoAndReplacePublishingRepoUrl()
+        assertThat(theirExtension.stagingRepositoryId.orNull).isEqualTo(STAGED_REPOSITORY_ID)
     }
 
 }

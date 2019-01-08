@@ -12,6 +12,7 @@ The plugin does the following:
 - Apply the `maven-publish` plugin
 - configure a Maven artifact repository called `nexus` (customizable via the `repositoryName` property)
 - create a `initializeNexusStagingRepository` task that starts a new staging repository in case the project's version does not end with `-SNAPSHOT` (customizable via the `useStaging` property) and sets the URL of the `nexus` repository accordingly. In case of a multi-project build, all subprojects with the same `serverUrl` will use the same staging repository.
+- if the [`io.codearte.nexus-staging` plugin](https://github.com/Codearte/gradle-nexus-staging-plugin) is applied on the root project, the `stagingRepositoryId` on its extension is set to the id of the newly created staging repository, this way it does not depend on exactly one open staging repository being available.
 - make all publishing tasks for the `nexus` repository depend on the `initializeNexusStagingRepository` task.
 - create a `publishToNexus` lifecycle task that depends on all publishing tasks for the `nexus` repository.
 

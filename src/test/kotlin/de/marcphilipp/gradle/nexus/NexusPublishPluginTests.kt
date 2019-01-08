@@ -19,6 +19,7 @@ package de.marcphilipp.gradle.nexus
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
+import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.put
@@ -303,6 +304,107 @@ class NexusPublishPluginTests {
         assertUploaded(server, "/b/staging/deployByRepositoryId/orgexample-b/org/example/b/0.0.1/b-0.0.1.jar")
     }
 
+    @ParameterizedTest
+    @MethodSource("gradleVersionAndSettings")
+    fun `configures staging repository id in staging plugin`(gradleVersion: String, extraSettings: String, @TempDir projectDir: Path, server: WireMockServer) {
+        Files.writeString(projectDir.resolve("settings.gradle"), """
+            rootProject.name = 'sample'
+            $extraSettings
+        """)
+        Files.writeString(projectDir.resolve("build.gradle"), """
+            buildscript {
+                repositories {
+                    gradlePluginPortal()
+                }
+                dependencies {
+                    classpath "io.codearte.gradle.nexus:gradle-nexus-staging-plugin:0.20.0"
+                    classpath files($pluginClasspathAsString)
+                }
+            }
+            plugins {
+                id('java-library')
+            }
+            apply plugin: 'io.codearte.nexus-staging'
+            apply plugin: 'de.marcphilipp.nexus-publish'
+            group = 'org.example'
+            version = '0.0.1'
+            publishing {
+                publications {
+                    mavenJava(MavenPublication) {
+                        from(components.java)
+                    }
+                }
+            }
+            nexusPublishing {
+                serverUrl = uri('${server.baseUrl()}')
+            }
+            nexusStaging {
+                serverUrl = uri('${server.baseUrl()}')
+                stagingProfileId = '$STAGING_PROFILE_ID'
+            }
+        """)
+
+        stubCreateStagingRepoRequest(server, "/staging/profiles/$STAGING_PROFILE_ID/start", STAGED_REPOSITORY_ID)
+        server.stubFor(post(urlEqualTo("/staging/bulk/close"))
+                .withRequestBody(matchingJsonPath("\$.data[?(@.stagedRepositoryIds[0] == '$STAGED_REPOSITORY_ID')]"))
+                .willReturn(aResponse().withHeader("Content-Type", "application/json").withBody("{}")))
+        server.stubFor(get(urlEqualTo("/staging/repository/$STAGED_REPOSITORY_ID"))
+                .willReturn(aResponse().withHeader("Content-Type", "application/json").withBody("{\"transitioning\":false,\"type\":\"CLOSED\"}")))
+
+        val result = runGradleBuild(gradleVersion, projectDir, "initializeNexusStagingRepository", "closeRepository")
+
+        assertSuccess(result, ":initializeNexusStagingRepository")
+        assertSuccess(result, ":closeRepository")
+        assertCloseOfStagingRepo(server)
+    }
+
+    @ParameterizedTest
+    @MethodSource("gradleVersionAndSettings")
+    fun `warns about too old staging plugin`(gradleVersion: String, extraSettings: String, @TempDir projectDir: Path, server: WireMockServer) {
+        Files.writeString(projectDir.resolve("settings.gradle"), """
+            rootProject.name = 'sample'
+            $extraSettings
+        """)
+        Files.writeString(projectDir.resolve("build.gradle"), """
+            buildscript {
+                repositories {
+                    gradlePluginPortal()
+                }
+                dependencies {
+                    classpath "io.codearte.gradle.nexus:gradle-nexus-staging-plugin:0.12.0"
+                    classpath files($pluginClasspathAsString)
+                }
+            }
+            plugins {
+                id('java-library')
+            }
+            apply plugin: 'io.codearte.nexus-staging'
+            apply plugin: 'de.marcphilipp.nexus-publish'
+            group = 'org.example'
+            version = '0.0.1'
+            publishing {
+                publications {
+                    mavenJava(MavenPublication) {
+                        from(components.java)
+                    }
+                }
+            }
+            nexusPublishing {
+                serverUrl = uri('${server.baseUrl()}')
+            }
+            nexusStaging {
+                stagingProfileId = '$STAGING_PROFILE_ID'
+            }
+        """)
+
+        stubCreateStagingRepoRequest(server, "/staging/profiles/$STAGING_PROFILE_ID/start", STAGED_REPOSITORY_ID)
+
+        val result = runGradleBuild(gradleVersion, projectDir, "initializeNexusStagingRepository")
+
+        assertSuccess(result, ":initializeNexusStagingRepository")
+        assertThat(result.output).contains("at least 0.20.0")
+    }
+
     private fun runGradleBuild(gradleVersion: String, projectDir: Path, vararg arguments: String): BuildResult {
         return gradleRunner
                 .withGradleVersion(gradleVersion)
@@ -355,6 +457,11 @@ class NexusPublishPluginTests {
 
     private fun assertUploaded(server: WireMockServer, testUrl: String) {
         server.verify(putRequestedFor(urlMatching(testUrl)))
+    }
+
+    private fun assertCloseOfStagingRepo(server: WireMockServer) {
+        server.verify(postRequestedFor(urlMatching("/staging/bulk/close"))
+                .withRequestBody(matchingJsonPath("\$.data[?(@.stagedRepositoryIds[0] == '$STAGED_REPOSITORY_ID')]")))
     }
 
 }
