@@ -25,10 +25,8 @@ import com.github.tomakehurst.wiremock.client.WireMock.put
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlMatching
-import com.google.common.collect.Sets
 import com.google.gson.Gson
 import org.assertj.core.api.Assertions.assertThat
-import org.gradle.internal.impldep.org.bouncycastle.crypto.tls.ConnectionEnd.server
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
@@ -53,11 +51,12 @@ class NexusPublishPluginTests {
 
         @JvmStatic
         private fun gradleVersionAndSettings(): Iterable<Arguments> {
-            return Sets.cartesianProduct(
-                    setOf("4.10.3", "5.0", "5.1-rc-1"),
-                    setOf("// no extra settings", "enableFeaturePreview('STABLE_PUBLISHING')")
-                )
-                .map { Arguments.of(*it.toTypedArray()) }
+            return listOf(
+                    Arguments.of("4.10.3", "// no extra settings"),
+                    Arguments.of("4.10.3", "enableFeaturePreview('STABLE_PUBLISHING')"),
+                    Arguments.of("5.0", "// no extra settings"),
+                    Arguments.of("5.1-rc-1", "// no extra settings")
+            )
         }
     }
 
