@@ -91,14 +91,14 @@ class NexusPublishPlugin implements Plugin<Project> {
     }
 
     private void configureTaskDependencies(@Nonnull Project project, TaskProvider<Task> publishToNexusTask, TaskProvider<InitializeNexusStagingRepository> initializeTask, MavenArtifactRepository nexusRepository) {
-        TaskCollection<PublishToMavenRepository> publishTasks = project.getTasks().withType(PublishToMavenRepository.class);
+        TaskCollection<PublishToMavenRepository> publishTasks = project.getTasks()
+                .withType(PublishToMavenRepository.class)
+                .matching(task -> task.getRepository().equals(nexusRepository));
         publishToNexusTask.configure(task -> task.dependsOn(publishTasks));
         // PublishToMavenRepository tasks may not yet have been initialized
         project.afterEvaluate(p -> publishTasks.configureEach(task -> {
-            if (task.getRepository().equals(nexusRepository)) {
-                task.dependsOn(initializeTask);
-                task.doFirst(t -> LOGGER.info("Uploading to {}", task.getRepository().getUrl()));
-            }
+            task.dependsOn(initializeTask);
+            task.doFirst(t -> LOGGER.info("Uploading to {}", task.getRepository().getUrl()));
         }));
     }
 

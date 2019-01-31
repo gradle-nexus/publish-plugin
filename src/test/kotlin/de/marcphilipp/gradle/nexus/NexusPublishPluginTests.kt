@@ -70,6 +70,44 @@ class NexusPublishPluginTests {
 
     @ParameterizedTest
     @MethodSource("gradleVersionAndSettings")
+    fun `publishToNexus depends on correct tasks`(gradleVersion: String, extraSettings: String, @TempDir projectDir: Path) {
+        Files.writeString(projectDir.resolve("settings.gradle"), """
+            rootProject.name = 'sample'
+            $extraSettings
+        """)
+        Files.writeString(projectDir.resolve("build.gradle"), """
+            plugins {
+                id('java-library')
+                id('de.marcphilipp.nexus-publish')
+            }
+            group = 'org.example'
+            version = '0.0.1'
+            publishing {
+                publications {
+                    mavenJava(MavenPublication) {
+                        from(components.java)
+                    }
+                }
+                repositories {
+                    maven {
+                        name 'someOtherRepo'
+                        url 'someOtherRepo'
+                    }
+                }
+            }
+            // use this instead of --dry-run to get the tasks in the result for verification
+            tasks.all { enabled false }
+        """)
+
+        val result = runGradleBuild(gradleVersion, projectDir, "publishToNexus")
+
+        assertSkipped(result, ":publishToNexus")
+        assertSkipped(result, ":publishMavenJavaPublicationToNexusRepository")
+        assertNotConsidered(result, ":publishMavenJavaPublicationToSomeOtherRepoRepository")
+    }
+
+    @ParameterizedTest
+    @MethodSource("gradleVersionAndSettings")
     fun `publishes to Nexus`(gradleVersion: String, extraSettings: String, @TempDir projectDir: Path, server: WireMockServer) {
         Files.writeString(projectDir.resolve("settings.gradle"), """
             rootProject.name = 'sample'
@@ -306,6 +344,10 @@ class NexusPublishPluginTests {
                 .isNotNull
                 .extracting { it.outcome }
                 .isEqualTo(outcome)
+    }
+
+    private fun assertNotConsidered(result: BuildResult, taskPath: String) {
+        assertThat(result.task(taskPath)).describedAs("Task $taskPath").isNull()
     }
 
     private fun assertUploadedToStagingRepo(server: WireMockServer, path: String) {
