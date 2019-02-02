@@ -34,15 +34,14 @@ import org.gradle.testkit.runner.TaskOutcome
 import org.gradle.testkit.runner.TaskOutcome.SKIPPED
 import org.gradle.testkit.runner.TaskOutcome.SUCCESS
 import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.api.io.TempDir
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
-import org.junitpioneer.jupiter.TempDirectory
-import org.junitpioneer.jupiter.TempDirectory.TempDir
 import java.nio.file.Files
 import java.nio.file.Path
 
-@ExtendWith(TempDirectory::class, WireMockExtension::class)
+@ExtendWith(WireMockExtension::class)
 class NexusPublishPluginTests {
 
     companion object {
