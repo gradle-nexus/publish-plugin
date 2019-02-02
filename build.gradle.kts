@@ -94,8 +94,8 @@ configurations {
 }
 
 dependencies {
-    shadowed("com.squareup.retrofit2:retrofit:2.4.0")
-    shadowed("com.squareup.retrofit2:converter-gson:2.4.0")
+    shadowed("com.squareup.retrofit2:retrofit:2.5.0")
+    shadowed("com.squareup.retrofit2:converter-gson:2.5.0")
 
     compileOnly("io.codearte.gradle.nexus:gradle-nexus-staging-plugin:0.20.0")
     testImplementation("io.codearte.gradle.nexus:gradle-nexus-staging-plugin:0.20.0")
