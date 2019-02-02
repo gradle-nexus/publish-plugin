@@ -56,7 +56,8 @@ class NexusPublishPluginTests {
                     Arguments.of("4.10.3", "// no extra settings"),
                     Arguments.of("4.10.3", "enableFeaturePreview('STABLE_PUBLISHING')"),
                     Arguments.of("5.0", "// no extra settings"),
-                    Arguments.of("5.1-rc-1", "// no extra settings")
+                    Arguments.of("5.1.1", "// no extra settings"),
+                    Arguments.of("5.2-rc-1", "// no extra settings")
             )
         }
     }
