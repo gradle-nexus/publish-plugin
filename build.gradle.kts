@@ -3,11 +3,12 @@ plugins {
     `kotlin-dsl`
     `maven-publish`
     id("com.gradle.build-scan") version "2.1"
-    id("com.gradle.plugin-publish") version "0.10.0"
-    id("com.diffplug.gradle.spotless") version "3.16.0"
-    id("com.github.johnrengelman.shadow") version "4.0.3"
-    id("io.freefair.lombok") version "3.0.0-rc.3"
+    id("com.gradle.plugin-publish") version "0.10.1"
+    id("com.diffplug.gradle.spotless") version "3.17.0"
+    id("com.github.johnrengelman.shadow") version "4.0.4"
+    id("io.freefair.lombok") version "3.1.0"
     id("org.jetbrains.gradle.plugin.idea-ext")
+    id("com.github.ben-manes.versions") version "0.20.0"
 }
 
 buildScan {
