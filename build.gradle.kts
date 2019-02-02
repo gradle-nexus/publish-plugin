@@ -1,6 +1,4 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-import kotlin.text.Typography.copyright
-
 plugins {
     `kotlin-dsl`
     `maven-publish`
