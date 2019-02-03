@@ -1,4 +1,4 @@
 language: java
-jdk: openjdk11
+jdk: oraclejdk8
 install: ./gradlew --version
 script: ./gradlew --daemon --scan --stacktrace build
