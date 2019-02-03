@@ -1,3 +1,4 @@
+import org.jetbrains.dokka.gradle.PackageOptions
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -123,6 +124,10 @@ tasks {
         outputDirectory = "$buildDir/javadoc"
         reportUndocumented = false
         jdkVersion = 8
+        packageOptions(delegateClosureOf<PackageOptions> {
+            prefix = "de.marcphilipp.gradle.nexus.internal"
+            suppress = true
+        })
     }
 }
 
