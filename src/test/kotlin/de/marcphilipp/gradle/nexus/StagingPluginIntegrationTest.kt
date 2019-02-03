@@ -23,12 +23,13 @@ import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.google.gson.Gson
 import io.codearte.gradle.nexus.NexusStagingExtension
 import io.codearte.gradle.nexus.NexusStagingPlugin
+import org.assertj.core.api.Assertions.assertThat
 import org.gradle.api.Project
+import org.gradle.kotlin.dsl.apply
+import org.gradle.kotlin.dsl.the
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-
-import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.extension.ExtendWith
 import java.net.URI
 
@@ -47,14 +48,14 @@ class StagingPluginIntegrationTest {
     @BeforeEach
     fun setUp() {
         project = ProjectBuilder.builder().build()
-        project.plugins.apply(NexusPublishPlugin::class.java)
-        project.plugins.apply(NexusStagingPlugin::class.java)
+        project.plugins.apply(NexusPublishPlugin::class)
+        project.plugins.apply(NexusStagingPlugin::class)
     }
 
     @Test
     fun `default wiring`() {
-        val ourExtension = project.extensions.getByType(NexusPublishExtension::class.java)
-        val theirExtension = project.extensions.getByType(NexusStagingExtension::class.java)
+        val ourExtension = project.the<NexusPublishExtension>()
+        val theirExtension = project.the<NexusStagingExtension>()
 
         theirExtension.packageGroup = "foo"
         assertThat(ourExtension.packageGroup.orNull).isEqualTo("foo")
@@ -71,8 +72,8 @@ class StagingPluginIntegrationTest {
 
     @Test
     fun `explicit values win`() {
-        val ourExtension = project.extensions.getByType(NexusPublishExtension::class.java)
-        val theirExtension = project.extensions.getByType(NexusStagingExtension::class.java)
+        val ourExtension = project.the<NexusPublishExtension>()
+        val theirExtension = project.the<NexusStagingExtension>()
 
         ourExtension.username.set("foo")
         theirExtension.username = "bar"
@@ -85,8 +86,8 @@ class StagingPluginIntegrationTest {
 
     @Test
     fun `staged repository id is forwarded`(server: WireMockServer) {
-        val ourExtension = project.extensions.getByType(NexusPublishExtension::class.java)
-        val theirExtension = project.extensions.getByType(NexusStagingExtension::class.java)
+        val ourExtension = project.the<NexusPublishExtension>()
+        val theirExtension = project.the<NexusStagingExtension>()
 
         ourExtension.serverUrl.set(URI.create(server.baseUrl()))
         ourExtension.stagingProfileId.set(STAGING_PROFILE_ID)
@@ -94,7 +95,8 @@ class StagingPluginIntegrationTest {
         server.stubFor(post(urlEqualTo("/staging/profiles/$STAGING_PROFILE_ID/start"))
                 .willReturn(aResponse().withBody(gson.toJson(mapOf("data" to mapOf("stagedRepositoryId" to STAGED_REPOSITORY_ID))))))
 
-        (project.getTasksByName("initializeNexusStagingRepository", false).first() as InitializeNexusStagingRepository).createStagingRepoAndReplacePublishingRepoUrl()
+        val task = project.getTasksByName("initializeNexusStagingRepository", false).first() as InitializeNexusStagingRepository
+        task.createStagingRepoAndReplacePublishingRepoUrl()
         assertThat(theirExtension.stagingRepositoryId.orNull).isEqualTo(STAGED_REPOSITORY_ID)
     }
 }

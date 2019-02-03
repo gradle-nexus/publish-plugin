@@ -28,15 +28,24 @@ import org.gradle.api.publish.maven.plugins.MavenPublishPlugin
 import org.gradle.api.publish.maven.tasks.PublishToMavenRepository
 import org.gradle.api.publish.plugins.PublishingPlugin
 import org.gradle.api.tasks.TaskProvider
-import org.slf4j.LoggerFactory
+import org.gradle.kotlin.dsl.apply
+import org.gradle.kotlin.dsl.create
+import org.gradle.kotlin.dsl.register
+import org.gradle.kotlin.dsl.the
+import org.gradle.kotlin.dsl.withType
 import java.net.URI
 import java.util.concurrent.ConcurrentHashMap
 
 @Suppress("UnstableApiUsage")
 class NexusPublishPlugin : Plugin<Project> {
 
+    companion object {
+        private const val PUBLISH_TO_NEXUS_LIFECYCLE_TASK_NAME = "publishToNexus"
+        private val serverUrlToStagingRepoUrl = ConcurrentHashMap<URI, URI>()
+    }
+
     override fun apply(project: Project) {
-        project.pluginManager.apply(MavenPublishPlugin::class.java)
+        project.pluginManager.apply(MavenPublishPlugin::class)
 
         project.gradle.addBuildListener(object : BuildAdapter() {
             override fun buildFinished(result: BuildResult) {
@@ -44,13 +53,13 @@ class NexusPublishPlugin : Plugin<Project> {
             }
         })
 
-        val extension = project.extensions.create(NexusPublishExtension.NAME, NexusPublishExtension::class.java, project)
+        val extension = project.extensions.create<NexusPublishExtension>(NexusPublishExtension.NAME, project)
         val publishToNexusTask = project.tasks.register(PUBLISH_TO_NEXUS_LIFECYCLE_TASK_NAME) {
             description = "Publishes all Maven publications produced by this project to Nexus."
             group = PublishingPlugin.PUBLISH_TASK_GROUP
         }
         val initializeTask = project.tasks
-                .register(InitializeNexusStagingRepository.NAME, InitializeNexusStagingRepository::class.java, project, extension, serverUrlToStagingRepoUrl)
+                .register<InitializeNexusStagingRepository>(InitializeNexusStagingRepository.NAME, project, extension, serverUrlToStagingRepoUrl)
 
         project.afterEvaluate {
             val nexusRepository = addMavenRepository(project, extension)
@@ -58,7 +67,7 @@ class NexusPublishPlugin : Plugin<Project> {
         }
 
         project.rootProject.plugins.withId("io.codearte.nexus-staging") {
-            val nexusStagingExtension = project.rootProject.extensions.getByType(NexusStagingExtension::class.java)
+            val nexusStagingExtension = project.rootProject.the<NexusStagingExtension>()
 
             extension.packageGroup.set(project.provider { nexusStagingExtension.packageGroup })
             extension.stagingProfileId.set(project.provider { nexusStagingExtension.stagingProfileId })
@@ -68,9 +77,8 @@ class NexusPublishPlugin : Plugin<Project> {
     }
 
     private fun addMavenRepository(project: Project, extension: NexusPublishExtension): MavenArtifactRepository {
-        val publishing = project.extensions.getByType(PublishingExtension::class.java)
-        return publishing.repositories.maven {
-            name = (extension.repositoryName.get())
+        return project.the<PublishingExtension>().repositories.maven {
+            name = extension.repositoryName.get()
             url = getRepoUrl(extension)
             credentials {
                 username = extension.username.orNull
@@ -81,14 +89,14 @@ class NexusPublishPlugin : Plugin<Project> {
 
     private fun configureTaskDependencies(project: Project, publishToNexusTask: TaskProvider<Task>, initializeTask: TaskProvider<InitializeNexusStagingRepository>, nexusRepository: MavenArtifactRepository) {
         val publishTasks = project.tasks
-                .withType(PublishToMavenRepository::class.java)
+                .withType<PublishToMavenRepository>()
                 .matching { it.repository == nexusRepository }
         publishToNexusTask.configure { dependsOn(publishTasks) }
         // PublishToMavenRepository tasks may not yet have been initialized
         project.afterEvaluate {
             publishTasks.configureEach {
                 dependsOn(initializeTask)
-                doFirst { LOGGER.info("Uploading to {}", repository.url) }
+                doFirst { logger.info("Uploading to {}", repository.url) }
             }
         }
     }
@@ -99,12 +107,5 @@ class NexusPublishPlugin : Plugin<Project> {
 
     private fun shouldUseStaging(nexusPublishExtension: NexusPublishExtension): Boolean {
         return nexusPublishExtension.useStaging.get()
-    }
-
-    companion object {
-
-        private const val PUBLISH_TO_NEXUS_LIFECYCLE_TASK_NAME = "publishToNexus"
-        private val LOGGER = LoggerFactory.getLogger(NexusPublishPlugin::class.java)
-        private val serverUrlToStagingRepoUrl = ConcurrentHashMap<URI, URI>()
     }
 }

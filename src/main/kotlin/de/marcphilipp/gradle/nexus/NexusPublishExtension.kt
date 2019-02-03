@@ -25,6 +25,10 @@ import java.net.URI
 @Suppress("UnstableApiUsage")
 open class NexusPublishExtension(project: Project) {
 
+    companion object {
+        internal const val NAME = "nexusPublishing"
+    }
+
     val useStaging: Property<Boolean> = project.objects.property()
     val serverUrl: Property<URI> = project.objects.property()
     val snapshotRepositoryUrl: Property<URI> = project.objects.property()
@@ -42,9 +46,5 @@ open class NexusPublishExtension(project: Project) {
         password.set(project.provider { project.findProperty("nexusPassword") as String? })
         repositoryName.set("nexus")
         packageGroup.set(project.provider { project.group.toString() })
-    }
-
-    companion object {
-        internal const val NAME = "nexusPublishing"
     }
 }
