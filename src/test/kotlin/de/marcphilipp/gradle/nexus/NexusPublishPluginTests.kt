@@ -102,7 +102,7 @@ class NexusPublishPluginTests {
             tasks.all { enabled false }
         """)
 
-        val result = runGradleBuild(gradleVersion, projectDir, "publishToNexus")
+        val result = runGradleBuild(gradleVersion, "publishToNexus")
 
         assertSkipped(result, ":publishToNexus")
         assertSkipped(result, ":publishMavenJavaPublicationToNexusRepository")
@@ -141,7 +141,7 @@ class NexusPublishPluginTests {
         stubCreateStagingRepoRequest(server, "/staging/profiles/$STAGING_PROFILE_ID/start", STAGED_REPOSITORY_ID)
         expectArtifactUploads(server, "/staging/deployByRepositoryId/$STAGED_REPOSITORY_ID")
 
-        val result = runGradleBuild(gradleVersion, projectDir, "publishToNexus")
+        val result = runGradleBuild(gradleVersion, "publishToNexus")
 
         assertSuccess(result, ":initializeNexusStagingRepository")
         assertUploadedToStagingRepo(server, "/org/example/sample/0.0.1/sample-0.0.1.pom")
@@ -204,7 +204,7 @@ class NexusPublishPluginTests {
         stubCreateStagingRepoRequest(server, "/staging/profiles/$STAGING_PROFILE_ID/start", STAGED_REPOSITORY_ID)
         expectArtifactUploads(server, "/staging/deployByRepositoryId/$STAGED_REPOSITORY_ID")
 
-        val result = runGradleBuild(gradleVersion, projectDir, "publishToNexus")
+        val result = runGradleBuild(gradleVersion, "publishToNexus")
 
         assertSuccess(result, ":gradle-plugin:initializeNexusStagingRepository")
         assertUploadedToStagingRepo(server, "/org/example/gradle-plugin/0.0.1/gradle-plugin-0.0.1.pom")
@@ -243,7 +243,7 @@ class NexusPublishPluginTests {
 
         expectArtifactUploads(server, "/snapshots")
 
-        val result = runGradleBuild(gradleVersion, projectDir, "publishToNexus")
+        val result = runGradleBuild(gradleVersion, "publishToNexus")
 
         assertSkipped(result, ":initializeNexusStagingRepository")
         assertUploaded(server, "/snapshots/org/example/sample/0.0.1-SNAPSHOT/sample-0.0.1-.*.pom")
@@ -295,7 +295,7 @@ class NexusPublishPluginTests {
         stubCreateStagingRepoRequest(server, "/b/staging/profiles/profile-b/start", "orgexample-b")
         expectArtifactUploads(server, "/b/staging/deployByRepositoryId/orgexample-b")
 
-        val result = runGradleBuild(gradleVersion, projectDir, "publishToNexus", "--parallel")
+        val result = runGradleBuild(gradleVersion, "publishToNexus", "--parallel")
 
         server.verify(1, postRequestedFor(urlEqualTo("/a/staging/profiles/profile-a/start")))
         server.verify(1, postRequestedFor(urlEqualTo("/b/staging/profiles/profile-b/start")))
@@ -354,7 +354,7 @@ class NexusPublishPluginTests {
         server.stubFor(get(urlEqualTo("/staging/repository/$STAGED_REPOSITORY_ID"))
                 .willReturn(aResponse().withHeader("Content-Type", "application/json").withBody("{\"transitioning\":false,\"type\":\"CLOSED\"}")))
 
-        val result = runGradleBuild(gradleVersion, projectDir, "initializeNexusStagingRepository", "closeRepository")
+        val result = runGradleBuild(gradleVersion, "initializeNexusStagingRepository", "closeRepository")
 
         assertSuccess(result, ":initializeNexusStagingRepository")
         assertSuccess(result, ":closeRepository")
@@ -402,13 +402,13 @@ class NexusPublishPluginTests {
 
         stubCreateStagingRepoRequest(server, "/staging/profiles/$STAGING_PROFILE_ID/start", STAGED_REPOSITORY_ID)
 
-        val result = runGradleBuild(gradleVersion, projectDir, "initializeNexusStagingRepository")
+        val result = runGradleBuild(gradleVersion, "initializeNexusStagingRepository")
 
         assertSuccess(result, ":initializeNexusStagingRepository")
         assertThat(result.output).contains("at least 0.20.0")
     }
 
-    private fun runGradleBuild(gradleVersion: String, projectDir: Path, vararg arguments: String): BuildResult {
+    private fun runGradleBuild(gradleVersion: String, vararg arguments: String): BuildResult {
         return gradleRunner
                 .withGradleVersion(gradleVersion)
                 .withProjectDir(projectDir.toFile())

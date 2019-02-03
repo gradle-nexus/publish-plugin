@@ -54,17 +54,16 @@ class NexusClient(private val baseUrl: URI, username: String?, password: String?
             httpClientBuilder
                     .addInterceptor({ chain ->
                         chain.proceed(chain.request().newBuilder()
-                                .header("Authorization", Credentials.basic(username!!, password!!))
+                                .header("Authorization", Credentials.basic(username ?: "", password ?: ""))
                                 .build())
                     })
         }
-        val httpClient = httpClientBuilder.build()
         val gson = GsonBuilder()
                 .registerTypeAdapterFactory(WrappingTypeAdapterFactory())
                 .create()
         val retrofit = Retrofit.Builder()
                 .baseUrl(baseUrl.toString())
-                .client(httpClient)
+                .client(httpClientBuilder.build())
                 .addConverterFactory(GsonConverterFactory.create(gson))
                 .build()
         api = retrofit.create(NexusApi::class.java)
@@ -97,13 +96,8 @@ class NexusClient(private val baseUrl: URI, username: String?, password: String?
         }
     }
 
-    fun getStagingRepositoryUri(stagingRepositoryId: String): URI {
-        var baseUrl = this.baseUrl.toString()
-        if (!baseUrl.endsWith("/")) {
-            baseUrl += "/"
-        }
-        return URI.create(baseUrl + "staging/deployByRepositoryId/" + stagingRepositoryId)
-    }
+    fun getStagingRepositoryUri(stagingRepositoryId: String): URI =
+            URI.create("${baseUrl.toString().removeSuffix("/")}/staging/deployByRepositoryId/$stagingRepositoryId")
 
     private fun failure(action: String, response: Response<*>): RuntimeException {
         var message = "Failed to " + action + ", server responded with status code " + response.code()
@@ -142,15 +136,15 @@ class NexusClient(private val baseUrl: URI, username: String?, password: String?
             val elementAdapter = gson.getAdapter(JsonElement::class.java)
             return object : TypeAdapter<T>() {
                 @Throws(IOException::class)
-                override fun write(out: JsonWriter, value: T) {
+                override fun write(writer: JsonWriter, value: T) {
                     val jsonObject = JsonObject()
                     jsonObject.add("data", delegate.toJsonTree(value))
-                    elementAdapter.write(out, jsonObject)
+                    elementAdapter.write(writer, jsonObject)
                 }
 
                 @Throws(IOException::class)
-                override fun read(`in`: JsonReader): T {
-                    var jsonElement = elementAdapter.read(`in`)
+                override fun read(reader: JsonReader): T {
+                    var jsonElement = elementAdapter.read(reader)
                     if (jsonElement.isJsonObject) {
                         val jsonObject = jsonElement.asJsonObject
                         if (jsonObject.has("data")) {
