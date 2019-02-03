@@ -17,6 +17,7 @@
 package de.marcphilipp.gradle.nexus
 
 import com.github.tomakehurst.wiremock.WireMockServer
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig
 import org.junit.jupiter.api.extension.AfterEachCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
@@ -30,7 +31,7 @@ class WireMockExtension : BeforeEachCallback, AfterEachCallback, ParameterResolv
     }
 
     override fun beforeEach(context: ExtensionContext) {
-        val server = getStore(context).getOrComputeIfAbsent("server", { WireMockServer() }, WireMockServer::class.java)
+        val server = getStore(context).getOrComputeIfAbsent("server", { WireMockServer(wireMockConfig().dynamicPort()) }, WireMockServer::class.java)
         server.start()
     }
 
