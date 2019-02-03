@@ -68,9 +68,12 @@ class NexusPublishPluginTests {
     private val pluginClasspathAsString: String
         get() = gradleRunner.pluginClasspath.joinToString(", ") { "'${it.absolutePath.replace('\\', '/')}'" }
 
+    @TempDir
+    lateinit var projectDir: Path
+
     @ParameterizedTest
     @MethodSource("gradleVersionAndSettings")
-    fun `publishToNexus depends on correct tasks`(gradleVersion: String, extraSettings: String, @TempDir projectDir: Path) {
+    fun `publishToNexus depends on correct tasks`(gradleVersion: String, extraSettings: String) {
         projectDir.resolve("settings.gradle").write("""
             rootProject.name = 'sample'
             $extraSettings
@@ -108,7 +111,7 @@ class NexusPublishPluginTests {
 
     @ParameterizedTest
     @MethodSource("gradleVersionAndSettings")
-    fun `publishes to Nexus`(gradleVersion: String, extraSettings: String, @TempDir projectDir: Path, server: WireMockServer) {
+    fun `publishes to Nexus`(gradleVersion: String, extraSettings: String, server: WireMockServer) {
         projectDir.resolve("settings.gradle").write("""
             rootProject.name = 'sample'
             $extraSettings
@@ -147,7 +150,7 @@ class NexusPublishPluginTests {
 
     @ParameterizedTest
     @MethodSource("gradleVersionAndSettings")
-    fun `can be used with lazily applied Gradle Plugin Development Plugin`(gradleVersion: String, extraSettings: String, @TempDir projectDir: Path, server: WireMockServer) {
+    fun `can be used with lazily applied Gradle Plugin Development Plugin`(gradleVersion: String, extraSettings: String, server: WireMockServer) {
         projectDir.resolve("settings.gradle").write("""
             rootProject.name = 'sample'
             $extraSettings
@@ -210,7 +213,7 @@ class NexusPublishPluginTests {
 
     @ParameterizedTest
     @MethodSource("gradleVersionAndSettings")
-    fun `publishes snapshots`(gradleVersion: String, extraSettings: String, @TempDir projectDir: Path, server: WireMockServer) {
+    fun `publishes snapshots`(gradleVersion: String, extraSettings: String, server: WireMockServer) {
         projectDir.resolve("settings.gradle").write("""
             rootProject.name = 'sample'
             $extraSettings
@@ -249,7 +252,7 @@ class NexusPublishPluginTests {
 
     @ParameterizedTest
     @MethodSource("gradleVersionAndSettings")
-    fun `creates single staging repository per server url`(gradleVersion: String, extraSettings: String, @TempDir projectDir: Path, server: WireMockServer) {
+    fun `creates single staging repository per server url`(gradleVersion: String, extraSettings: String, server: WireMockServer) {
         projectDir.resolve("settings.gradle").write("""
             rootProject.name = 'sample'
             $extraSettings
@@ -306,7 +309,7 @@ class NexusPublishPluginTests {
 
     @ParameterizedTest
     @MethodSource("gradleVersionAndSettings")
-    fun `configures staging repository id in staging plugin`(gradleVersion: String, extraSettings: String, @TempDir projectDir: Path, server: WireMockServer) {
+    fun `configures staging repository id in staging plugin`(gradleVersion: String, extraSettings: String, server: WireMockServer) {
         projectDir.resolve("settings.gradle").write("""
             rootProject.name = 'sample'
             $extraSettings
@@ -360,7 +363,7 @@ class NexusPublishPluginTests {
 
     @ParameterizedTest
     @MethodSource("gradleVersionAndSettings")
-    fun `warns about too old staging plugin`(gradleVersion: String, extraSettings: String, @TempDir projectDir: Path, server: WireMockServer) {
+    fun `warns about too old staging plugin`(gradleVersion: String, extraSettings: String, server: WireMockServer) {
         projectDir.resolve("settings.gradle").write("""
             rootProject.name = 'sample'
             $extraSettings
