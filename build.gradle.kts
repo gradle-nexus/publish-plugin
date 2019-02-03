@@ -1,4 +1,5 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
     `kotlin-dsl`
     `maven-publish`
@@ -6,14 +7,14 @@ plugins {
     id("com.gradle.plugin-publish") version "0.10.1"
     id("com.diffplug.gradle.spotless") version "3.17.0"
     id("com.github.johnrengelman.shadow") version "4.0.4"
-    id("io.freefair.lombok") version "3.1.0"
     id("org.jetbrains.gradle.plugin.idea-ext")
     id("com.github.ben-manes.versions") version "0.20.0"
+    id("org.jetbrains.dokka") version "0.9.17"
 }
 
 buildScan {
-    setTermsOfServiceUrl("https://gradle.com/terms-of-service")
-    setTermsOfServiceAgree("yes")
+    termsOfServiceUrl = "https://gradle.com/terms-of-service"
+    termsOfServiceAgree = "yes"
 }
 
 group = "de.marcphilipp.gradle"
@@ -44,20 +45,8 @@ repositories {
     mavenCentral()
 }
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
-}
-tasks.named<JavaCompile>("compileTestJava") {
-    sourceCompatibility = "11"
-    targetCompatibility = "11"
-}
-
 val licenseHeaderFile = file("gradle/license-header.txt")
 spotless {
-    java {
-        licenseHeaderFile(licenseHeaderFile)
-    }
     kotlin {
         licenseHeaderFile(licenseHeaderFile)
     }
@@ -80,16 +69,12 @@ idea {
 }
 
 val shadowed by configurations.creating
-sourceSets["main"].apply {
-    compileClasspath = files(compileClasspath, shadowed)
-}
-sourceSets["test"].apply {
-    compileClasspath = files(compileClasspath, shadowed)
-    runtimeClasspath = files(runtimeClasspath, shadowed)
-}
-
 configurations {
-    "testImplementation" {
+    compileOnly {
+        extendsFrom(shadowed)
+    }
+    testImplementation {
+        extendsFrom(shadowed)
         exclude(group = "junit", module = "junit")
     }
 }
@@ -98,58 +83,65 @@ dependencies {
     shadowed("com.squareup.retrofit2:retrofit:2.5.0")
     shadowed("com.squareup.retrofit2:converter-gson:2.5.0")
 
-    compileOnly("io.codearte.gradle.nexus:gradle-nexus-staging-plugin:0.20.0")
-    testImplementation("io.codearte.gradle.nexus:gradle-nexus-staging-plugin:0.20.0")
+    val nexusStagingPlugin = create("io.codearte.gradle.nexus:gradle-nexus-staging-plugin:0.20.0")
+    compileOnly(nexusStagingPlugin)
+    testImplementation(nexusStagingPlugin)
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.4.0-RC2")
-    testImplementation("com.github.tomakehurst:wiremock:2.19.0")
+    testImplementation("com.github.tomakehurst:wiremock:2.21.0")
     testImplementation("org.assertj:assertj-core:3.11.1")
 }
 
-val shadowJar by tasks.getting(ShadowJar::class) {
-    classifier = ""
-    configurations = listOf(shadowed)
-    exclude("META-INF/maven/**")
-    listOf("retrofit2", "okhttp3", "okio", "com").forEach {
-        relocate(it, "${project.group}.nexus.shadow.$it")
-    }
-}
-
-val pluginUnderTestMetadata by tasks.existing(PluginUnderTestMetadata::class) {
-    pluginClasspath.setFrom(shadowJar.archivePath)
-}
-
 tasks {
-    "jar" {
+    withType<KotlinCompile>().configureEach {
+        kotlinOptions.jvmTarget = "1.8"
+    }
+    shadowJar {
+        archiveClassifier.set("")
+        configurations = listOf(shadowed)
+        exclude("META-INF/maven/**")
+        listOf("retrofit2", "okhttp3", "okio", "com").forEach {
+            relocate(it, "${project.group}.nexus.shadow.$it")
+        }
+    }
+    jar {
         enabled = false
         dependsOn(shadowJar)
     }
-    withType<Test> {
-        useJUnitPlatform()
+    pluginUnderTestMetadata {
+        pluginClasspath.from.clear()
+        pluginClasspath.from(shadowJar)
+    }
+    test {
         dependsOn(shadowJar)
+        useJUnitPlatform()
+        maxParallelForks = 8
+    }
+    dokka {
+        outputFormat = "javadoc"
+        outputDirectory = "$buildDir/javadoc"
+        reportUndocumented = false
+        jdkVersion = 8
     }
 }
 
 val sourcesJar by tasks.creating(Jar::class) {
-    classifier = "sources"
-    from(sourceSets["main"].allSource)
-}
-
-val javadoc by tasks.existing(Javadoc::class) {
-    classpath = sourceSets["main"].compileClasspath
+    archiveClassifier.set("sources")
+    from(sourceSets.main.map { it.allSource })
 }
 
 val javadocJar by tasks.creating(Jar::class) {
-    classifier = "javadoc"
-    from(javadoc)
+    archiveClassifier.set("javadoc")
+    from(tasks.dokka)
 }
 
 // used by plugin-publish plugin
-configurations.archives.artifacts.clear()
+val archives by configurations.getting
+archives.artifacts.clear()
 artifacts {
-    add("archives", shadowJar)
-    add("archives", sourcesJar)
-    add("archives", javadocJar)
+    add(archives.name, tasks.shadowJar)
+    add(archives.name, sourcesJar)
+    add(archives.name, javadocJar)
 }
 
 publishing {

@@ -71,11 +71,11 @@ class NexusPublishPluginTests {
     @ParameterizedTest
     @MethodSource("gradleVersionAndSettings")
     fun `publishToNexus depends on correct tasks`(gradleVersion: String, extraSettings: String, @TempDir projectDir: Path) {
-        Files.writeString(projectDir.resolve("settings.gradle"), """
+        projectDir.resolve("settings.gradle").write("""
             rootProject.name = 'sample'
             $extraSettings
         """)
-        Files.writeString(projectDir.resolve("build.gradle"), """
+        projectDir.resolve("build.gradle").write("""
             plugins {
                 id('java-library')
                 id('de.marcphilipp.nexus-publish')
@@ -109,11 +109,11 @@ class NexusPublishPluginTests {
     @ParameterizedTest
     @MethodSource("gradleVersionAndSettings")
     fun `publishes to Nexus`(gradleVersion: String, extraSettings: String, @TempDir projectDir: Path, server: WireMockServer) {
-        Files.writeString(projectDir.resolve("settings.gradle"), """
+        projectDir.resolve("settings.gradle").write("""
             rootProject.name = 'sample'
             $extraSettings
         """)
-        Files.writeString(projectDir.resolve("build.gradle"), """
+        projectDir.resolve("build.gradle").write("""
             plugins {
                 id('java-library')
                 id('de.marcphilipp.nexus-publish')
@@ -148,13 +148,13 @@ class NexusPublishPluginTests {
     @ParameterizedTest
     @MethodSource("gradleVersionAndSettings")
     fun `can be used with lazily applied Gradle Plugin Development Plugin`(gradleVersion: String, extraSettings: String, @TempDir projectDir: Path, server: WireMockServer) {
-        Files.writeString(projectDir.resolve("settings.gradle"), """
+        projectDir.resolve("settings.gradle").write("""
             rootProject.name = 'sample'
             $extraSettings
             include 'gradle-plugin'
         """)
 
-        Files.writeString(projectDir.resolve("build.gradle"), """
+        projectDir.resolve("build.gradle").write("""
             buildscript {
                 dependencies {
                     classpath files($pluginClasspathAsString)
@@ -174,7 +174,7 @@ class NexusPublishPluginTests {
         """)
 
         val pluginDir = Files.createDirectories(projectDir.resolve("gradle-plugin"))
-        Files.writeString(pluginDir.resolve("build.gradle"), """
+        pluginDir.resolve("build.gradle").write("""
             plugins {
                 id('maven-publish')
                 id('java-gradle-plugin')
@@ -191,7 +191,7 @@ class NexusPublishPluginTests {
             version = '0.0.1'
         """)
         val srcDir = Files.createDirectories(pluginDir.resolve("src/main/java/org/example/"))
-        Files.writeString(srcDir.resolve("FooPlugin.java"), """
+        srcDir.resolve("FooPlugin.java").write("""
             import org.gradle.api.*;
             public class FooPlugin implements Plugin<Project> {
                 public void apply(Project p) {}
@@ -211,12 +211,12 @@ class NexusPublishPluginTests {
     @ParameterizedTest
     @MethodSource("gradleVersionAndSettings")
     fun `publishes snapshots`(gradleVersion: String, extraSettings: String, @TempDir projectDir: Path, server: WireMockServer) {
-        Files.writeString(projectDir.resolve("settings.gradle"), """
+        projectDir.resolve("settings.gradle").write("""
             rootProject.name = 'sample'
             $extraSettings
         """)
 
-        Files.writeString(projectDir.resolve("build.gradle"), """
+        projectDir.resolve("build.gradle").write("""
             plugins {
                 id('java-library')
                 id('de.marcphilipp.nexus-publish')
@@ -250,13 +250,13 @@ class NexusPublishPluginTests {
     @ParameterizedTest
     @MethodSource("gradleVersionAndSettings")
     fun `creates single staging repository per server url`(gradleVersion: String, extraSettings: String, @TempDir projectDir: Path, server: WireMockServer) {
-        Files.writeString(projectDir.resolve("settings.gradle"), """
+        projectDir.resolve("settings.gradle").write("""
             rootProject.name = 'sample'
             $extraSettings
             include 'a1', 'a2', 'b'
         """)
 
-        Files.writeString(projectDir.resolve("build.gradle"), """
+        projectDir.resolve("build.gradle").write("""
             plugins {
                 id('de.marcphilipp.nexus-publish') apply false
             }
@@ -307,11 +307,11 @@ class NexusPublishPluginTests {
     @ParameterizedTest
     @MethodSource("gradleVersionAndSettings")
     fun `configures staging repository id in staging plugin`(gradleVersion: String, extraSettings: String, @TempDir projectDir: Path, server: WireMockServer) {
-        Files.writeString(projectDir.resolve("settings.gradle"), """
+        projectDir.resolve("settings.gradle").write("""
             rootProject.name = 'sample'
             $extraSettings
         """)
-        Files.writeString(projectDir.resolve("build.gradle"), """
+        projectDir.resolve("build.gradle").write("""
             buildscript {
                 repositories {
                     gradlePluginPortal()
@@ -361,11 +361,11 @@ class NexusPublishPluginTests {
     @ParameterizedTest
     @MethodSource("gradleVersionAndSettings")
     fun `warns about too old staging plugin`(gradleVersion: String, extraSettings: String, @TempDir projectDir: Path, server: WireMockServer) {
-        Files.writeString(projectDir.resolve("settings.gradle"), """
+        projectDir.resolve("settings.gradle").write("""
             rootProject.name = 'sample'
             $extraSettings
         """)
-        Files.writeString(projectDir.resolve("build.gradle"), """
+        projectDir.resolve("build.gradle").write("""
             buildscript {
                 repositories {
                     gradlePluginPortal()
