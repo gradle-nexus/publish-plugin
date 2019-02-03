@@ -463,5 +463,4 @@ class NexusPublishPluginTests {
         server.verify(postRequestedFor(urlMatching("/staging/bulk/close"))
                 .withRequestBody(matchingJsonPath("\$.data[?(@.stagedRepositoryIds[0] == '$STAGED_REPOSITORY_ID')]")))
     }
-
 }

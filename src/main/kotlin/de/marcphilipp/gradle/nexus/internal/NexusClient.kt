@@ -114,7 +114,6 @@ class NexusClient(private val baseUrl: URI, username: String?, password: String?
             } catch (e: IOException) {
                 throw UncheckedIOException("Failed to read body of error response", e)
             }
-
         }
         return RuntimeException(message)
     }
@@ -128,7 +127,6 @@ class NexusClient(private val baseUrl: URI, username: String?, password: String?
         @Headers("Content-Type: application/json")
         @POST("staging/profiles/{stagingProfileId}/start")
         fun startStagingRepo(@Path("stagingProfileId") stagingProfileId: String, @Body description: Description): Call<StagingRepository>
-
     }
 
     data class StagingProfile(var id: String, var name: String)
@@ -164,5 +162,4 @@ class NexusClient(private val baseUrl: URI, username: String?, password: String?
             }.nullSafe()
         }
     }
-
 }

@@ -112,5 +112,4 @@ constructor(project: Project, extension: NexusPublishExtension, private val serv
 
         private val logger = LoggerFactory.getLogger(InitializeNexusStagingRepository::class.java)
     }
-
 }

@@ -48,6 +48,7 @@ repositories {
 val licenseHeaderFile = file("gradle/license-header.txt")
 spotless {
     kotlin {
+        ktlint()
         licenseHeaderFile(licenseHeaderFile)
     }
 }

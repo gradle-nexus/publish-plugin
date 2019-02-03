@@ -97,5 +97,4 @@ class StagingPluginIntegrationTest {
         (project.getTasksByName("initializeNexusStagingRepository", false).first() as InitializeNexusStagingRepository).createStagingRepoAndReplacePublishingRepoUrl()
         assertThat(theirExtension.stagingRepositoryId.orNull).isEqualTo(STAGED_REPOSITORY_ID)
     }
-
 }

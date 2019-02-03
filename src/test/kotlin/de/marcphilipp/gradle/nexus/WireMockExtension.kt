@@ -54,5 +54,4 @@ class WireMockExtension : BeforeEachCallback, AfterEachCallback, ParameterResolv
     private fun getStore(extensionContext: ExtensionContext): ExtensionContext.Store {
         return extensionContext.getStore(NAMESPACE)
     }
-
 }
