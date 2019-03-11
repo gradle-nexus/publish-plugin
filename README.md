@@ -16,10 +16,12 @@ The plugin does the following:
 - make all publishing tasks for the `nexus` repository depend on the `initializeNexusStagingRepository` task.
 - create a `publishToNexus` lifecycle task that depends on all publishing tasks for the `nexus` repository.
 
+### Groovy DSL
+
 ```gradle
 plugins {
-    id("java-library")
-    id("de.marcphilipp.nexus-publish") version "0.2.0"
+    id "java-library"
+    id "de.marcphilipp.nexus-publish" version "0.2.0"
 }
 
 publishing {
@@ -38,13 +40,37 @@ nexusPublishing {
 }
 ```
 
-If the [`io.codearte.nexus-staging` plugin](https://github.com/Codearte/gradle-nexus-staging-plugin) is applied on the root project, the following default values change:
-```gradle
+### Kotlin DSL
+
+```kotlin
+plugins {
+    `java-library`
+    id("de.marcphilipp.nexus-publish") version "0.2.0"
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from(components["java"])
+        }
+    }
+}
+
 nexusPublishing {
-    packageGroup = rootProject.nexusStaging.packageGroup
-    stagingProfileId = rootProject.nexusStaging.stagingProfileId
-    username = rootProject.nexusStaging.username
-    password = rootProject.nexusStaging.password
+    serverUrl.set(uri("https://your-server.com/staging")) // defaults to https://oss.sonatype.org/service/local/
+    snapshotRepositoryUrl.set(uri("https://your-server.com/snapshots")) // defaults to https://oss.sonatype.org/content/repositories/snapshots/
+    username.set("your-username") // defaults to project.properties["nexusUsername"]
+    password.set("your-password") // defaults to project.properties["nexusPassword"]
 }
 ```
+
+If the [`io.codearte.nexus-staging` plugin](https://github.com/Codearte/gradle-nexus-staging-plugin) is applied on the root project, the following default values change:
+
+| Property            | Default value                                |
+| ------------------- | -------------------------------------------- |
+| `packageGroup`      | `rootProject.nexusStaging.packageGroup`      |
+| `stagingProfileId`  | `rootProject.nexusStaging.stagingProfileId`  |
+| `username`          | `rootProject.nexusStaging.username`          |
+| `password`          | `rootProject.nexusStaging.password`          |
+
 This reuses the values specified for the `nexusStaging` block, so you don't have to specify them twice.
