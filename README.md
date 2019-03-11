@@ -26,7 +26,7 @@ plugins {
 
 publishing {
     publications {
-        create<MavenPublication>("mavenJava") {
+        mavenJava(MavenPublication) {
             from(components.java)
         }
     }
@@ -50,7 +50,7 @@ plugins {
 
 publishing {
     publications {
-        mavenJava(MavenPublication) {
+        create<MavenPublication>("mavenJava") {
             from(components["java"])
         }
     }
