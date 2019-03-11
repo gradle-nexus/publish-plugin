@@ -19,7 +19,7 @@ The plugin does the following:
 ```gradle
 plugins {
     id("java-library")
-    id("de.marcphilipp.nexus-publish") version "0.0.1-SNAPSHOT"
+    id("de.marcphilipp.nexus-publish") version "0.2.0"
 }
 
 publishing {
