@@ -40,7 +40,8 @@ import java.util.concurrent.ConcurrentHashMap
 class NexusPublishPlugin : Plugin<Project> {
 
     companion object {
-        private const val PUBLISH_TO_NEXUS_LIFECYCLE_TASK_NAME = "publishToNexus"
+        const val INITIALIZE_NEXUS_STAGING_REPOSITORY_TASK_NAME = "initializeNexusStagingRepository"
+        const val PUBLISH_TO_NEXUS_LIFECYCLE_TASK_NAME = "publishToNexus"
         private val serverUrlToStagingRepoUrl = ConcurrentHashMap<URI, URI>()
     }
 
@@ -59,7 +60,7 @@ class NexusPublishPlugin : Plugin<Project> {
             group = PublishingPlugin.PUBLISH_TASK_GROUP
         }
         val initializeTask = project.tasks
-                .register<InitializeNexusStagingRepository>(InitializeNexusStagingRepository.NAME, project, extension, serverUrlToStagingRepoUrl)
+                .register<InitializeNexusStagingRepository>(INITIALIZE_NEXUS_STAGING_REPOSITORY_TASK_NAME, project, extension, serverUrlToStagingRepoUrl)
 
         project.afterEvaluate {
             val nexusRepository = addMavenRepository(project, extension)

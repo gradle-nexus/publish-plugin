@@ -36,10 +36,6 @@ import javax.inject.Inject
 open class InitializeNexusStagingRepository @Inject
 constructor(project: Project, extension: NexusPublishExtension, private val serverUrlToStagingRepoUrl: MutableMap<URI, URI>) : DefaultTask() {
 
-    companion object {
-        internal const val NAME = "initializeNexusStagingRepository"
-    }
-
     @get:Input
     val serverUrl: Property<URI> = project.objects.property()
 
