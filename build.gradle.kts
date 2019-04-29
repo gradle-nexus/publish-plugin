@@ -89,7 +89,7 @@ dependencies {
     compileOnly(nexusStagingPlugin)
     testImplementation(nexusStagingPlugin)
 
-    testImplementation("org.junit.jupiter:junit-jupiter:5.4.0-RC2")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.4.2")
     testImplementation("com.github.tomakehurst:wiremock:2.21.0")
     testImplementation("org.assertj:assertj-core:3.11.1")
 }
