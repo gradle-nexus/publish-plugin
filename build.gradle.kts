@@ -19,7 +19,7 @@ buildScan {
 }
 
 group = "de.marcphilipp.gradle"
-version = "0.2.1-SNAPSHOT"
+version = "0.3.0-SNAPSHOT"
 
 val readableName = "Nexus Publish Plugin"
 description = "Gradle Plugin for publishing to Nexus repositories"
