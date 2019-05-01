@@ -16,15 +16,6 @@
 
 package de.marcphilipp.gradle.nexus.internal
 
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
-import com.google.gson.JsonElement
-import com.google.gson.JsonObject
-import com.google.gson.TypeAdapter
-import com.google.gson.TypeAdapterFactory
-import com.google.gson.reflect.TypeToken
-import com.google.gson.stream.JsonReader
-import com.google.gson.stream.JsonWriter
 import okhttp3.Credentials
 import okhttp3.OkHttpClient
 import retrofit2.Call
@@ -51,20 +42,18 @@ class NexusClient(private val baseUrl: URI, username: String?, password: String?
                 .readTimeout(1, TimeUnit.MINUTES)
                 .writeTimeout(1, TimeUnit.MINUTES)
         if (username != null || password != null) {
+            val credentials = Credentials.basic(username ?: "", password ?: "")
             httpClientBuilder
                     .addInterceptor({ chain ->
                         chain.proceed(chain.request().newBuilder()
-                                .header("Authorization", Credentials.basic(username ?: "", password ?: ""))
+                                .header("Authorization", credentials)
                                 .build())
                     })
         }
-        val gson = GsonBuilder()
-                .registerTypeAdapterFactory(WrappingTypeAdapterFactory())
-                .create()
         val retrofit = Retrofit.Builder()
                 .baseUrl(baseUrl.toString())
                 .client(httpClientBuilder.build())
-                .addConverterFactory(GsonConverterFactory.create(gson))
+                .addConverterFactory(GsonConverterFactory.create())
                 .build()
         api = retrofit.create(NexusApi::class.java)
     }
@@ -76,6 +65,7 @@ class NexusClient(private val baseUrl: URI, username: String?, password: String?
                 throw failure("load staging profiles", response)
             }
             return response.body()
+                    ?.data
                     ?.filter { profile -> profile.name == packageGroup }
                     ?.map { it.id }
                     ?.firstOrNull()
@@ -86,11 +76,11 @@ class NexusClient(private val baseUrl: URI, username: String?, password: String?
 
     fun createStagingRepository(stagingProfileId: String): String {
         try {
-            val response = api.startStagingRepo(stagingProfileId, Description("publishing")).execute()
+            val response = api.startStagingRepo(stagingProfileId, Dto(Description("publishing"))).execute()
             if (!response.isSuccessful) {
                 throw failure("create staging repository", response)
             }
-            return response.body()?.stagedRepositoryId ?: throw RuntimeException("No response body")
+            return response.body()?.data?.stagedRepositoryId ?: throw RuntimeException("No response body")
         } catch (e: IOException) {
             throw UncheckedIOException(e)
         }
@@ -116,44 +106,18 @@ class NexusClient(private val baseUrl: URI, username: String?, password: String?
 
         @get:Headers("Accept: application/json")
         @get:GET("staging/profiles")
-        val stagingProfiles: Call<List<StagingProfile>>
+        val stagingProfiles: Call<Dto<List<StagingProfile>>>
 
         @Headers("Content-Type: application/json")
         @POST("staging/profiles/{stagingProfileId}/start")
-        fun startStagingRepo(@Path("stagingProfileId") stagingProfileId: String, @Body description: Description): Call<StagingRepository>
+        fun startStagingRepo(@Path("stagingProfileId") stagingProfileId: String, @Body description: Dto<Description>): Call<Dto<StagingRepository>>
     }
+
+    data class Dto<T>(var data: T)
 
     data class StagingProfile(var id: String, var name: String)
 
     data class Description(val description: String)
 
     data class StagingRepository(var stagedRepositoryId: String)
-
-    private class WrappingTypeAdapterFactory : TypeAdapterFactory {
-
-        override fun <T> create(gson: Gson, type: TypeToken<T>): TypeAdapter<T> {
-            val delegate = gson.getDelegateAdapter(this, type)
-            val elementAdapter = gson.getAdapter(JsonElement::class.java)
-            return object : TypeAdapter<T>() {
-                @Throws(IOException::class)
-                override fun write(writer: JsonWriter, value: T) {
-                    val jsonObject = JsonObject()
-                    jsonObject.add("data", delegate.toJsonTree(value))
-                    elementAdapter.write(writer, jsonObject)
-                }
-
-                @Throws(IOException::class)
-                override fun read(reader: JsonReader): T {
-                    var jsonElement = elementAdapter.read(reader)
-                    if (jsonElement.isJsonObject) {
-                        val jsonObject = jsonElement.asJsonObject
-                        if (jsonObject.has("data")) {
-                            jsonElement = jsonObject.get("data")
-                        }
-                    }
-                    return delegate.fromJsonTree(jsonElement)
-                }
-            }.nullSafe()
-        }
-    }
 }

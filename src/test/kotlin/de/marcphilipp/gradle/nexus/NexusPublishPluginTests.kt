@@ -144,6 +144,8 @@ class NexusPublishPluginTests {
         val result = runGradleBuild(gradleVersion, "publishToNexus")
 
         assertSuccess(result, ":initializeNexusStagingRepository")
+        server.verify(postRequestedFor(urlEqualTo("/staging/profiles/$STAGING_PROFILE_ID/start"))
+                .withRequestBody(matchingJsonPath("\$.data[?(@.description == 'publishing')]")))
         assertUploadedToStagingRepo(server, "/org/example/sample/0.0.1/sample-0.0.1.pom")
         assertUploadedToStagingRepo(server, "/org/example/sample/0.0.1/sample-0.0.1.jar")
     }
