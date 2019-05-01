@@ -4,12 +4,12 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     `kotlin-dsl`
     `maven-publish`
-    id("com.gradle.build-scan") version "2.1"
+    id("com.gradle.build-scan") version "2.2.1"
     id("com.gradle.plugin-publish") version "0.10.1"
-    id("com.diffplug.gradle.spotless") version "3.17.0"
-    id("com.github.johnrengelman.shadow") version "4.0.4"
+    id("com.diffplug.gradle.spotless") version "3.23.0"
+    id("com.github.johnrengelman.shadow") version "5.0.0"
     id("org.jetbrains.gradle.plugin.idea-ext")
-    id("com.github.ben-manes.versions") version "0.20.0"
+    id("com.github.ben-manes.versions") version "0.21.0"
     id("org.jetbrains.dokka") version "0.9.17"
 }
 
@@ -90,8 +90,8 @@ dependencies {
     testImplementation(nexusStagingPlugin)
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.4.2")
-    testImplementation("com.github.tomakehurst:wiremock:2.21.0")
-    testImplementation("org.assertj:assertj-core:3.11.1")
+    testImplementation("com.github.tomakehurst:wiremock:2.23.2")
+    testImplementation("org.assertj:assertj-core:3.12.2")
 }
 
 tasks {
