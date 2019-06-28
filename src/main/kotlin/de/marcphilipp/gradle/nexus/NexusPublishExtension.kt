@@ -21,6 +21,7 @@ import org.gradle.api.provider.Property
 import org.gradle.kotlin.dsl.property
 
 import java.net.URI
+import java.time.Duration
 
 @Suppress("UnstableApiUsage")
 open class NexusPublishExtension(project: Project) {
@@ -37,6 +38,7 @@ open class NexusPublishExtension(project: Project) {
     val repositoryName: Property<String> = project.objects.property()
     val packageGroup: Property<String> = project.objects.property()
     val stagingProfileId: Property<String> = project.objects.property()
+    val clientTimeout: Property<Duration> = project.objects.property()
 
     init {
         useStaging.set(project.provider { !project.version.toString().endsWith("-SNAPSHOT") })
@@ -46,5 +48,6 @@ open class NexusPublishExtension(project: Project) {
         password.set(project.provider { project.findProperty("nexusPassword") as String? })
         repositoryName.set("nexus")
         packageGroup.set(project.provider { project.group.toString() })
+        clientTimeout.set(Duration.ofMinutes(1))
     }
 }

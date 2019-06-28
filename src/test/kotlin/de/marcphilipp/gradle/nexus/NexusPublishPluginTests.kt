@@ -18,6 +18,7 @@ package de.marcphilipp.gradle.nexus
 
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.post
@@ -31,6 +32,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
+import org.gradle.testkit.runner.TaskOutcome.FAILED
 import org.gradle.testkit.runner.TaskOutcome.SKIPPED
 import org.gradle.testkit.runner.TaskOutcome.SUCCESS
 import org.junit.jupiter.api.extension.ExtendWith
@@ -408,13 +410,55 @@ class NexusPublishPluginTests {
         assertThat(result.output).contains("at least 0.20.0")
     }
 
+    @ParameterizedTest
+    @MethodSource("gradleVersionAndSettings")
+    fun `uses configured timeout`(gradleVersion: String, extraSettings: String, server: WireMockServer) {
+        projectDir.resolve("settings.gradle").write("""
+            rootProject.name = 'sample'
+            $extraSettings
+        """)
+        projectDir.resolve("build.gradle").write("""
+            import java.time.Duration
+            
+            plugins {
+                id('java-library')
+                id('de.marcphilipp.nexus-publish')
+            }
+            group = 'org.example'
+            version = '0.0.1'
+            publishing {
+                publications {
+                    mavenJava(MavenPublication) {
+                        from(components.java)
+                    }
+                }
+            }
+            nexusPublishing {
+                serverUrl = uri('${server.baseUrl()}')
+                username = 'username'
+                password = 'password'
+                clientTimeout = Duration.ofSeconds(1)
+            }
+        """)
+
+        server.stubFor(get(anyUrl()).willReturn(aResponse().withFixedDelay(5_000)))
+
+        val result = gradleRunner(gradleVersion, "initializeNexusStagingRepository").buildAndFail()
+
+        assertOutcome(result, ":initializeNexusStagingRepository", FAILED)
+        assertThat(result.output).contains("SocketTimeoutException")
+    }
+
     private fun runGradleBuild(gradleVersion: String, vararg arguments: String): BuildResult {
+        return gradleRunner(gradleVersion, *arguments).build()
+    }
+
+    private fun gradleRunner(gradleVersion: String, vararg arguments: String): GradleRunner {
         return gradleRunner
                 .withGradleVersion(gradleVersion)
                 .withProjectDir(projectDir.toFile())
                 .withArguments(*arguments)
                 .forwardOutput()
-                .build()
     }
 
     @SafeVarargs

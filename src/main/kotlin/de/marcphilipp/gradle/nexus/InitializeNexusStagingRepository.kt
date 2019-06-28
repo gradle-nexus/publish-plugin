@@ -25,11 +25,13 @@ import org.gradle.api.artifacts.repositories.MavenArtifactRepository
 import org.gradle.api.provider.Property
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
 import org.gradle.kotlin.dsl.property
 import org.gradle.kotlin.dsl.the
 import java.net.URI
+import java.time.Duration
 import javax.inject.Inject
 
 @Suppress("UnstableApiUsage")
@@ -58,6 +60,9 @@ constructor(project: Project, extension: NexusPublishExtension, private val serv
     @get:Input
     val repositoryName: Property<String> = project.objects.property()
 
+    @get:Internal
+    val clientTimeout: Property<Duration> = project.objects.property()
+
     init {
         serverUrl.set(extension.serverUrl)
         username.set(extension.username)
@@ -65,13 +70,14 @@ constructor(project: Project, extension: NexusPublishExtension, private val serv
         packageGroup.set(extension.packageGroup)
         stagingProfileId.set(extension.stagingProfileId)
         repositoryName.set(extension.repositoryName)
+        clientTimeout.set(extension.clientTimeout)
         onlyIf { extension.useStaging.getOrElse(false) }
     }
 
     @TaskAction
     fun createStagingRepoAndReplacePublishingRepoUrl() {
         val url = serverUrlToStagingRepoUrl.computeIfAbsent(serverUrl.get()) { serverUrl ->
-            val client = NexusClient(serverUrl, username.orNull, password.orNull)
+            val client = NexusClient(serverUrl, username.orNull, password.orNull, clientTimeout.getOrElse(Duration.ZERO))
             val stagingProfileId = determineStagingProfileId(client)
             logger.info("Creating staging repository for stagingProfileId '{}'", stagingProfileId)
             val stagingRepositoryId = client.createStagingRepository(stagingProfileId)

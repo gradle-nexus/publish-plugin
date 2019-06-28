@@ -31,24 +31,25 @@ import retrofit2.http.Path
 import java.io.IOException
 import java.io.UncheckedIOException
 import java.net.URI
+import java.time.Duration
 import java.util.concurrent.TimeUnit
 
-class NexusClient(private val baseUrl: URI, username: String?, password: String?) {
+class NexusClient(private val baseUrl: URI, username: String?, password: String?, timeout: Duration) {
     private val api: NexusApi
 
     init {
         val httpClientBuilder = OkHttpClient.Builder()
                 .connectTimeout(1, TimeUnit.MINUTES)
-                .readTimeout(1, TimeUnit.MINUTES)
-                .writeTimeout(1, TimeUnit.MINUTES)
+                .readTimeout(timeout.toMillis(), TimeUnit.MILLISECONDS)
+                .writeTimeout(timeout.toMillis(), TimeUnit.MILLISECONDS)
         if (username != null || password != null) {
             val credentials = Credentials.basic(username ?: "", password ?: "")
             httpClientBuilder
-                    .addInterceptor({ chain ->
+                    .addInterceptor { chain ->
                         chain.proceed(chain.request().newBuilder()
                                 .header("Authorization", credentials)
                                 .build())
-                    })
+                    }
         }
         val retrofit = Retrofit.Builder()
                 .baseUrl(baseUrl.toString())
