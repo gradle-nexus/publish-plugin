@@ -67,9 +67,15 @@ class NexusClient(private val baseUrl: URI, username: String?, password: String?
             }
             return response.body()
                     ?.data
-                    ?.filter { profile -> profile.name == packageGroup }
-                    ?.map { it.id }
-                    ?.firstOrNull()
+                    ?.filter { profile ->
+                        // profile.name either matches exactly
+                        // or it is a prefix of a packageGroup
+                        packageGroup.startsWith(profile.name) &&
+                                (packageGroup.length == profile.name.length ||
+                                        packageGroup[profile.name.length] == '.')
+                    }
+                    ?.maxBy { it.name.length }
+                    ?.id
         } catch (e: IOException) {
             throw UncheckedIOException(e)
         }

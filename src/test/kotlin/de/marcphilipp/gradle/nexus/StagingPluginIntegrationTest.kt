@@ -18,6 +18,7 @@ package de.marcphilipp.gradle.nexus
 
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.google.gson.Gson
@@ -98,5 +99,32 @@ class StagingPluginIntegrationTest {
         val task = project.getTasksByName("initializeNexusStagingRepository", false).first() as InitializeNexusStagingRepository
         task.createStagingRepoAndReplacePublishingRepoUrl()
         assertThat(theirExtension.stagingRepositoryId.orNull).isEqualTo(STAGED_REPOSITORY_ID)
+    }
+
+    @Test
+    fun `stage profile for subgroup is identified`(server: WireMockServer) {
+        val ourExtension = project.the<NexusPublishExtension>()
+        val theirExtension = project.the<NexusStagingExtension>()
+
+        ourExtension.serverUrl.set(URI.create(server.baseUrl()))
+        theirExtension.packageGroup = "com.test.abcd"
+
+        server.stubFor(get(urlEqualTo("/staging/profiles"))
+                .willReturn(aResponse().withBody(gson.toJson(
+                        mapOf("data" to listOf(
+                                // zzz is lexically greater than STAGING_PROFILE_ID
+                                mapOf("id" to "zzz", "name" to "com"),
+                                mapOf("id" to STAGING_PROFILE_ID, "name" to "com.test"),
+                                mapOf("id" to "com.test.abcdefg", "name" to "com.test.abcdefg")
+                        ))))))
+
+        server.stubFor(post(urlEqualTo("/staging/profiles/$STAGING_PROFILE_ID/start"))
+                .willReturn(aResponse().withBody(gson.toJson(mapOf("data" to mapOf("stagedRepositoryId" to STAGED_REPOSITORY_ID))))))
+
+        val task = project.getTasksByName("initializeNexusStagingRepository", false).first() as InitializeNexusStagingRepository
+        task.createStagingRepoAndReplacePublishingRepoUrl()
+        assertThat(theirExtension.stagingRepositoryId.orNull)
+                .withFailMessage("Requested package was com.test.abcd, and the longest matching prefix is com.test")
+                .isEqualTo(STAGED_REPOSITORY_ID)
     }
 }
