@@ -20,7 +20,8 @@ subprojects {
     }
 
     configure<NexusPublishExtension> {
-        username.set(project.properties["ossrhUsername"] as String)
-        password.set(project.properties["ossrhPassword"] as String)
+        repositories {
+            sonatype()
+        }
     }
 }

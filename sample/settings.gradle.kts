@@ -6,7 +6,7 @@ pluginManagement {
     resolutionStrategy {
         eachPlugin {
             if (requested.id.id == "de.marcphilipp.nexus-publish") {
-                useModule("com.github.marcphilipp.nexus-publish-plugin:de.marcphilipp.nexus-publish.gradle.plugin:a25220b403")
+                useModule("com.github.marcphilipp.nexus-publish-plugin:de.marcphilipp.nexus-publish.gradle.plugin:master-SNAPSHOT")
             }
         }
     }
