@@ -11,6 +11,7 @@ plugins {
     id("org.jetbrains.gradle.plugin.idea-ext")
     id("com.github.ben-manes.versions") version "0.21.0"
     id("org.jetbrains.dokka") version "0.9.17"
+    id("org.ajoberstar.stutter") version "0.5.0"
 }
 
 buildScan {
@@ -94,6 +95,28 @@ dependencies {
     testImplementation("org.assertj:assertj-core:3.12.2")
 }
 
+stutter {
+    java(8) {
+        compatibleRange("4.10")
+    }
+}
+
+configurations {
+    compatTestCompileClasspath {
+        extendsFrom(testCompileClasspath.get())
+    }
+    compatTestRuntimeClasspath {
+        extendsFrom(testRuntimeClasspath.get())
+    }
+}
+
+sourceSets {
+    compatTest {
+        compileClasspath += sourceSets["test"].output
+        runtimeClasspath += sourceSets["test"].output
+    }
+}
+
 tasks {
     withType<KotlinCompile>().configureEach {
         kotlinOptions.jvmTarget = "1.8"
@@ -114,7 +137,7 @@ tasks {
         pluginClasspath.from.clear()
         pluginClasspath.from(shadowJar)
     }
-    test {
+    withType<Test>().configureEach {
         dependsOn(shadowJar)
         useJUnitPlatform()
         maxParallelForks = 8
