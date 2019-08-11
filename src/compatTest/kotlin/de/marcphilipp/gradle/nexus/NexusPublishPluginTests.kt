@@ -38,10 +38,12 @@ import org.gradle.testkit.runner.TaskOutcome.SUCCESS
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.io.TempDir
+import ru.lanwen.wiremock.ext.WiremockResolver
+import ru.lanwen.wiremock.ext.WiremockResolver.Wiremock
 import java.nio.file.Files
 import java.nio.file.Path
 
-@ExtendWith(WireMockExtension::class)
+@ExtendWith(WiremockResolver::class)
 class NexusPublishPluginTests {
 
     companion object {
@@ -105,7 +107,7 @@ class NexusPublishPluginTests {
     }
 
     @Test
-    fun `publishes to Nexus`(server: WireMockServer) {
+    fun `publishes to Nexus`(@Wiremock server: WireMockServer) {
         projectDir.resolve("settings.gradle").write("""
             rootProject.name = 'sample'
         """)
@@ -152,7 +154,7 @@ class NexusPublishPluginTests {
     }
 
     @Test
-    fun `can be used with lazily applied Gradle Plugin Development Plugin`(server: WireMockServer) {
+    fun `can be used with lazily applied Gradle Plugin Development Plugin`(@Wiremock server: WireMockServer) {
         projectDir.resolve("settings.gradle").write("""
             rootProject.name = 'sample'
             include 'gradle-plugin'
@@ -217,7 +219,7 @@ class NexusPublishPluginTests {
     }
 
     @Test
-    fun `publishes snapshots`(server: WireMockServer) {
+    fun `publishes snapshots`(@Wiremock server: WireMockServer) {
         projectDir.resolve("settings.gradle").write("""
             rootProject.name = 'sample'
         """)
@@ -258,7 +260,7 @@ class NexusPublishPluginTests {
     }
 
     @Test
-    fun `creates single staging repository per server url`(server: WireMockServer) {
+    fun `creates single staging repository per server url`(@Wiremock server: WireMockServer) {
         projectDir.resolve("settings.gradle").write("""
             rootProject.name = 'sample'
             include 'a1', 'a2', 'b'
@@ -321,7 +323,7 @@ class NexusPublishPluginTests {
     }
 
     @Test
-    fun `configures staging repository id in staging plugin`(server: WireMockServer) {
+    fun `configures staging repository id in staging plugin`(@Wiremock server: WireMockServer) {
         projectDir.resolve("settings.gradle").write("""
             rootProject.name = 'sample'
         """)
@@ -377,7 +379,7 @@ class NexusPublishPluginTests {
     }
 
     @Test
-    fun `warns about too old staging plugin`(server: WireMockServer) {
+    fun `warns about too old staging plugin`(@Wiremock server: WireMockServer) {
         projectDir.resolve("settings.gradle").write("""
             rootProject.name = 'sample'
         """)
@@ -426,7 +428,7 @@ class NexusPublishPluginTests {
     }
 
     @Test
-    fun `uses configured timeout`(server: WireMockServer) {
+    fun `uses configured timeout`(@Wiremock server: WireMockServer) {
         projectDir.resolve("settings.gradle").write("""
             rootProject.name = 'sample'
         """)

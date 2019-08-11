@@ -91,7 +91,8 @@ dependencies {
     testImplementation(nexusStagingPlugin)
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.4.2")
-    testImplementation("com.github.tomakehurst:wiremock:2.23.2")
+    testImplementation("com.github.tomakehurst:wiremock:2.24.1")
+    testImplementation("ru.lanwen.wiremock:wiremock-junit5:1.3.0")
     testImplementation("org.assertj:assertj-core:3.12.2")
 }
 

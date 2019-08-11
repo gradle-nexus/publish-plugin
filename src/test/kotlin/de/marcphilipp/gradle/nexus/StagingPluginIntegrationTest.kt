@@ -33,9 +33,11 @@ import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import ru.lanwen.wiremock.ext.WiremockResolver
+import ru.lanwen.wiremock.ext.WiremockResolver.Wiremock
 import java.net.URI
 
-@ExtendWith(WireMockExtension::class)
+@ExtendWith(WiremockResolver::class)
 class StagingPluginIntegrationTest {
 
     companion object {
@@ -92,7 +94,7 @@ class StagingPluginIntegrationTest {
     }
 
     @Test
-    fun `staged repository id is forwarded`(server: WireMockServer) {
+    fun `staged repository id is forwarded`(@Wiremock server: WireMockServer) {
         ourExtension.repositories.create("myRepo").apply {
             nexusUrl.set(URI.create(server.baseUrl()))
             stagingProfileId.set(STAGING_PROFILE_ID)
@@ -107,7 +109,7 @@ class StagingPluginIntegrationTest {
     }
 
     @Test
-    fun `stage profile for subgroup is identified`(server: WireMockServer) {
+    fun `stage profile for subgroup is identified`(@Wiremock server: WireMockServer) {
         ourExtension.repositories.create("myRepo").apply {
             nexusUrl.set(URI.create(server.baseUrl()))
         }
