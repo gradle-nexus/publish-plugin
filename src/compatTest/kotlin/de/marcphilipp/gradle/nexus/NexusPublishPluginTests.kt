@@ -148,7 +148,7 @@ class NexusPublishPluginTests {
         assertSuccess(result, ":initializeMyNexusStagingRepository")
         assertNotConsidered(result, ":initializeSomeOtherNexusStagingRepository")
         server.verify(postRequestedFor(urlEqualTo("/staging/profiles/$STAGING_PROFILE_ID/start"))
-                .withRequestBody(matchingJsonPath("\$.data[?(@.description == 'publishing')]")))
+                .withRequestBody(matchingJsonPath("\$.data[?(@.description == 'Created by de.marcphilipp.nexus-publish Gradle plugin')]")))
         assertUploadedToStagingRepo(server, "/org/example/sample/0.0.1/sample-0.0.1.pom")
         assertUploadedToStagingRepo(server, "/org/example/sample/0.0.1/sample-0.0.1.jar")
     }

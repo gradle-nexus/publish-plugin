@@ -83,7 +83,7 @@ class NexusClient(private val baseUrl: URI, username: String?, password: String?
 
     fun createStagingRepository(stagingProfileId: String): String {
         try {
-            val response = api.startStagingRepo(stagingProfileId, Dto(Description("publishing"))).execute()
+            val response = api.startStagingRepo(stagingProfileId, Dto(Description("Created by de.marcphilipp.nexus-publish Gradle plugin"))).execute()
             if (!response.isSuccessful) {
                 throw failure("create staging repository", response)
             }
