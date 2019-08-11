@@ -16,11 +16,13 @@
 
 package de.marcphilipp.gradle.nexus
 
+import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.provider.Property
+import org.gradle.kotlin.dsl.container
+import org.gradle.kotlin.dsl.newInstance
 import org.gradle.kotlin.dsl.property
 
-import java.net.URI
 import java.time.Duration
 
 @Suppress("UnstableApiUsage")
@@ -30,24 +32,21 @@ open class NexusPublishExtension(project: Project) {
         internal const val NAME = "nexusPublishing"
     }
 
-    val useStaging: Property<Boolean> = project.objects.property()
-    val serverUrl: Property<URI> = project.objects.property()
-    val snapshotRepositoryUrl: Property<URI> = project.objects.property()
-    val username: Property<String> = project.objects.property()
-    val password: Property<String> = project.objects.property()
-    val repositoryName: Property<String> = project.objects.property()
-    val packageGroup: Property<String> = project.objects.property()
-    val stagingProfileId: Property<String> = project.objects.property()
-    val clientTimeout: Property<Duration> = project.objects.property()
-
-    init {
-        useStaging.set(project.provider { !project.version.toString().endsWith("-SNAPSHOT") })
-        serverUrl.set(URI.create("https://oss.sonatype.org/service/local/"))
-        snapshotRepositoryUrl.set(URI.create("https://oss.sonatype.org/content/repositories/snapshots/"))
-        username.set(project.provider { project.findProperty("nexusUsername") as String? })
-        password.set(project.provider { project.findProperty("nexusPassword") as String? })
-        repositoryName.set("nexus")
-        packageGroup.set(project.provider { project.group.toString() })
-        clientTimeout.set(Duration.ofMinutes(1))
+    val useStaging: Property<Boolean> = project.objects.property<Boolean>().apply {
+        set(project.provider { !project.version.toString().endsWith("-SNAPSHOT") })
     }
+
+    val packageGroup: Property<String> = project.objects.property<String>().apply {
+        set(project.provider { project.group.toString() })
+    }
+
+    val clientTimeout: Property<Duration> = project.objects.property<Duration>().apply {
+        set(Duration.ofMinutes(1))
+    }
+
+    val repositories: NexusRepositoryContainer = DefaultNexusRepositoryContainer(project.container(NexusRepository::class) { name ->
+        project.objects.newInstance(NexusRepository::class, name, project)
+    })
+
+    fun repositories(action: Action<in NexusRepositoryContainer>) = action.execute(repositories)
 }

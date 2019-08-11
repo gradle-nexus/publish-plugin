@@ -27,6 +27,7 @@ import io.codearte.gradle.nexus.NexusStagingPlugin
 import org.assertj.core.api.Assertions.assertThat
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.apply
+import org.gradle.kotlin.dsl.get
 import org.gradle.kotlin.dsl.the
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.BeforeEach
@@ -46,6 +47,14 @@ class StagingPluginIntegrationTest {
 
     private lateinit var project: Project
 
+    private val ourExtension by lazy {
+        project.the<NexusPublishExtension>()
+    }
+
+    private val theirExtension by lazy {
+        project.the<NexusStagingExtension>()
+    }
+
     @BeforeEach
     fun setUp() {
         project = ProjectBuilder.builder().build()
@@ -55,58 +64,53 @@ class StagingPluginIntegrationTest {
 
     @Test
     fun `default wiring`() {
-        val ourExtension = project.the<NexusPublishExtension>()
-        val theirExtension = project.the<NexusStagingExtension>()
+        val repository = ourExtension.repositories.create("myRepo")
 
         theirExtension.packageGroup = "foo"
-        assertThat(ourExtension.packageGroup.orNull).isEqualTo("foo")
-
         theirExtension.stagingProfileId = "12345678"
-        assertThat(ourExtension.stagingProfileId.orNull).isEqualTo("12345678")
-
         theirExtension.username = "bar"
-        assertThat(ourExtension.username.orNull).isEqualTo("bar")
-
         theirExtension.password = "secret"
-        assertThat(ourExtension.password.orNull).isEqualTo("secret")
+
+        assertThat(ourExtension.packageGroup.orNull).isEqualTo("foo")
+        assertThat(repository.stagingProfileId.orNull).isEqualTo("12345678")
+        assertThat(repository.username.orNull).isEqualTo("bar")
+        assertThat(repository.password.orNull).isEqualTo("secret")
     }
 
     @Test
     fun `explicit values win`() {
-        val ourExtension = project.the<NexusPublishExtension>()
-        val theirExtension = project.the<NexusStagingExtension>()
+        val repository = ourExtension.repositories.create("myRepo").apply {
+            username.set("foo")
+            password.set("secret2")
+        }
 
-        ourExtension.username.set("foo")
         theirExtension.username = "bar"
-        assertThat(ourExtension.username.orNull).isEqualTo("foo")
-
         theirExtension.password = "secret1"
-        ourExtension.password.set("secret2")
-        assertThat(ourExtension.password.orNull).isEqualTo("secret2")
+
+        assertThat(repository.password.orNull).isEqualTo("secret2")
+        assertThat(repository.username.orNull).isEqualTo("foo")
     }
 
     @Test
     fun `staged repository id is forwarded`(server: WireMockServer) {
-        val ourExtension = project.the<NexusPublishExtension>()
-        val theirExtension = project.the<NexusStagingExtension>()
-
-        ourExtension.serverUrl.set(URI.create(server.baseUrl()))
-        ourExtension.stagingProfileId.set(STAGING_PROFILE_ID)
-
+        ourExtension.repositories.create("myRepo").apply {
+            nexusUrl.set(URI.create(server.baseUrl()))
+            stagingProfileId.set(STAGING_PROFILE_ID)
+        }
         server.stubFor(post(urlEqualTo("/staging/profiles/$STAGING_PROFILE_ID/start"))
                 .willReturn(aResponse().withBody(gson.toJson(mapOf("data" to mapOf("stagedRepositoryId" to STAGED_REPOSITORY_ID))))))
 
-        val task = project.getTasksByName("initializeNexusStagingRepository", false).first() as InitializeNexusStagingRepository
-        task.createStagingRepoAndReplacePublishingRepoUrl()
+        val task = project.tasks["initializeMyRepoStagingRepository"] as InitializeNexusStagingRepository
+        task.createStagingRepo()
+
         assertThat(theirExtension.stagingRepositoryId.orNull).isEqualTo(STAGED_REPOSITORY_ID)
     }
 
     @Test
     fun `stage profile for subgroup is identified`(server: WireMockServer) {
-        val ourExtension = project.the<NexusPublishExtension>()
-        val theirExtension = project.the<NexusStagingExtension>()
-
-        ourExtension.serverUrl.set(URI.create(server.baseUrl()))
+        ourExtension.repositories.create("myRepo").apply {
+            nexusUrl.set(URI.create(server.baseUrl()))
+        }
         theirExtension.packageGroup = "com.test.abcd"
 
         server.stubFor(get(urlEqualTo("/staging/profiles"))
@@ -121,8 +125,9 @@ class StagingPluginIntegrationTest {
         server.stubFor(post(urlEqualTo("/staging/profiles/$STAGING_PROFILE_ID/start"))
                 .willReturn(aResponse().withBody(gson.toJson(mapOf("data" to mapOf("stagedRepositoryId" to STAGED_REPOSITORY_ID))))))
 
-        val task = project.getTasksByName("initializeNexusStagingRepository", false).first() as InitializeNexusStagingRepository
-        task.createStagingRepoAndReplacePublishingRepoUrl()
+        val task = project.tasks["initializeMyRepoStagingRepository"] as InitializeNexusStagingRepository
+        task.createStagingRepo()
+
         assertThat(theirExtension.stagingRepositoryId.orNull)
                 .withFailMessage("Requested package was com.test.abcd, and the longest matching prefix is com.test")
                 .isEqualTo(STAGED_REPOSITORY_ID)

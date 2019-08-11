@@ -30,6 +30,7 @@ import org.gradle.api.publish.plugins.PublishingPlugin
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.apply
 import org.gradle.kotlin.dsl.create
+import org.gradle.kotlin.dsl.named
 import org.gradle.kotlin.dsl.register
 import org.gradle.kotlin.dsl.the
 import org.gradle.kotlin.dsl.withType
@@ -40,8 +41,6 @@ import java.util.concurrent.ConcurrentHashMap
 class NexusPublishPlugin : Plugin<Project> {
 
     companion object {
-        const val INITIALIZE_NEXUS_STAGING_REPOSITORY_TASK_NAME = "initializeNexusStagingRepository"
-        const val PUBLISH_TO_NEXUS_LIFECYCLE_TASK_NAME = "publishToNexus"
         private val serverUrlToStagingRepoUrl = ConcurrentHashMap<URI, URI>()
     }
 
@@ -55,35 +54,51 @@ class NexusPublishPlugin : Plugin<Project> {
         })
 
         val extension = project.extensions.create<NexusPublishExtension>(NexusPublishExtension.NAME, project)
-        val publishToNexusTask = project.tasks.register(PUBLISH_TO_NEXUS_LIFECYCLE_TASK_NAME) {
-            description = "Publishes all Maven publications produced by this project to Nexus."
-            group = PublishingPlugin.PUBLISH_TASK_GROUP
+
+        extension.repositories.all {
+            project.tasks.register("publishTo${name.capitalize()}") {
+                description = "Publishes all Maven publications produced by this project to Nexus."
+                group = PublishingPlugin.PUBLISH_TASK_GROUP
+            }
+            project.tasks
+                    .register<InitializeNexusStagingRepository>("initialize${name.capitalize()}StagingRepository", project.objects, extension, this, serverUrlToStagingRepoUrl)
         }
-        val initializeTask = project.tasks
-                .register<InitializeNexusStagingRepository>(INITIALIZE_NEXUS_STAGING_REPOSITORY_TASK_NAME, project, extension, serverUrlToStagingRepoUrl)
+        extension.repositories.whenObjectRemoved {
+            project.tasks.remove(project.tasks.named("publishTo${name.capitalize()}") as Any)
+            project.tasks.remove(project.tasks.named("initialize${name.capitalize()}StagingRepository") as Any)
+        }
 
         project.afterEvaluate {
-            val nexusRepository = addMavenRepository(project, extension)
-            configureTaskDependencies(project, publishToNexusTask, initializeTask, nexusRepository)
+            val nexusRepositories = addMavenRepositories(project, extension)
+            nexusRepositories.forEach { (nexusRepo, mavenRepo) ->
+                val publishToNexusTask = project.tasks.named("publishTo${nexusRepo.name.capitalize()}")
+                val initializeTask = project.tasks.withType(InitializeNexusStagingRepository::class)
+                        .named("initialize${nexusRepo.name.capitalize()}StagingRepository")
+                configureTaskDependencies(project, publishToNexusTask, initializeTask, mavenRepo)
+            }
         }
 
         project.rootProject.plugins.withId("io.codearte.nexus-staging") {
             val nexusStagingExtension = project.rootProject.the<NexusStagingExtension>()
 
             extension.packageGroup.set(project.provider { nexusStagingExtension.packageGroup })
-            extension.stagingProfileId.set(project.provider { nexusStagingExtension.stagingProfileId })
-            extension.username.set(project.provider { nexusStagingExtension.username })
-            extension.password.set(project.provider { nexusStagingExtension.password })
+            extension.repositories.configureEach {
+                stagingProfileId.set(project.provider { nexusStagingExtension.stagingProfileId })
+                username.set(project.provider { nexusStagingExtension.username })
+                password.set(project.provider { nexusStagingExtension.password })
+            }
         }
     }
 
-    private fun addMavenRepository(project: Project, extension: NexusPublishExtension): MavenArtifactRepository {
-        return project.the<PublishingExtension>().repositories.maven {
-            name = extension.repositoryName.get()
-            url = getRepoUrl(extension)
-            credentials {
-                username = extension.username.orNull
-                password = extension.password.orNull
+    private fun addMavenRepositories(project: Project, extension: NexusPublishExtension): Map<NexusRepository, MavenArtifactRepository> {
+        return extension.repositories.associateWith { nexusRepo ->
+            project.the<PublishingExtension>().repositories.maven {
+                name = nexusRepo.name
+                url = getRepoUrl(nexusRepo, extension)
+                credentials {
+                    username = nexusRepo.username.orNull
+                    password = nexusRepo.password.orNull
+                }
             }
         }
     }
@@ -102,8 +117,8 @@ class NexusPublishPlugin : Plugin<Project> {
         }
     }
 
-    private fun getRepoUrl(nexusPublishExtension: NexusPublishExtension): URI {
-        return if (shouldUseStaging(nexusPublishExtension)) nexusPublishExtension.serverUrl.get() else nexusPublishExtension.snapshotRepositoryUrl.get()
+    private fun getRepoUrl(nexusRepo: NexusRepository, extension: NexusPublishExtension): URI {
+        return if (shouldUseStaging(extension)) nexusRepo.nexusUrl.get() else nexusRepo.snapshotRepositoryUrl.get()
     }
 
     private fun shouldUseStaging(nexusPublishExtension: NexusPublishExtension): Boolean {

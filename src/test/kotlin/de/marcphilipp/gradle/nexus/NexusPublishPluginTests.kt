@@ -29,6 +29,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlMatching
 import com.google.gson.Gson
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assumptions
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
@@ -73,7 +74,7 @@ class NexusPublishPluginTests {
 
     @ParameterizedTest
     @MethodSource("gradleVersionAndSettings")
-    fun `publishToNexus depends on correct tasks`(gradleVersion: String, extraSettings: String) {
+    fun `publish task depends on correct tasks`(gradleVersion: String, extraSettings: String) {
         projectDir.resolve("settings.gradle").write("""
             rootProject.name = 'sample'
             $extraSettings
@@ -98,14 +99,21 @@ class NexusPublishPluginTests {
                     }
                 }
             }
+            nexusPublishing {
+                repositories {
+                    myNexus {
+                        nexusUrl = uri('https://example.com')
+                    }
+                }
+            }
             // use this instead of --dry-run to get the tasks in the result for verification
-            tasks.all { enabled false }
+            tasks.all { enabled = false }
         """)
 
-        val result = runGradleBuild(gradleVersion, "publishToNexus")
+        val result = runGradleBuild(gradleVersion, "publishToMyNexus")
 
-        assertSkipped(result, ":publishToNexus")
-        assertSkipped(result, ":publishMavenJavaPublicationToNexusRepository")
+        assertSkipped(result, ":publishToMyNexus")
+        assertSkipped(result, ":publishMavenJavaPublicationToMyNexusRepository")
         assertNotConsidered(result, ":publishMavenJavaPublicationToSomeOtherRepoRepository")
     }
 
@@ -131,9 +139,16 @@ class NexusPublishPluginTests {
                 }
             }
             nexusPublishing {
-                serverUrl = uri('${server.baseUrl()}')
-                username = 'username'
-                password = 'password'
+                repositories {
+                    myNexus {
+                        nexusUrl = uri('${server.baseUrl()}')
+                        username = 'username'
+                        password = 'password'
+                    }
+                    someOtherNexus {
+                        nexusUrl = uri('http://example.org')
+                    }
+                }
             }
         """)
 
@@ -141,9 +156,10 @@ class NexusPublishPluginTests {
         stubCreateStagingRepoRequest(server, "/staging/profiles/$STAGING_PROFILE_ID/start", STAGED_REPOSITORY_ID)
         expectArtifactUploads(server, "/staging/deployByRepositoryId/$STAGED_REPOSITORY_ID")
 
-        val result = runGradleBuild(gradleVersion, "publishToNexus")
+        val result = runGradleBuild(gradleVersion, "publishToMyNexus")
 
-        assertSuccess(result, ":initializeNexusStagingRepository")
+        assertSuccess(result, ":initializeMyNexusStagingRepository")
+        assertNotConsidered(result, ":initializeSomeOtherNexusStagingRepository")
         server.verify(postRequestedFor(urlEqualTo("/staging/profiles/$STAGING_PROFILE_ID/start"))
                 .withRequestBody(matchingJsonPath("\$.data[?(@.description == 'publishing')]")))
         assertUploadedToStagingRepo(server, "/org/example/sample/0.0.1/sample-0.0.1.pom")
@@ -169,10 +185,14 @@ class NexusPublishPluginTests {
                 plugins.withId('maven-publish') {
                     project.apply plugin: 'de.marcphilipp.nexus-publish'
                     project.extensions.configure('nexusPublishing') { ext ->
-                        ext.serverUrl = uri('${server.baseUrl()}')
-                        ext.stagingProfileId = '$STAGING_PROFILE_ID'
-                        ext.username = 'username'
-                        ext.password = 'password'
+                        ext.repositories {
+                            sonatype {
+                                nexusUrl = uri('${server.baseUrl()}')
+                                stagingProfileId = '$STAGING_PROFILE_ID'
+                                username = 'username'
+                                password = 'password'
+                            }
+                        }
                     }
                 }
             }
@@ -206,9 +226,9 @@ class NexusPublishPluginTests {
         stubCreateStagingRepoRequest(server, "/staging/profiles/$STAGING_PROFILE_ID/start", STAGED_REPOSITORY_ID)
         expectArtifactUploads(server, "/staging/deployByRepositoryId/$STAGED_REPOSITORY_ID")
 
-        val result = runGradleBuild(gradleVersion, "publishToNexus")
+        val result = runGradleBuild(gradleVersion, "publishToSonatype", "-s")
 
-        assertSuccess(result, ":gradle-plugin:initializeNexusStagingRepository")
+        assertSuccess(result, ":gradle-plugin:initializeSonatypeStagingRepository")
         assertUploadedToStagingRepo(server, "/org/example/gradle-plugin/0.0.1/gradle-plugin-0.0.1.pom")
         assertUploadedToStagingRepo(server, "/org/example/foo/org.example.foo.gradle.plugin/0.0.1/org.example.foo.gradle.plugin-0.0.1.pom")
     }
@@ -236,18 +256,22 @@ class NexusPublishPluginTests {
                 }
             }
             nexusPublishing {
-                serverUrl = uri('${server.baseUrl()}/shouldNotBeUsed')
-                snapshotRepositoryUrl = uri('${server.baseUrl()}/snapshots')
-                username = 'username'
-                password = 'password'
+                repositories {
+                    myNexus {
+                        nexusUrl = uri('${server.baseUrl()}/shouldNotBeUsed')
+                        snapshotRepositoryUrl = uri('${server.baseUrl()}/snapshots')
+                        username = 'username'
+                        password = 'password'
+                    }
+                }
             }
         """)
 
         expectArtifactUploads(server, "/snapshots")
 
-        val result = runGradleBuild(gradleVersion, "publishToNexus")
+        val result = runGradleBuild(gradleVersion, "publishToMyNexus")
 
-        assertSkipped(result, ":initializeNexusStagingRepository")
+        assertSkipped(result, ":initializeMyNexusStagingRepository")
         assertUploaded(server, "/snapshots/org/example/sample/0.0.1-SNAPSHOT/sample-0.0.1-.*.pom")
         assertUploaded(server, "/snapshots/org/example/sample/0.0.1-SNAPSHOT/sample-0.0.1-.*.jar")
     }
@@ -278,16 +302,24 @@ class NexusPublishPluginTests {
                     }
                 }
                 nexusPublishing {
-                    serverUrl = uri('${server.baseUrl()}/a/')
-                    stagingProfileId = 'profile-a'
-                    username = 'username'
-                    password = 'password'
+                    repositories {
+                        myNexus {
+                            nexusUrl = uri('${server.baseUrl()}/a/')
+                            stagingProfileId = 'profile-a'
+                            username = 'username'
+                            password = 'password'
+                        }
+                    }
                 }
             }
             project(':b:') {
                 nexusPublishing {
-                    serverUrl = uri('${server.baseUrl()}/b/')
-                    stagingProfileId = 'profile-b'
+                    repositories {
+                        named('myNexus').configure {
+                            nexusUrl = uri('${server.baseUrl()}/b/')
+                            stagingProfileId = 'profile-b'
+                        }
+                    }
                 }
             }
         """)
@@ -297,13 +329,13 @@ class NexusPublishPluginTests {
         stubCreateStagingRepoRequest(server, "/b/staging/profiles/profile-b/start", "orgexample-b")
         expectArtifactUploads(server, "/b/staging/deployByRepositoryId/orgexample-b")
 
-        val result = runGradleBuild(gradleVersion, "publishToNexus", "--parallel")
+        val result = runGradleBuild(gradleVersion, "publishToMyNexus", "--parallel")
 
         server.verify(1, postRequestedFor(urlEqualTo("/a/staging/profiles/profile-a/start")))
         server.verify(1, postRequestedFor(urlEqualTo("/b/staging/profiles/profile-b/start")))
-        assertSuccess(result, ":a1:initializeNexusStagingRepository")
-        assertSuccess(result, ":a2:initializeNexusStagingRepository")
-        assertSuccess(result, ":b:initializeNexusStagingRepository")
+        assertSuccess(result, ":a1:initializeMyNexusStagingRepository")
+        assertSuccess(result, ":a2:initializeMyNexusStagingRepository")
+        assertSuccess(result, ":b:initializeMyNexusStagingRepository")
         assertUploaded(server, "/a/staging/deployByRepositoryId/orgexample-a/org/example/a1/0.0.1/a1-0.0.1.pom")
         assertUploaded(server, "/a/staging/deployByRepositoryId/orgexample-a/org/example/a2/0.0.1/a2-0.0.1.pom")
         assertUploaded(server, "/b/staging/deployByRepositoryId/orgexample-b/org/example/b/0.0.1/b-0.0.1.jar")
@@ -341,7 +373,11 @@ class NexusPublishPluginTests {
                 }
             }
             nexusPublishing {
-                serverUrl = uri('${server.baseUrl()}')
+                repositories {
+                    sonatype {
+                        nexusUrl = uri('${server.baseUrl()}')
+                    }
+                }
             }
             nexusStaging {
                 serverUrl = uri('${server.baseUrl()}')
@@ -356,9 +392,9 @@ class NexusPublishPluginTests {
         server.stubFor(get(urlEqualTo("/staging/repository/$STAGED_REPOSITORY_ID"))
                 .willReturn(aResponse().withHeader("Content-Type", "application/json").withBody("{\"transitioning\":false,\"type\":\"CLOSED\"}")))
 
-        val result = runGradleBuild(gradleVersion, "initializeNexusStagingRepository", "closeRepository")
+        val result = runGradleBuild(gradleVersion, "initializeSonatypeStagingRepository", "closeRepository")
 
-        assertSuccess(result, ":initializeNexusStagingRepository")
+        assertSuccess(result, ":initializeSonatypeStagingRepository")
         assertSuccess(result, ":closeRepository")
         assertCloseOfStagingRepo(server)
     }
@@ -395,7 +431,11 @@ class NexusPublishPluginTests {
                 }
             }
             nexusPublishing {
-                serverUrl = uri('${server.baseUrl()}')
+                repositories {
+                    myNexus {
+                        nexusUrl = uri('${server.baseUrl()}')
+                    }
+                }
             }
             nexusStaging {
                 stagingProfileId = '$STAGING_PROFILE_ID'
@@ -404,9 +444,9 @@ class NexusPublishPluginTests {
 
         stubCreateStagingRepoRequest(server, "/staging/profiles/$STAGING_PROFILE_ID/start", STAGED_REPOSITORY_ID)
 
-        val result = runGradleBuild(gradleVersion, "initializeNexusStagingRepository")
+        val result = runGradleBuild(gradleVersion, "initializeMyNexusStagingRepository")
 
-        assertSuccess(result, ":initializeNexusStagingRepository")
+        assertSuccess(result, ":initializeMyNexusStagingRepository")
         assertThat(result.output).contains("at least 0.20.0")
     }
 
@@ -434,19 +474,124 @@ class NexusPublishPluginTests {
                 }
             }
             nexusPublishing {
-                serverUrl = uri('${server.baseUrl()}')
-                username = 'username'
-                password = 'password'
+                repositories {
+                    myNexus {
+                        nexusUrl = uri('${server.baseUrl()}')
+                        username = 'username'
+                        password = 'password'
+                    }
+                }
                 clientTimeout = Duration.ofSeconds(1)
             }
         """)
 
         server.stubFor(get(anyUrl()).willReturn(aResponse().withFixedDelay(5_000)))
 
-        val result = gradleRunner(gradleVersion, "initializeNexusStagingRepository").buildAndFail()
+        val result = gradleRunner(gradleVersion, "initializeMyNexusStagingRepository").buildAndFail()
 
-        assertOutcome(result, ":initializeNexusStagingRepository", FAILED)
+        assertOutcome(result, ":initializeMyNexusStagingRepository", FAILED)
         assertThat(result.output).contains("SocketTimeoutException")
+    }
+
+    @ParameterizedTest
+    @MethodSource("gradleVersionAndSettings")
+    fun `uses default URLs for sonatype repos in Groovy DSL`(gradleVersion: String, extraSettings: String) {
+        projectDir.resolve("settings.gradle").write("""
+            rootProject.name = 'sample'
+            include('a', 'b')
+            $extraSettings
+        """)
+        projectDir.resolve("build.gradle").write("""
+            plugins {
+                id('de.marcphilipp.nexus-publish') apply false
+            }
+            subprojects {
+                apply plugin: 'de.marcphilipp.nexus-publish'
+                task printSonatypeConfig {
+                    doFirst {
+                        println "${"$"}{project.name}.nexusUrl = ${"$"}{nexusPublishing.repositories['sonatype'].nexusUrl.orNull}"
+                        println "${"$"}{project.name}.snapshotRepositoryUrl = ${"$"}{nexusPublishing.repositories['sonatype'].snapshotRepositoryUrl.orNull}"
+                    }
+                }
+            }
+            project(':a').nexusPublishing {
+                repositories {
+                    sonatype()
+                }
+            }
+            project(':b').nexusPublishing {
+                repositories {
+                    sonatype {
+                        nexusUrl = uri('https://example.com')
+                    }
+                }
+            }
+        """)
+
+        val result = runGradleBuild(gradleVersion, "printSonatypeConfig")
+
+        assertThat(result.output)
+                .contains("a.nexusUrl = https://oss.sonatype.org/service/local/")
+                .contains("a.snapshotRepositoryUrl = https://oss.sonatype.org/content/repositories/snapshots/")
+                .contains("b.nexusUrl = https://example.com")
+                .contains("b.snapshotRepositoryUrl = https://oss.sonatype.org/content/repositories/snapshots/")
+    }
+
+    @ParameterizedTest
+    @MethodSource("gradleVersionAndSettings")
+    fun `uses default URLs for sonatype repos in Kotlin DSL`(gradleVersion: String, extraSettings: String) {
+        Assumptions.assumeThat(gradleVersion).isEqualTo("5.4.1")
+
+        projectDir.resolve("settings.gradle").write("""
+            rootProject.name = 'sample'
+            include('a', 'b')
+            $extraSettings
+        """)
+        projectDir.resolve("a/build.gradle.kts").write("""
+            plugins {
+                id("de.marcphilipp.nexus-publish")
+            }
+            nexusPublishing {
+                repositories {
+                    sonatype()
+                }
+            }
+            tasks.create("printSonatypeConfig") {
+                doFirst {
+                    println("${"$"}{project.name}.nexusUrl = ${"$"}{nexusPublishing.repositories["sonatype"].nexusUrl.orNull}")
+                    println("${"$"}{project.name}.snapshotRepositoryUrl = ${"$"}{nexusPublishing.repositories["sonatype"].snapshotRepositoryUrl.orNull}")
+                }
+            }
+        """)
+        projectDir.resolve("b/build.gradle.kts").write("""
+            plugins {
+                id("de.marcphilipp.nexus-publish")
+            }
+            nexusPublishing {
+                repositories {
+                    sonatype {
+                        nexusUrl.set(uri("https://example.com"))
+                    }
+                    create("anotherRepo") {
+                        nexusUrl.set(uri("https://example.org"))
+                    }
+                }
+            }
+            tasks.create("printSonatypeConfig") {
+                doFirst {
+                    println("${"$"}{project.name}.nexusUrl = ${"$"}{nexusPublishing.repositories["sonatype"].nexusUrl.orNull}")
+                    println("${"$"}{project.name}.snapshotRepositoryUrl = ${"$"}{nexusPublishing.repositories["sonatype"].snapshotRepositoryUrl.orNull}")
+                }
+            }
+        """)
+
+        val result = runGradleBuild(gradleVersion, "printSonatypeConfig")
+
+        assertThat(result.output)
+                .contains("a.nexusUrl = https://oss.sonatype.org/service/local/")
+                .contains("a.snapshotRepositoryUrl = https://oss.sonatype.org/content/repositories/snapshots/")
+                .contains("b.nexusUrl = https://example.com")
+                .contains("b.snapshotRepositoryUrl = https://oss.sonatype.org/content/repositories/snapshots/")
     }
 
     private fun runGradleBuild(gradleVersion: String, vararg arguments: String): BuildResult {
@@ -456,8 +601,9 @@ class NexusPublishPluginTests {
     private fun gradleRunner(gradleVersion: String, vararg arguments: String): GradleRunner {
         return gradleRunner
                 .withGradleVersion(gradleVersion)
+                .withDebug(true)
                 .withProjectDir(projectDir.toFile())
-                .withArguments(*arguments)
+                .withArguments(*arguments, "--stacktrace")
                 .forwardOutput()
     }
 

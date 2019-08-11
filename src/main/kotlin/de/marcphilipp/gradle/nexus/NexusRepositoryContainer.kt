@@ -16,10 +16,12 @@
 
 package de.marcphilipp.gradle.nexus
 
-import java.nio.file.Files
-import java.nio.file.Path
+import groovy.lang.Closure
+import org.gradle.api.Action
+import org.gradle.api.NamedDomainObjectContainer
 
-fun Path.write(text: String) {
-    Files.createDirectories(parent)
-    toFile().writeText(text)
+interface NexusRepositoryContainer : NamedDomainObjectContainer<NexusRepository> {
+    fun sonatype(): NexusRepository
+    fun sonatype(closure: Closure<*>): NexusRepository
+    fun sonatype(action: Action<in NexusRepository>): NexusRepository
 }
