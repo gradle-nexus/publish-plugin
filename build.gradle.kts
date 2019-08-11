@@ -169,7 +169,9 @@ val javadocJar by tasks.creating(Jar::class) {
 val archives by configurations.getting
 archives.artifacts.clear()
 artifacts {
-    add(archives.name, tasks.shadowJar)
+    add(archives.name, tasks.shadowJar) {
+        classifier = ""
+    }
     add(archives.name, sourcesJar)
     add(archives.name, javadocJar)
 }
