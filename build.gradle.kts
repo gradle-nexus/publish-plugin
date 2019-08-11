@@ -35,7 +35,7 @@ pluginBundle {
 
 gradlePlugin {
     plugins {
-        create("nexus-publish") {
+        create("nexusPublish") {
             id = "de.marcphilipp.nexus-publish"
             displayName = readableName
             implementationClass = "de.marcphilipp.gradle.nexus.NexusPublishPlugin"
