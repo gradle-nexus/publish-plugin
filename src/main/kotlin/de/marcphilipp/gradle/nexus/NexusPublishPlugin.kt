@@ -57,7 +57,7 @@ class NexusPublishPlugin : Plugin<Project> {
 
         extension.repositories.all {
             project.tasks.register("publishTo${name.capitalize()}") {
-                description = "Publishes all Maven publications produced by this project to Nexus."
+                description = "Publishes all Maven publications produced by this project to the '${this@all.name}' Nexus repository."
                 group = PublishingPlugin.PUBLISH_TASK_GROUP
             }
             project.tasks
