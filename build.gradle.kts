@@ -20,14 +20,14 @@ buildScan {
 }
 
 group = "de.marcphilipp.gradle"
-version = "0.4.0-SNAPSHOT"
+version = "0.3.1"
 
 val readableName = "Nexus Publish Plugin"
 description = "Gradle Plugin for publishing to Nexus repositories"
 val repoUrl = "https://github.com/marcphilipp/nexus-publish-plugin"
 
 pluginBundle {
-    description = project.description
+    description = """Fix integration issue with Nexus Staging Plugin when packageGroup is not set."""
     website = repoUrl
     vcsUrl = repoUrl
     tags = listOf("publishing", "maven", "nexus", "travis")
