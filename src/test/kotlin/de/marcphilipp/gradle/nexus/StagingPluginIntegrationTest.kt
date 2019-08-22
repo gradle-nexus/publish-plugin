@@ -134,4 +134,10 @@ class StagingPluginIntegrationTest {
                 .withFailMessage("Requested package was com.test.abcd, and the longest matching prefix is com.test")
                 .isEqualTo(STAGED_REPOSITORY_ID)
     }
+
+    @Test
+    fun `uses project group if staging packageGroup is not set`() {
+        project.group = "com.acme.foo"
+        assertThat(ourExtension.packageGroup.orNull).isEqualTo("com.acme.foo")
+    }
 }

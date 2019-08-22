@@ -81,7 +81,13 @@ class NexusPublishPlugin : Plugin<Project> {
         project.rootProject.plugins.withId("io.codearte.nexus-staging") {
             val nexusStagingExtension = project.rootProject.the<NexusStagingExtension>()
 
-            extension.packageGroup.set(project.provider { nexusStagingExtension.packageGroup })
+            extension.packageGroup.set(project.provider {
+                if (nexusStagingExtension.packageGroup.isNullOrBlank()) {
+                    project.group.toString()
+                } else {
+                    nexusStagingExtension.packageGroup
+                }
+            })
             extension.repositories.configureEach {
                 stagingProfileId.set(project.provider { nexusStagingExtension.stagingProfileId })
                 username.set(project.provider { nexusStagingExtension.username })
