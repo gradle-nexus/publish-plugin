@@ -113,3 +113,7 @@ If the [`io.codearte.nexus-staging` plugin](https://github.com/Codearte/gradle-n
 | `password`          | `rootProject.nexusStaging.password`          |
 
 This reuses the values specified for the `nexusStaging` block, so you don't have to specify them twice.
+
+### HTTP Timeouts
+
+You can configure the `connectTimeout` and `clientTimeout` properties on the `nexusPublishing` extension to set the connect and read/write timeouts (both default to 1 minute). Good luck!
