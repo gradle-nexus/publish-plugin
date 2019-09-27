@@ -44,6 +44,10 @@ open class NexusPublishExtension(project: Project) {
         set(Duration.ofMinutes(1))
     }
 
+    val connectTimeout: Property<Duration> = project.objects.property<Duration>().apply {
+        set(Duration.ofMinutes(1))
+    }
+
     val repositories: NexusRepositoryContainer = DefaultNexusRepositoryContainer(project.container(NexusRepository::class) { name ->
         project.objects.newInstance(NexusRepository::class, name, project)
     })

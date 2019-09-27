@@ -32,16 +32,20 @@ import java.io.IOException
 import java.io.UncheckedIOException
 import java.net.URI
 import java.time.Duration
-import java.util.concurrent.TimeUnit
 
-class NexusClient(private val baseUrl: URI, username: String?, password: String?, timeout: Duration) {
+class NexusClient(private val baseUrl: URI, username: String?, password: String?, timeout: Duration?, connectTimeout: Duration?) {
     private val api: NexusApi
 
     init {
         val httpClientBuilder = OkHttpClient.Builder()
-                .connectTimeout(1, TimeUnit.MINUTES)
-                .readTimeout(timeout.toMillis(), TimeUnit.MILLISECONDS)
-                .writeTimeout(timeout.toMillis(), TimeUnit.MILLISECONDS)
+        if (timeout != null) {
+            httpClientBuilder
+                    .readTimeout(timeout)
+                    .writeTimeout(timeout)
+        }
+        if (connectTimeout != null) {
+            httpClientBuilder.connectTimeout(connectTimeout)
+        }
         if (username != null || password != null) {
             val credentials = Credentials.basic(username ?: "", password ?: "")
             httpClientBuilder

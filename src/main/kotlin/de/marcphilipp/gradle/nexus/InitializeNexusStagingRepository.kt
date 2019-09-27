@@ -63,6 +63,9 @@ constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository
     @get:Internal
     val clientTimeout: Property<Duration> = objects.property()
 
+    @get:Internal
+    val connectTimeout: Property<Duration> = objects.property()
+
     init {
         serverUrl.set(repository.nexusUrl)
         username.set(repository.username)
@@ -71,6 +74,7 @@ constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository
         stagingProfileId.set(repository.stagingProfileId)
         repositoryName.set(repository.name)
         clientTimeout.set(extension.clientTimeout)
+        connectTimeout.set(extension.connectTimeout)
         this.onlyIf { extension.useStaging.getOrElse(false) }
     }
 
@@ -82,7 +86,7 @@ constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository
 
     internal fun createStagingRepo(): URI {
         return serverUrlToStagingRepoUrl.computeIfAbsent(serverUrl.get()) { serverUrl ->
-            val client = NexusClient(serverUrl, username.orNull, password.orNull, clientTimeout.getOrElse(Duration.ZERO))
+            val client = NexusClient(serverUrl, username.orNull, password.orNull, clientTimeout.orNull, connectTimeout.orNull)
             val stagingProfileId = determineStagingProfileId(client)
             logger.info("Creating staging repository for stagingProfileId '{}'", stagingProfileId)
             val stagingRepositoryId = client.createStagingRepository(stagingProfileId)
