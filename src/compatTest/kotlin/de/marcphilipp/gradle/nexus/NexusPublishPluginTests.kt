@@ -35,6 +35,8 @@ import org.gradle.testkit.runner.TaskOutcome
 import org.gradle.testkit.runner.TaskOutcome.FAILED
 import org.gradle.testkit.runner.TaskOutcome.SKIPPED
 import org.gradle.testkit.runner.TaskOutcome.SUCCESS
+import org.gradle.util.VersionNumber
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.io.TempDir
@@ -53,9 +55,11 @@ class NexusPublishPluginTests {
 
     private val gson = Gson()
 
+    private val gradleVersion = System.getProperty("compat.gradle.version")
+
     private val gradleRunner = GradleRunner.create()
             .withPluginClasspath()
-            .withGradleVersion(System.getProperty("compat.gradle.version"))
+            .withGradleVersion(gradleVersion)
 
     private val pluginClasspathAsString: String
         get() = gradleRunner.pluginClasspath.joinToString(", ") { "'${it.absolutePath.replace('\\', '/')}'" }
@@ -461,6 +465,54 @@ class NexusPublishPluginTests {
         """)
 
         server.stubFor(get(anyUrl()).willReturn(aResponse().withFixedDelay(5_000)))
+
+        val result = gradleRunner("initializeMyNexusStagingRepository").buildAndFail()
+
+        assertOutcome(result, ":initializeMyNexusStagingRepository", FAILED)
+        assertThat(result.output).contains("SocketTimeoutException")
+    }
+
+    @Test
+    fun `uses configured connect timeout`() {
+        assumeTrue(VersionNumber.parse(gradleVersion) >= VersionNumber.parse("5.0"),
+                "Task timeouts were added in Gradle 5.0")
+
+        // Taken from https://stackoverflow.com/a/904609/5866817
+        val nonRoutableAddress = "10.255.255.1"
+
+        projectDir.resolve("settings.gradle").write("""
+            rootProject.name = 'sample'
+        """)
+        projectDir.resolve("build.gradle").write("""
+            import java.time.Duration
+            
+            plugins {
+                id('java-library')
+                id('de.marcphilipp.nexus-publish')
+            }
+            group = 'org.example'
+            version = '0.0.1'
+            publishing {
+                publications {
+                    mavenJava(MavenPublication) {
+                        from(components.java)
+                    }
+                }
+            }
+            nexusPublishing {
+                repositories {
+                    myNexus {
+                        nexusUrl = uri('http://$nonRoutableAddress/')
+                        username = 'username'
+                        password = 'password'
+                    }
+                }
+                connectTimeout = Duration.ofSeconds(1)
+            }
+            initializeMyNexusStagingRepository {
+                timeout = Duration.ofSeconds(10)
+            }
+        """)
 
         val result = gradleRunner("initializeMyNexusStagingRepository").buildAndFail()
 
