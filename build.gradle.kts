@@ -20,14 +20,14 @@ buildScan {
 }
 
 group = "de.marcphilipp.gradle"
-version = "0.4.0-SNAPSHOT"
+version = "0.4.0"
 
 val readableName = "Nexus Publish Plugin"
 description = "Gradle Plugin for publishing to Nexus repositories"
 val repoUrl = "https://github.com/marcphilipp/nexus-publish-plugin"
 
 pluginBundle {
-    description = project.description
+    description = "Make connect timeout configurable"
     website = repoUrl
     vcsUrl = repoUrl
     tags = listOf("publishing", "maven", "nexus", "travis")
