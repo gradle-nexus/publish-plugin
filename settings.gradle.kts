@@ -1,1 +1,1 @@
-rootProject.name = "nexus-publish-plugin"
+rootProject.name = "gradle-nexus-publish-plugin"

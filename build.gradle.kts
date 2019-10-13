@@ -19,12 +19,12 @@ buildScan {
     termsOfServiceAgree = "yes"
 }
 
-group = "de.marcphilipp.gradle"
-version = "0.5.0-SNAPSHOT"
+group = "io.github.gradle-nexus"
+version = "0.1.0-SNAPSHOT"
 
 val readableName = "Nexus Publish Plugin"
-description = "Gradle Plugin for publishing to Nexus repositories"
-val repoUrl = "https://github.com/marcphilipp/nexus-publish-plugin"
+description = "Gradle Plugin for publishing, closing, and releasing to Nexus staging repositories"
+val repoUrl = "https://github.com/gradle-nexus/publish-plugin"
 
 pluginBundle {
     description = project.description
@@ -36,9 +36,9 @@ pluginBundle {
 gradlePlugin {
     plugins {
         create("nexusPublish") {
-            id = "de.marcphilipp.nexus-publish"
+            id = "io.github.gradle-nexus.publish-plugin"
             displayName = readableName
-            implementationClass = "de.marcphilipp.gradle.nexus.NexusPublishPlugin"
+            implementationClass = "io.github.gradlenexus.publishplugin.NexusPublishPlugin"
         }
     }
 }
@@ -150,7 +150,7 @@ tasks {
         reportUndocumented = false
         jdkVersion = 8
         packageOptions(delegateClosureOf<PackageOptions> {
-            prefix = "de.marcphilipp.gradle.nexus.internal"
+            prefix = "io.github.gradlenexus.publishplugin.internal"
             suppress = true
         })
     }
@@ -181,17 +181,22 @@ publishing {
     publications {
         afterEvaluate {
             named<MavenPublication>("pluginMaven") {
+                artifactId = "publish-plugin"
                 artifact(sourcesJar)
                 artifact(javadocJar)
                 pom {
                     name.set(readableName)
                     description.set(project.description)
-                    inceptionYear.set("2018")
+                    inceptionYear.set("2019")
                     url.set(repoUrl)
                     developers {
                         developer {
                             name.set("Marc Philipp")
                             id.set("marcphilipp")
+                        }
+                        developer {
+                            name.set("Marcin Zajączkowski")
+                            id.set("szpak")
                         }
                     }
                     licenses {
