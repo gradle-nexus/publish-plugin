@@ -18,65 +18,19 @@ package io.github.gradlenexus.publishplugin
 
 import io.github.gradlenexus.publishplugin.internal.NexusClient
 import io.codearte.gradle.nexus.NexusStagingExtension
-import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
 import org.gradle.api.model.ObjectFactory
-import org.gradle.api.provider.Property
 import org.gradle.api.publish.PublishingExtension
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
-import org.gradle.kotlin.dsl.property
 import org.gradle.kotlin.dsl.the
 import java.net.URI
-import java.time.Duration
 import javax.inject.Inject
 
 @Suppress("UnstableApiUsage")
 open class InitializeNexusStagingRepository @Inject
-constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository: NexusRepository, private val serverUrlToStagingRepoUrl: MutableMap<URI, URI>) : DefaultTask() {
-
-    @get:Input
-    val serverUrl: Property<URI> = objects.property()
-
-    @get:Optional
-    @get:Input
-    val username: Property<String> = objects.property()
-
-    @get:Optional
-    @get:Input
-    val password: Property<String> = objects.property()
-
-    @get:Optional
-    @get:Input
-    val packageGroup: Property<String> = objects.property()
-
-    @get:Optional
-    @get:Input
-    val stagingProfileId: Property<String> = objects.property()
-
-    @get:Input
-    val repositoryName: Property<String> = objects.property()
-
-    @get:Internal
-    val clientTimeout: Property<Duration> = objects.property()
-
-    @get:Internal
-    val connectTimeout: Property<Duration> = objects.property()
-
-    init {
-        serverUrl.set(repository.nexusUrl)
-        username.set(repository.username)
-        password.set(repository.password)
-        packageGroup.set(extension.packageGroup)
-        stagingProfileId.set(repository.stagingProfileId)
-        repositoryName.set(repository.name)
-        clientTimeout.set(extension.clientTimeout)
-        connectTimeout.set(extension.connectTimeout)
-        this.onlyIf { extension.useStaging.getOrElse(false) }
-    }
+constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository: NexusRepository, private val serverUrlToStagingRepoUrl: MutableMap<URI, URI>) :
+        BaseOperationOnNexusStagingRepository(objects, extension, repository) {
 
     @TaskAction
     fun createStagingRepoAndReplacePublishingRepoUrl() {
