@@ -17,7 +17,6 @@
 package io.github.gradlenexus.publishplugin
 
 import org.assertj.core.api.Assertions.assertThat
-import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.publish.PublishingExtension
@@ -86,6 +85,7 @@ class TaskOrchestrationTest {
     }
 
     private fun initSingleProjectWithDefaultConfiguration() {
+        project.apply(plugin = "java")
         project.apply<NexusPublishPlugin>()
         project.extensions.configure<NexusPublishExtension> {
             repositories.sonatype()
