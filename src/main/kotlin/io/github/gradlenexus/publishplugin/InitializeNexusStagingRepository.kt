@@ -16,11 +16,11 @@
 
 package io.github.gradlenexus.publishplugin
 
-import io.github.gradlenexus.publishplugin.internal.NexusClient
 import io.codearte.gradle.nexus.NexusStagingExtension
-import org.gradle.api.GradleException
+import io.github.gradlenexus.publishplugin.internal.NexusClient
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Property
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.tasks.TaskAction
 import org.gradle.kotlin.dsl.the
@@ -32,6 +32,8 @@ open class InitializeNexusStagingRepository @Inject
 constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository: NexusRepository, private val serverUrlToStagingRepoUrl: MutableMap<URI, URI>) :
         BaseOperationOnNexusStagingRepository(objects, extension, repository) {
 
+    private val stagingRepositoryId: Property<String> = repository.stagingRepositoryId
+
     @TaskAction
     fun createStagingRepoAndReplacePublishingRepoUrl() {
         val url = createStagingRepo()
@@ -41,13 +43,15 @@ constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository
     internal fun createStagingRepo(): URI {
         return serverUrlToStagingRepoUrl.computeIfAbsent(serverUrl.get()) { serverUrl ->
             val client = NexusClient(serverUrl, username.orNull, password.orNull, clientTimeout.orNull, connectTimeout.orNull)
-            val stagingProfileId = determineStagingProfileId(client)
+            val stagingProfileId = determineStagingProfileId(client) // TODO: It would be good to keep/cache value in Extension/Repository
             logger.info("Creating staging repository for stagingProfileId '{}'", stagingProfileId)
-            val stagingRepositoryId = client.createStagingRepository(stagingProfileId)
+            val stagingRepositoryIdAsString = client.createStagingRepository(stagingProfileId)
+            keppStagingRepositoyIdInExtension(stagingRepositoryIdAsString)
+
             project.rootProject.plugins.withId("io.codearte.nexus-staging") {
                 val nexusStagingExtension = project.rootProject.the<NexusStagingExtension>()
                 try {
-                    nexusStagingExtension.stagingRepositoryId.set(stagingRepositoryId)
+                    nexusStagingExtension.stagingRepositoryId.set(stagingRepositoryIdAsString)
                 } catch (e: NoSuchMethodError) {
                     logger.warn("For increased publishing reliability please update the io.codearte.nexus-staging plugin to at least version 0.20.0.\n" +
                             "If your version is at least 0.20.0, try to update the io.github.gradle-nexus.publish-plugin plugin to its latest version.\n" +
@@ -55,19 +59,8 @@ constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository
                     logger.debug("getStagingRepositoryId method not found on nexusStagingExtension", e)
                 }
             }
-            client.getStagingRepositoryUri(stagingRepositoryId)
+            client.getStagingRepositoryUri(stagingRepositoryIdAsString)
         }
-    }
-
-    private fun determineStagingProfileId(client: NexusClient): String {
-        var stagingProfileId = stagingProfileId.orNull
-        if (stagingProfileId == null) {
-            val packageGroup = packageGroup.get()
-            logger.debug("No stagingProfileId set, querying for packageGroup '{}'", packageGroup)
-            stagingProfileId = client.findStagingProfileId(packageGroup)
-                    ?: throw GradleException("Failed to find staging profile for package group: $packageGroup")
-        }
-        return stagingProfileId
     }
 
     private fun replacePublishingRepoUrl(url: URI) {
@@ -75,5 +68,9 @@ constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository
         val repository = publishing.repositories.getByName(repositoryName.get()) as MavenArtifactRepository
         logger.info("Updating URL of publishing repository '{}' to '{}'", repository.name, url)
         repository.setUrl(url.toString())
+    }
+
+    private fun keppStagingRepositoyIdInExtension(stagingRepositoryIdAsString: String) {
+        stagingRepositoryId.set(stagingRepositoryIdAsString)
     }
 }

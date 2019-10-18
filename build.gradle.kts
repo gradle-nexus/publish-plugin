@@ -51,7 +51,7 @@ repositories {
 val licenseHeaderFile = file("gradle/license-header.txt")
 spotless {
     kotlin {
-        ktlint()
+        ktlint().userData(mapOf("disabled_rules" to "comment-spacing"))
         licenseHeaderFile(licenseHeaderFile)
     }
 }
@@ -98,7 +98,11 @@ dependencies {
 }
 
 stutter {
+    isSparse = (findProperty("stutter.sparce")?.toString()?.toBoolean()) ?: true
     java(8) {
+        compatibleRange("4.10")
+    }
+    java(11) {
         compatibleRange("4.10")
     }
 }

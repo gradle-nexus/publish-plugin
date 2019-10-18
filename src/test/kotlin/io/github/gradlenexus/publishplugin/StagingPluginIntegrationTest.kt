@@ -37,6 +37,7 @@ import ru.lanwen.wiremock.ext.WiremockResolver
 import ru.lanwen.wiremock.ext.WiremockResolver.Wiremock
 import java.net.URI
 
+@Suppress("UnstableApiUsage")
 @ExtendWith(WiremockResolver::class)
 class StagingPluginIntegrationTest {
 

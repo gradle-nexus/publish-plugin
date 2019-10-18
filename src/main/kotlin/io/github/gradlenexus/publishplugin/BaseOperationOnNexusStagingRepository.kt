@@ -16,7 +16,9 @@
 
 package io.github.gradlenexus.publishplugin
 
+import io.github.gradlenexus.publishplugin.internal.NexusClient
 import org.gradle.api.DefaultTask
+import org.gradle.api.GradleException
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
@@ -69,5 +71,16 @@ constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository
         clientTimeout.set(extension.clientTimeout)
         connectTimeout.set(extension.connectTimeout)
         this.onlyIf { extension.useStaging.getOrElse(false) }
+    }
+
+    protected fun determineStagingProfileId(client: NexusClient): String {
+        var stagingProfileId = stagingProfileId.orNull
+        if (stagingProfileId == null) {
+            val packageGroup = packageGroup.get()
+            logger.debug("No stagingProfileId set, querying for packageGroup '{}'", packageGroup)
+            stagingProfileId = client.findStagingProfileId(packageGroup)
+                    ?: throw GradleException("Failed to find staging profile for package group: $packageGroup")
+        }
+        return stagingProfileId
     }
 }
