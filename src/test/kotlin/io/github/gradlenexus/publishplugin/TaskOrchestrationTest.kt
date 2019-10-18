@@ -22,6 +22,10 @@ import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
+import org.gradle.kotlin.dsl.apply
+import org.gradle.kotlin.dsl.configure
+import org.gradle.kotlin.dsl.create
+import org.gradle.kotlin.dsl.get
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
@@ -82,17 +86,15 @@ class TaskOrchestrationTest {
     }
 
     private fun initSingleProjectWithDefaultConfiguration() {
-        project.apply(mapOf("plugin" to NexusPublishPlugin::class.java))
-        val extension = project.extensions.findByType(NexusPublishExtension::class.java)
-        extension?.repositories(Action {
-            sonatype()
-        })
-        val publishingExtension = project.extensions.findByType(PublishingExtension::class.java)
-        publishingExtension?.publications(Action {
-            create("mavenJava", MavenPublication::class.java) {
-//                from(components.java)  //fails to compile
+        project.apply<NexusPublishPlugin>()
+        project.extensions.configure<NexusPublishExtension> {
+            repositories.sonatype()
+        }
+        project.extensions.configure<PublishingExtension> {
+            publications.create<MavenPublication>("mavenJava") {
+                from(project.components["java"])
             }
-        })
+        }
     }
 
     private fun assertGivenTaskMustRunAfterAnother(taskName: String, expectedPredecessorName: String) {
@@ -102,7 +104,7 @@ class TaskOrchestrationTest {
     }
 
     private fun getJustOneTaskByNameOrFail(taskName: String): Task {
-        val tasks = project.getTasksByName(taskName, true) // forces project evaluation"
+        val tasks = project.getTasksByName(taskName, true) // forces project evaluation
         assertThat(tasks.size).describedAs("Expected just one task: $taskName. Found: ${project.tasks}").isOne()
         return tasks.first()
     }
