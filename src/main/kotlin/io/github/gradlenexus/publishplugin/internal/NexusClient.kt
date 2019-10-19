@@ -64,64 +64,49 @@ class NexusClient(private val baseUrl: URI, username: String?, password: String?
     }
 
     fun findStagingProfileId(packageGroup: String): String? {
-        try {
-            val response = api.stagingProfiles.execute()
-            if (!response.isSuccessful) {
-                throw failure("load staging profiles", response)
-            }
-            return response.body()
-                    ?.data
-                    ?.filter { profile ->
-                        // profile.name either matches exactly
-                        // or it is a prefix of a packageGroup
-                        packageGroup.startsWith(profile.name) &&
-                                (packageGroup.length == profile.name.length ||
-                                        packageGroup[profile.name.length] == '.')
-                    }
-                    ?.maxBy { it.name.length }
-                    ?.id
-        } catch (e: IOException) {
-            throw UncheckedIOException(e)
+        val response = api.stagingProfiles.execute()
+        if (!response.isSuccessful) {
+            throw failure("load staging profiles", response)
         }
+        return response.body()
+                ?.data
+                ?.filter { profile ->
+                    // profile.name either matches exactly
+                    // or it is a prefix of a packageGroup
+                    packageGroup.startsWith(profile.name) &&
+                            (packageGroup.length == profile.name.length ||
+                                    packageGroup[profile.name.length] == '.')
+                }
+                ?.maxBy { it.name.length }
+                ?.id
     }
 
     fun createStagingRepository(stagingProfileId: String): String {
-        try {
-            val response = api.startStagingRepo(stagingProfileId, Dto(Description("Created by io.github.gradle-nexus.publish-plugin Gradle plugin"))).execute()
-            if (!response.isSuccessful) {
-                throw failure("create staging repository", response)
-            }
-            return response.body()?.data?.stagedRepositoryId ?: throw RuntimeException("No response body")
-        } catch (e: IOException) {
-            throw UncheckedIOException(e)
+        val response = api.startStagingRepo(stagingProfileId, Dto(Description("Created by io.github.gradle-nexus.publish-plugin Gradle plugin"))).execute()
+        if (!response.isSuccessful) {
+            throw failure("create staging repository", response)
         }
+        return response.body()?.data?.stagedRepositoryId ?: throw RuntimeException("No response body")
     }
 
     fun closeStagingRepository(stagingRepositoryId: String) {
-        try {
-            val response = api.closeStagingRepo(Dto(StagingRepositoryToTransit(listOf(stagingRepositoryId), "Closed by io.github.gradle-nexus.publish-plugin Gradle plugin"))).execute()
-            if (!response.isSuccessful) {
-                throw failure("close staging repository", response)
-            }
-        } catch (e: IOException) {
-            throw UncheckedIOException(e)
+        val response = api.closeStagingRepo(Dto(StagingRepositoryToTransit(listOf(stagingRepositoryId), "Closed by io.github.gradle-nexus.publish-plugin Gradle plugin"))).execute()
+        if (!response.isSuccessful) {
+            throw failure("close staging repository", response)
         }
     }
 
     fun releaseStagingRepository(stagingRepositoryId: String) {
-        try {
-            val response = api.releaseStagingRepo(Dto(StagingRepositoryToTransit(listOf(stagingRepositoryId), "Release by io.github.gradle-nexus.publish-plugin Gradle plugin"))).execute()
-            if (!response.isSuccessful) {
-                throw failure("release staging repository", response)
-            }
-        } catch (e: IOException) {
-            throw UncheckedIOException(e)
+        val response = api.releaseStagingRepo(Dto(StagingRepositoryToTransit(listOf(stagingRepositoryId), "Release by io.github.gradle-nexus.publish-plugin Gradle plugin"))).execute()
+        if (!response.isSuccessful) {
+            throw failure("release staging repository", response)
         }
     }
 
     fun getStagingRepositoryUri(stagingRepositoryId: String): URI =
             URI.create("${baseUrl.toString().removeSuffix("/")}/staging/deployByRepositoryId/$stagingRepositoryId")
 
+    // TODO: Cover all API calls with unified error handling (including unexpected IOExceptions)
     private fun failure(action: String, response: Response<*>): RuntimeException {
         var message = "Failed to " + action + ", server responded with status code " + response.code()
         val errorBody = response.errorBody()
