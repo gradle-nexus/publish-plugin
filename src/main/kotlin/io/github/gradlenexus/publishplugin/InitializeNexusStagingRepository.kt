@@ -46,7 +46,7 @@ constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository
             val stagingProfileId = determineStagingProfileId(client) // TODO: It would be good to keep/cache value in Extension/Repository
             logger.info("Creating staging repository for stagingProfileId '{}'", stagingProfileId)
             val stagingRepositoryIdAsString = client.createStagingRepository(stagingProfileId)
-            keppStagingRepositoyIdInExtension(stagingRepositoryIdAsString)
+            keepStagingRepositoyIdInExtension(stagingRepositoryIdAsString)
 
             project.rootProject.plugins.withId("io.codearte.nexus-staging") {
                 val nexusStagingExtension = project.rootProject.the<NexusStagingExtension>()
@@ -70,7 +70,7 @@ constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository
         repository.setUrl(url.toString())
     }
 
-    private fun keppStagingRepositoyIdInExtension(stagingRepositoryIdAsString: String) {
+    private fun keepStagingRepositoyIdInExtension(stagingRepositoryIdAsString: String) {
         stagingRepositoryId.set(stagingRepositoryIdAsString)
     }
 }

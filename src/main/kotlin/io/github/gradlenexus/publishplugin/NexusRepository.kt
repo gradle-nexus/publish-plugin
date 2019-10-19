@@ -41,7 +41,7 @@ open class NexusRepository @Inject constructor(val name: String, project: Projec
 
     val stagingRepositoryId: Property<String> = project.objects.property()
 
-    fun capitalizedName(): String {
+    internal fun capitalizedName(): String {
         return name.capitalize()
     }
 }
