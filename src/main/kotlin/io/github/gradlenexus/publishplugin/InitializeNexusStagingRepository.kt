@@ -30,7 +30,7 @@ import javax.inject.Inject
 @Suppress("UnstableApiUsage")
 open class InitializeNexusStagingRepository @Inject
 constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository: NexusRepository, private val serverUrlToStagingRepoUrl: MutableMap<URI, URI>) :
-        BaseOperationOnNexusStagingRepository(objects, extension, repository) {
+        AbstractNexusStagingRepositoryTask(objects, extension, repository) {
 
     private val stagingRepositoryId: Property<String> = repository.stagingRepositoryId
 

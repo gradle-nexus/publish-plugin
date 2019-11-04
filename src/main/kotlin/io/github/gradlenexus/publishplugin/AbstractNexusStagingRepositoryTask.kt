@@ -30,7 +30,7 @@ import java.time.Duration
 import javax.inject.Inject
 
 @Suppress("UnstableApiUsage")
-abstract class BaseOperationOnNexusStagingRepository @Inject
+abstract class AbstractNexusStagingRepositoryTask @Inject
 constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository: NexusRepository) : DefaultTask() {
 
     @get:Input

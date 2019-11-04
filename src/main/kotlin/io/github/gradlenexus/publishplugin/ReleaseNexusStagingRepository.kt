@@ -27,7 +27,7 @@ import javax.inject.Inject
 @Suppress("UnstableApiUsage")
 open class ReleaseNexusStagingRepository @Inject
 constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository: NexusRepository) :
-        BaseOperationOnNexusStagingRepository(objects, extension, repository) {
+        AbstractNexusStagingRepositoryTask(objects, extension, repository) {
 
     @get:Input
     val stagingRepositoryId: Property<String> = objects.property()
