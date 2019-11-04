@@ -61,6 +61,8 @@ constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository
     @get:Internal
     protected val connectTimeout: Property<Duration> = objects.property()
 
+    private val repository: Property<NexusRepository> = objects.property()
+
     init {
         serverUrl.set(repository.nexusUrl)
         username.set(repository.username)
@@ -70,6 +72,7 @@ constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository
         repositoryName.set(repository.name)
         clientTimeout.set(extension.clientTimeout)
         connectTimeout.set(extension.connectTimeout)
+        this.repository.set(repository)
         this.onlyIf { extension.useStaging.getOrElse(false) }
     }
 
@@ -82,5 +85,9 @@ constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository
                     ?: throw GradleException("Failed to find staging profile for package group: $packageGroup")
         }
         return stagingProfileId
+    }
+
+    protected fun keepStagingRepositoryIdInExtension(stagingRepositoryIdAsString: String) {
+        repository.get().stagingRepositoryId.set(stagingRepositoryIdAsString)
     }
 }

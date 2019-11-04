@@ -20,7 +20,6 @@ import io.codearte.gradle.nexus.NexusStagingExtension
 import io.github.gradlenexus.publishplugin.internal.NexusClient
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
 import org.gradle.api.model.ObjectFactory
-import org.gradle.api.provider.Property
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.tasks.TaskAction
 import org.gradle.kotlin.dsl.the
@@ -31,8 +30,6 @@ import javax.inject.Inject
 open class InitializeNexusStagingRepository @Inject
 constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository: NexusRepository, private val serverUrlToStagingRepoUrl: MutableMap<URI, URI>) :
         AbstractNexusStagingRepositoryTask(objects, extension, repository) {
-
-    private val stagingRepositoryId: Property<String> = repository.stagingRepositoryId
 
     @TaskAction
     fun createStagingRepoAndReplacePublishingRepoUrl() {
@@ -46,7 +43,7 @@ constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository
             val stagingProfileId = determineStagingProfileId(client) // TODO: It would be good to keep/cache value in Extension/Repository
             logger.info("Creating staging repository for stagingProfileId '{}'", stagingProfileId)
             val stagingRepositoryIdAsString = client.createStagingRepository(stagingProfileId)
-            keepStagingRepositoyIdInExtension(stagingRepositoryIdAsString)
+            keepStagingRepositoryIdInExtension(stagingRepositoryIdAsString)
 
             project.rootProject.plugins.withId("io.codearte.nexus-staging") {
                 val nexusStagingExtension = project.rootProject.the<NexusStagingExtension>()
@@ -68,9 +65,5 @@ constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository
         val repository = publishing.repositories.getByName(repositoryName.get()) as MavenArtifactRepository
         logger.info("Updating URL of publishing repository '{}' to '{}'", repository.name, url)
         repository.setUrl(url.toString())
-    }
-
-    private fun keepStagingRepositoyIdInExtension(stagingRepositoryIdAsString: String) {
-        stagingRepositoryId.set(stagingRepositoryIdAsString)
     }
 }
