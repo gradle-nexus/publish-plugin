@@ -102,9 +102,6 @@ stutter {
     java(8) {
         compatibleRange("4.10")
     }
-    java(11) {
-        compatibleRange("4.10")
-    }
 }
 
 configurations {
