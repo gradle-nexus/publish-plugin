@@ -6,7 +6,7 @@ plugins {
     `maven-publish`
     id("com.gradle.build-scan") version "2.4.2"
     id("com.gradle.plugin-publish") version "0.10.1"
-    id("com.diffplug.gradle.spotless") version "3.24.2"
+    id("com.diffplug.gradle.spotless") version "3.25.0"
     id("com.github.johnrengelman.shadow") version "5.1.0"
     id("org.jetbrains.gradle.plugin.idea-ext")
     id("com.github.ben-manes.versions") version "0.25.0"
@@ -51,7 +51,8 @@ repositories {
 val licenseHeaderFile = file("gradle/license-header.txt")
 spotless {
     kotlin {
-        ktlint().userData(mapOf("disabled_rules" to "comment-spacing"))
+        //"import-ordering" required here as it started to fail after spotless plugin upgrade to 0.35.0 - resolve in separate PR
+        ktlint().userData(mapOf("disabled_rules" to "comment-spacing,import-ordering"))
         licenseHeaderFile(licenseHeaderFile)
     }
 }
