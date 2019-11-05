@@ -683,6 +683,14 @@ class NexusPublishPluginTests {
         assertReleaseOfStagingRepo(server)
     }
 
+    @Test
+    @Disabled("TODO")
+    fun `should allow to override stagingRepositoryId to close from command line`() {}
+
+    @Test
+    @Disabled("TODO")
+    fun `should allow to override stagingRepositoryId to release from command line`() {}
+
     // TODO: To be used also in other tests
     private fun writeDefaultSingleProjectConfiguration() {
         projectDir.resolve("settings.gradle").write("""

@@ -21,6 +21,7 @@ import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.options.Option
 import org.gradle.kotlin.dsl.property
 import javax.inject.Inject
 
@@ -30,9 +31,11 @@ constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository
         AbstractNexusStagingRepositoryTask(objects, extension, repository) {
 
     @get:Input
+    @get:Option(option = "stagingRepositoryId", description = "stagingRepositoryId to release")
     val stagingRepositoryId: Property<String> = objects.property()
 
     init {
+        // TODO: Replace with convention() once only Gradle 5.1+ is supported
         stagingRepositoryId.set(repository.stagingRepositoryId)
     }
 
