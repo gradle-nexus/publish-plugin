@@ -41,7 +41,7 @@ constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository
 
     @TaskAction
     fun releaseStagingRepo() {
-        val client = NexusClient(serverUrl.get(), username.orNull, password.orNull, clientTimeout.orNull, connectTimeout.orNull)
+        val client = NexusClient(repository.get().nexusUrl.get(), repository.get().username.orNull, repository.get().password.orNull, clientTimeout.orNull, connectTimeout.orNull)
         val stagingProfileId = determineStagingProfileId(client) // TODO: Will it update value in extension?
         logger.info("Releasing staging repository with id '{}' for stagingProfileId '{}'", stagingRepositoryId.get(), stagingProfileId)
         client.releaseStagingRepository(stagingRepositoryId.get())

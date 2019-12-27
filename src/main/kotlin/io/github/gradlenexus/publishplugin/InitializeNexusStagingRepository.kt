@@ -38,8 +38,8 @@ constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository
     }
 
     internal fun createStagingRepo(): URI {
-        return serverUrlToStagingRepoUrl.computeIfAbsent(serverUrl.get()) { serverUrl ->
-            val client = NexusClient(serverUrl, username.orNull, password.orNull, clientTimeout.orNull, connectTimeout.orNull)
+        return serverUrlToStagingRepoUrl.computeIfAbsent(repository.get().nexusUrl.get()) { serverUrl ->
+            val client = NexusClient(serverUrl, repository.get().username.orNull, repository.get().password.orNull, clientTimeout.orNull, connectTimeout.orNull)
             val stagingProfileId = determineStagingProfileId(client) // TODO: It would be good to keep/cache value in Extension/Repository
             logger.info("Creating staging repository for stagingProfileId '{}'", stagingProfileId)
             val stagingRepositoryIdAsString = client.createStagingRepository(stagingProfileId)
@@ -62,7 +62,7 @@ constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository
 
     private fun replacePublishingRepoUrl(url: URI) {
         val publishing = project.the<PublishingExtension>()
-        val repository = publishing.repositories.getByName(repositoryName.get()) as MavenArtifactRepository
+        val repository = publishing.repositories.getByName(repository.get().name) as MavenArtifactRepository
         logger.info("Updating URL of publishing repository '{}' to '{}'", repository.name, url)
         repository.setUrl(url.toString())
     }

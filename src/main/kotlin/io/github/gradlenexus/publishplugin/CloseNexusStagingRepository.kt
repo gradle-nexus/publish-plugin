@@ -41,7 +41,7 @@ constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository
 
     @TaskAction
     fun closeStagingRepo() {
-        val client = NexusClient(serverUrl.get(), username.orNull, password.orNull, clientTimeout.orNull, connectTimeout.orNull)
+        val client = NexusClient(repository.get().nexusUrl.get(), repository.get().username.orNull, repository.get().password.orNull, clientTimeout.orNull, connectTimeout.orNull)
         val stagingProfileId = determineStagingProfileId(client)
         logger.info("Closing staging repository with id '{}' for stagingProfileId '{}'", stagingRepositoryId.get(), stagingProfileId)
         client.closeStagingRepository(stagingRepositoryId.get())

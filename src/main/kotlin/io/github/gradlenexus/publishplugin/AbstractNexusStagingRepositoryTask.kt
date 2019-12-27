@@ -25,7 +25,6 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.kotlin.dsl.property
-import java.net.URI
 import java.time.Duration
 import javax.inject.Inject
 
@@ -33,27 +32,9 @@ import javax.inject.Inject
 abstract class AbstractNexusStagingRepositoryTask @Inject
 constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository: NexusRepository) : DefaultTask() {
 
-    @get:Input
-    protected val serverUrl: Property<URI> = objects.property()
-
-    @get:Optional
-    @get:Input
-    protected val username: Property<String> = objects.property()
-
-    @get:Optional
-    @get:Input
-    protected val password: Property<String> = objects.property()
-
     @get:Optional
     @get:Input
     protected val packageGroup: Property<String> = objects.property()
-
-    @get:Optional
-    @get:Input
-    protected val stagingProfileId: Property<String> = objects.property()
-
-    @get:Input
-    protected val repositoryName: Property<String> = objects.property()
 
     @get:Internal
     protected val clientTimeout: Property<Duration> = objects.property()
@@ -61,15 +42,12 @@ constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository
     @get:Internal
     protected val connectTimeout: Property<Duration> = objects.property()
 
-    private val repository: Property<NexusRepository> = objects.property()
+    //TODO: Expose externally as interface with getters only
+    //@get:Nested   //FIXME: @Nested switch values in NexusRepository to state = Final which prevent settings stagingRepositoryId in init task
+    protected val repository: Property<NexusRepository> = objects.property()
 
     init {
-        serverUrl.set(repository.nexusUrl)
-        username.set(repository.username)
-        password.set(repository.password)
         packageGroup.set(extension.packageGroup)
-        stagingProfileId.set(repository.stagingProfileId)
-        repositoryName.set(repository.name)
         clientTimeout.set(extension.clientTimeout)
         connectTimeout.set(extension.connectTimeout)
         this.repository.set(repository)
@@ -77,7 +55,7 @@ constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository
     }
 
     protected fun determineStagingProfileId(client: NexusClient): String {
-        var stagingProfileId = stagingProfileId.orNull
+        var stagingProfileId = repository.get().stagingProfileId.orNull
         if (stagingProfileId == null) {
             val packageGroup = packageGroup.get()
             logger.debug("No stagingProfileId set, querying for packageGroup '{}'", packageGroup)
