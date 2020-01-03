@@ -144,11 +144,13 @@ class NexusPublishPluginTests {
                 repositories {
                     myNexus {
                         nexusUrl = uri('${server.baseUrl()}')
+                        snapshotRepositoryUrl = uri('${server.baseUrl()}/snapshots/')
                         username = 'username'
                         password = 'password'
                     }
                     someOtherNexus {
                         nexusUrl = uri('http://example.org')
+                        snapshotRepositoryUrl = uri('http://example.org/snapshots/')
                     }
                 }
             }
@@ -301,6 +303,7 @@ class NexusPublishPluginTests {
                     repositories {
                         myNexus {
                             nexusUrl = uri('${server.baseUrl()}/a/')
+                            snapshotRepositoryUrl = uri('${server.baseUrl()}/a/snapshots/')
                             stagingProfileId = 'profile-a'
                             username = 'username'
                             password = 'password'
@@ -313,6 +316,7 @@ class NexusPublishPluginTests {
                     repositories {
                         named('myNexus').configure {
                             nexusUrl = uri('${server.baseUrl()}/b/')
+                            snapshotRepositoryUrl = uri('${server.baseUrl()}/b/snapshots/')
                             stagingProfileId = 'profile-b'
                         }
                     }
@@ -426,6 +430,7 @@ class NexusPublishPluginTests {
                 repositories {
                     myNexus {
                         nexusUrl = uri('${server.baseUrl()}')
+                        snapshotRepositoryUrl = uri('${server.baseUrl()}/snapshots/')
                     }
                 }
             }
@@ -467,6 +472,7 @@ class NexusPublishPluginTests {
                 repositories {
                     myNexus {
                         nexusUrl = uri('${server.baseUrl()}')
+                        snapshotRepositoryUrl = uri('${server.baseUrl()}/snapshots/')
                         username = 'username'
                         password = 'password'
                     }

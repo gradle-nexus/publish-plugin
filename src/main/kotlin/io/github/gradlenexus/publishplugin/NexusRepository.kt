@@ -19,6 +19,7 @@ package io.github.gradlenexus.publishplugin
 import org.gradle.api.Project
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.kotlin.dsl.property
 import java.net.URI
@@ -49,9 +50,8 @@ open class NexusRepository @Inject constructor(@get:Input val name: String, proj
     @get:Input
     val stagingProfileId: Property<String> = project.objects.property()
 
-    @get:Optional
-    @get:Input
-    val stagingRepositoryId: Property<String> = project.objects.property()
+    @get:Internal
+    val stagingRepository: Property<NexusStagingRepository> = project.objects.property()
 
     internal fun capitalizedName(): String {
         return name.capitalize()

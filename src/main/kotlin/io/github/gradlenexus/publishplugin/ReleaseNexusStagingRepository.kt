@@ -20,31 +20,34 @@ import io.github.gradlenexus.publishplugin.internal.NexusClient
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.TaskAction
-import org.gradle.api.tasks.options.Option
 import org.gradle.kotlin.dsl.property
 import javax.inject.Inject
 
+//TODO: Extract the same logic from CloseNexusStagingRepository and ReleaseNexusStagingRepository
 @Suppress("UnstableApiUsage")
 open class ReleaseNexusStagingRepository @Inject
 constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository: NexusRepository) :
         AbstractNexusStagingRepositoryTask(objects, extension, repository) {
 
     @get:Input
-    @get:Option(option = "stagingRepositoryId", description = "stagingRepositoryId to release")
-    val stagingRepositoryId: Property<String> = objects.property()
+    @get:Nested
+    val stagingRepository: Property<NexusStagingRepository> = objects.property()
+
+    //TODO: Bring back an ability to define stagingRepositoryId from a command line
 
     init {
         // TODO: Replace with convention() once only Gradle 5.1+ is supported
-        stagingRepositoryId.set(repository.stagingRepositoryId)
+        stagingRepository.set(repository.stagingRepository)
     }
 
     @TaskAction
     fun releaseStagingRepo() {
         val client = NexusClient(repository.get().nexusUrl.get(), repository.get().username.orNull, repository.get().password.orNull, clientTimeout.orNull, connectTimeout.orNull)
         val stagingProfileId = determineStagingProfileId(client) // TODO: Will it update value in extension?
-        logger.info("Releasing staging repository with id '{}' for stagingProfileId '{}'", stagingRepositoryId.get(), stagingProfileId)
-        client.releaseStagingRepository(stagingRepositoryId.get())
+        logger.info("Releasing staging repository with id '{}' for stagingProfileId '{}'", stagingRepository.get().stagingRepositoryId.get(), stagingProfileId)
+        client.releaseStagingRepository(stagingRepository.get().stagingRepositoryId.get())
         // TODO: Broken with real Nexus - waiting for effective execution is also required https://github.com/gradle-nexus/publish-plugin/issues/7
     }
 }

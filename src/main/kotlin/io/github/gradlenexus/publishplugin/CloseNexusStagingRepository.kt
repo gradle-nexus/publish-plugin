@@ -20,8 +20,8 @@ import io.github.gradlenexus.publishplugin.internal.NexusClient
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.TaskAction
-import org.gradle.api.tasks.options.Option
 import org.gradle.kotlin.dsl.property
 import javax.inject.Inject
 
@@ -31,20 +31,22 @@ constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository
         AbstractNexusStagingRepositoryTask(objects, extension, repository) {
 
     @get:Input
-    @get:Option(option = "stagingRepositoryId", description = "stagingRepositoryId to close")
-    val stagingRepositoryId: Property<String> = objects.property()
+    @get:Nested
+    val stagingRepository: Property<NexusStagingRepository> = objects.property()
+
+    //TODO: Bring back an ability to define stagingRepositoryId from a command line (and propagate that value back to NexusStagingRepository for Release*)
 
     init {
         // TODO: Replace with convention() once only Gradle 5.1+ is supported
-        stagingRepositoryId.set(repository.stagingRepositoryId)
+        stagingRepository.set(repository.stagingRepository)
     }
 
     @TaskAction
     fun closeStagingRepo() {
         val client = NexusClient(repository.get().nexusUrl.get(), repository.get().username.orNull, repository.get().password.orNull, clientTimeout.orNull, connectTimeout.orNull)
         val stagingProfileId = determineStagingProfileId(client)
-        logger.info("Closing staging repository with id '{}' for stagingProfileId '{}'", stagingRepositoryId.get(), stagingProfileId)
-        client.closeStagingRepository(stagingRepositoryId.get())
+        logger.info("Closing staging repository with id '{}' for stagingProfileId '{}'", stagingRepository.get().stagingRepositoryId.get(), stagingProfileId)
+        client.closeStagingRepository(stagingRepository.get().stagingRepositoryId.get())
         // TODO: Broken with real Nexus - waiting for effective execution is also required https://github.com/gradle-nexus/publish-plugin/issues/7
     }
 }

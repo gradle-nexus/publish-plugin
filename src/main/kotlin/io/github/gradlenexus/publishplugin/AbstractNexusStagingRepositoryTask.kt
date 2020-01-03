@@ -23,6 +23,7 @@ import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.kotlin.dsl.property
 import java.time.Duration
@@ -43,7 +44,7 @@ constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository
     protected val connectTimeout: Property<Duration> = objects.property()
 
     //TODO: Expose externally as interface with getters only
-    //@get:Nested   //FIXME: @Nested switch values in NexusRepository to state = Final which prevent settings stagingRepositoryId in init task
+    @get:Nested
     protected val repository: Property<NexusRepository> = objects.property()
 
     init {
@@ -66,6 +67,6 @@ constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository
     }
 
     protected fun keepStagingRepositoryIdInExtension(stagingRepositoryIdAsString: String) {
-        repository.get().stagingRepositoryId.set(stagingRepositoryIdAsString)
+        repository.get().stagingRepository.set(NexusStagingRepository(stagingRepositoryIdAsString, project))
     }
 }
