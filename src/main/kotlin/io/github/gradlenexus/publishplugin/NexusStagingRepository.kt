@@ -16,19 +16,6 @@
 
 package io.github.gradlenexus.publishplugin
 
-import org.gradle.api.Project
-import org.gradle.api.provider.Property
-import org.gradle.api.tasks.Internal
-import org.gradle.kotlin.dsl.property
-import javax.inject.Inject
+import org.gradle.api.tasks.Input
 
-@Suppress("UnstableApiUsage")
-open class NexusStagingRepository @Inject constructor(stagingRepositoryIdAsString: String, project: Project) {
-
-    @Internal
-    val stagingRepositoryId: Property<String> = project.objects.property()
-
-    init {
-        stagingRepositoryId.set(stagingRepositoryIdAsString)
-    }
-}
+open class NexusStagingRepository constructor(@get:Input val id: String)

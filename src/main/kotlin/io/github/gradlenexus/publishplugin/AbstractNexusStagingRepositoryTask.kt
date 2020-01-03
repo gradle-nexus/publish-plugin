@@ -67,6 +67,6 @@ constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository
     }
 
     protected fun keepStagingRepositoryIdInExtension(stagingRepositoryIdAsString: String) {
-        repository.get().stagingRepository.set(NexusStagingRepository(stagingRepositoryIdAsString, project))
+        repository.get().stagingRepository.set(NexusStagingRepository(stagingRepositoryIdAsString))
     }
 }

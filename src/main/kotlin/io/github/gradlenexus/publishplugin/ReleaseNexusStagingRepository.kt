@@ -19,7 +19,6 @@ package io.github.gradlenexus.publishplugin
 import io.github.gradlenexus.publishplugin.internal.NexusClient
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.TaskAction
 import org.gradle.kotlin.dsl.property
@@ -31,7 +30,6 @@ open class ReleaseNexusStagingRepository @Inject
 constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository: NexusRepository) :
         AbstractNexusStagingRepositoryTask(objects, extension, repository) {
 
-    @get:Input
     @get:Nested
     val stagingRepository: Property<NexusStagingRepository> = objects.property()
 
@@ -46,8 +44,8 @@ constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository
     fun releaseStagingRepo() {
         val client = NexusClient(repository.get().nexusUrl.get(), repository.get().username.orNull, repository.get().password.orNull, clientTimeout.orNull, connectTimeout.orNull)
         val stagingProfileId = determineStagingProfileId(client) // TODO: Will it update value in extension?
-        logger.info("Releasing staging repository with id '{}' for stagingProfileId '{}'", stagingRepository.get().stagingRepositoryId.get(), stagingProfileId)
-        client.releaseStagingRepository(stagingRepository.get().stagingRepositoryId.get())
+        logger.info("Releasing staging repository with id '{}' for stagingProfileId '{}'", stagingRepository.get().id, stagingProfileId)
+        client.releaseStagingRepository(stagingRepository.get().id)
         // TODO: Broken with real Nexus - waiting for effective execution is also required https://github.com/gradle-nexus/publish-plugin/issues/7
     }
 }

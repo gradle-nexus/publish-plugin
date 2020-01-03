@@ -520,6 +520,7 @@ class NexusPublishPluginTests {
                 repositories {
                     myNexus {
                         nexusUrl = uri('http://$nonRoutableAddress/')
+                        snapshotRepositoryUrl = uri('$nonRoutableAddress/snapshots/')
                         username = 'username'
                         password = 'password'
                     }
