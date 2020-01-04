@@ -21,6 +21,7 @@ import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.options.Option
 import org.gradle.kotlin.dsl.property
 import javax.inject.Inject
 
@@ -33,7 +34,10 @@ constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository
     @get:Nested
     val stagingRepository: Property<NexusStagingRepository> = objects.property()
 
-    //TODO: Bring back an ability to define stagingRepositoryId from a command line
+    @Option(option = "stagingRepositoryId", description = "stagingRepositoryId to release")
+    fun setStagingRepositoryId(stagingRepositoryId: String) {
+        stagingRepository.set(NexusStagingRepository(stagingRepositoryId))
+    }
 
     init {
         // TODO: Replace with convention() once only Gradle 5.1+ is supported
