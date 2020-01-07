@@ -55,18 +55,25 @@ constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository
         this.onlyIf { extension.useStaging.getOrElse(false) }
     }
 
-    protected fun determineStagingProfileId(client: NexusClient): String {
-        var stagingProfileId = repository.get().stagingProfileId.orNull
+    protected fun determineAndCacheStagingProfileId(client: NexusClient): String {
+        //NexusRepository.stagingProfileId is already finalized by Gradle at a time tasks are executed - workaround with non-property values is needed
+        var stagingProfileId = repository.get().stagingRepositoryMutableTaskConfig.orNull?.profileId
+                ?: repository.get().stagingProfileId.orNull
         if (stagingProfileId == null) {
             val packageGroup = packageGroup.get()
             logger.debug("No stagingProfileId set, querying for packageGroup '{}'", packageGroup)
             stagingProfileId = client.findStagingProfileId(packageGroup)
                     ?: throw GradleException("Failed to find staging profile for package group: $packageGroup")
+            cacheStagingProfileIdForOtherTasks(stagingProfileId)
         }
         return stagingProfileId
     }
 
-    protected fun keepStagingRepositoryIdInExtension(stagingRepositoryIdAsString: String) {
-        repository.get().stagingRepository.set(NexusStagingRepository(stagingRepositoryIdAsString))
+    private fun cacheStagingProfileIdForOtherTasks(stagingProfileId: String) {
+        repository.get().stagingRepositoryMutableTaskConfig.get().profileId = stagingProfileId
+    }
+
+    protected fun cacheStagingRepositoryForOtherTasks(stagingRepositoryId: String) {
+        repository.get().stagingRepositoryMutableTaskConfig.get().repositoryId = stagingRepositoryId
     }
 }

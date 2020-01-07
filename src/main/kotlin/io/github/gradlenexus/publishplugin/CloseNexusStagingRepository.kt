@@ -31,24 +31,24 @@ constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository
         AbstractNexusStagingRepositoryTask(objects, extension, repository) {
 
     @get:Nested
-    val stagingRepository: Property<NexusStagingRepository> = objects.property()
+    val stagingRepositoryConfig: Property<NexusStagingRepositoryMutableTaskConfig> = objects.property()
 
     @Option(option = "stagingRepositoryId", description = "stagingRepositoryId to close")
     fun setStagingRepositoryId(stagingRepositoryId: String) {
-        stagingRepository.set(NexusStagingRepository(stagingRepositoryId))
+        stagingRepositoryConfig.get().repositoryId = stagingRepositoryId
     }
 
     init {
         // TODO: Replace with convention() once only Gradle 5.1+ is supported
-        stagingRepository.set(repository.stagingRepository)
+        stagingRepositoryConfig.set(repository.stagingRepositoryMutableTaskConfig)
     }
 
     @TaskAction
     fun closeStagingRepo() {
         val client = NexusClient(repository.get().nexusUrl.get(), repository.get().username.orNull, repository.get().password.orNull, clientTimeout.orNull, connectTimeout.orNull)
-        val stagingProfileId = determineStagingProfileId(client)
-        logger.info("Closing staging repository with id '{}' for stagingProfileId '{}'", stagingRepository.get().id, stagingProfileId)
-        client.closeStagingRepository(stagingRepository.get().id)
+        val stagingProfileId = determineAndCacheStagingProfileId(client)
+        logger.info("Closing staging repository with id '{}' for stagingProfileId '{}'", stagingRepositoryConfig.get().repositoryId, stagingProfileId)
+        client.closeStagingRepository(stagingRepositoryConfig.get().repositoryId!!) //should be checked by @Input
         // TODO: Broken with real Nexus - waiting for effective execution is also required https://github.com/gradle-nexus/publish-plugin/issues/7
     }
 }

@@ -19,7 +19,9 @@ package io.github.gradlenexus.publishplugin
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
+import com.github.tomakehurst.wiremock.client.WireMock.containing
 import com.github.tomakehurst.wiremock.client.WireMock.get
+import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
@@ -733,6 +735,63 @@ class NexusPublishPluginTests {
     fun `command line option should override initialized staging repository to release`() {
     }
 
+    @Test
+    internal fun `initialize task should resolve stagingProfileId if not provided and keep it for close task`(@Wiremock server: WireMockServer) {
+        writeDefaultSingleProjectConfiguration()
+        //and
+        buildGradle.append("""
+            nexusPublishing {
+                repositories {
+                    sonatype {
+                        nexusUrl = uri('${server.baseUrl()}')
+                        //No staging profile defined
+                    }
+                }
+            }
+        """)
+        //and
+        stubGetStagingProfilesForOneProfileIdGivenId(server, STAGING_PROFILE_ID)
+        stubCreateStagingRepoRequest(server, "/staging/profiles/$STAGING_PROFILE_ID/start", STAGED_REPOSITORY_ID)
+        stubCloseStagingRepoRequestWithSubsequentQueryAboutItsState(server)
+
+        val result = run("initializeSonatypeStagingRepository", "closeSonatypeStagingRepository")
+
+        assertSuccess(result, ":initializeSonatypeStagingRepository")
+        assertSuccess(result, ":closeSonatypeStagingRepository")
+        //and
+        assertGetStagingProfile(server, 1)
+    }
+
+    @Test
+    internal fun `close task should resolve stagingProfileId if not provided and keep it for release task`(@Wiremock server: WireMockServer) {
+        gradleRunner.withDebug(true)
+
+        writeDefaultSingleProjectConfiguration()
+        //and
+        buildGradle.append("""
+            nexusPublishing {
+                repositories {
+                    sonatype {
+                        nexusUrl = uri('${server.baseUrl()}')
+                        //No staging profile defined
+                    }
+                }
+            }
+        """)
+        //and
+        stubGetStagingProfilesForOneProfileIdGivenId(server, STAGING_PROFILE_ID)
+        stubCreateStagingRepoRequest(server, "/staging/profiles/$STAGING_PROFILE_ID/start", STAGED_REPOSITORY_ID)
+        stubCloseStagingRepoRequestWithSubsequentQueryAboutItsState(server)
+        stubReleaseStagingRepoRequestWithSubsequentQueryAboutItsState(server)
+
+        val result = run("closeSonatypeStagingRepository", "--stagingRepositoryId=$STAGED_REPOSITORY_ID", "releaseSonatypeStagingRepository")
+
+        assertSuccess(result, ":closeSonatypeStagingRepository")
+        assertSuccess(result, ":releaseSonatypeStagingRepository")
+        //and
+        assertGetStagingProfile(server, 1)
+    }
+
     // TODO: To be used also in other tests
     private fun writeDefaultSingleProjectConfiguration() {
         projectDir.resolve("settings.gradle").write("""
@@ -799,6 +858,15 @@ class NexusPublishPluginTests {
                 .willReturn(aResponse().withBody(gson.toJson(mapOf("data" to mapOf("stagedRepositoryId" to stagedRepositoryId))))))
     }
 
+    private fun stubGetStagingProfilesForOneProfileIdGivenId(server: WireMockServer, stagingProfileId: String = STAGING_PROFILE_ID) {
+        server.stubFor(get(urlEqualTo("/staging/profiles"))
+                        .withHeader("Accept", containing("application/json"))
+                        .willReturn(aResponse()
+                            .withStatus(200)
+                            .withHeader("Content-Type", "application/json")
+                            .withBody(getOneStagingProfileWithGivenIdShrunkJsonResponseAsString(stagingProfileId))))
+    }
+
     private fun expectArtifactUploads(server: WireMockServer, prefix: String) {
         server.stubFor(put(urlMatching("$prefix/.+"))
                 .willReturn(aResponse().withStatus(201)))
@@ -825,6 +893,10 @@ class NexusPublishPluginTests {
         assertThat(result.task(taskPath)).describedAs("Task $taskPath").isNull()
     }
 
+    private fun assertGetStagingProfile(server: WireMockServer, count: Int = 1) {
+        server.verify(count, getRequestedFor(urlMatching("/staging/profiles")))
+    }
+
     private fun assertUploadedToStagingRepo(server: WireMockServer, path: String) {
         assertUploaded(server, "/staging/deployByRepositoryId/$STAGED_REPOSITORY_ID$path")
     }
@@ -844,5 +916,26 @@ class NexusPublishPluginTests {
     private fun assertGivenTransitionOperationOfStagingRepo(server: WireMockServer, transitionOperation: String, stagingRepositoryId: String) {
         server.verify(postRequestedFor(urlMatching("/staging/bulk/$transitionOperation"))
                 .withRequestBody(matchingJsonPath("\$.data[?(@.stagedRepositoryIds[0] == '$stagingRepositoryId')]")))
+    }
+
+    private fun getOneStagingProfileWithGivenIdShrunkJsonResponseAsString(stagingProfileId: String): String {
+        return """
+            {
+              "data": [
+                {
+                  "deployURI": "https://oss.sonatype.org/service/local/staging/deploy/maven2",
+                  "id": "$stagingProfileId",
+                  "inProgress": false,
+                  "mode": "BOTH",
+                  "name": "org.example",
+                  "order": 6445,
+                  "promotionTargetRepository": "releases",
+                  "repositoryType": "maven2",
+                  "resourceURI": "https://oss.sonatype.org/service/local/staging/profiles/$stagingProfileId",
+                  "targetGroups": ["staging"]
+                }
+              ]
+            }
+        """.trimIndent()
     }
 }

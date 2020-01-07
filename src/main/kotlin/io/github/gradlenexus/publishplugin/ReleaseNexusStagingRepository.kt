@@ -32,24 +32,24 @@ constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository
         AbstractNexusStagingRepositoryTask(objects, extension, repository) {
 
     @get:Nested
-    val stagingRepository: Property<NexusStagingRepository> = objects.property()
+    val stagingRepositoryConfig: Property<NexusStagingRepositoryMutableTaskConfig> = objects.property()
 
     @Option(option = "stagingRepositoryId", description = "stagingRepositoryId to release")
     fun setStagingRepositoryId(stagingRepositoryId: String) {
-        stagingRepository.set(NexusStagingRepository(stagingRepositoryId))
+        stagingRepositoryConfig.get().repositoryId = stagingRepositoryId
     }
 
     init {
         // TODO: Replace with convention() once only Gradle 5.1+ is supported
-        stagingRepository.set(repository.stagingRepository)
+        stagingRepositoryConfig.set(repository.stagingRepositoryMutableTaskConfig)
     }
 
     @TaskAction
     fun releaseStagingRepo() {
         val client = NexusClient(repository.get().nexusUrl.get(), repository.get().username.orNull, repository.get().password.orNull, clientTimeout.orNull, connectTimeout.orNull)
-        val stagingProfileId = determineStagingProfileId(client) // TODO: Will it update value in extension?
-        logger.info("Releasing staging repository with id '{}' for stagingProfileId '{}'", stagingRepository.get().id, stagingProfileId)
-        client.releaseStagingRepository(stagingRepository.get().id)
+        val stagingProfileId = determineAndCacheStagingProfileId(client) // TODO: Will it update value in extension?
+        logger.info("Releasing staging repository with id '{}' for stagingProfileId '{}'", stagingRepositoryConfig.get().repositoryId, stagingProfileId)
+        client.releaseStagingRepository(stagingRepositoryConfig.get().repositoryId!!)
         // TODO: Broken with real Nexus - waiting for effective execution is also required https://github.com/gradle-nexus/publish-plugin/issues/7
     }
 }

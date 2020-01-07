@@ -17,5 +17,16 @@
 package io.github.gradlenexus.publishplugin
 
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Optional
 
-open class NexusStagingRepository constructor(@get:Input val id: String)
+open class NexusStagingRepositoryMutableTaskConfig constructor(
+    @get:Input var repositoryId: String?,
+    @get:Input @get:Optional var profileId: String?
+) {
+
+    companion object {
+        fun empty(): NexusStagingRepositoryMutableTaskConfig {
+            return NexusStagingRepositoryMutableTaskConfig(null, null)
+        }
+    }
+}

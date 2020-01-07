@@ -51,7 +51,12 @@ open class NexusRepository @Inject constructor(@get:Input val name: String, proj
     val stagingProfileId: Property<String> = project.objects.property()
 
     @get:Internal
-    val stagingRepository: Property<NexusStagingRepository> = project.objects.property()
+    val stagingRepositoryMutableTaskConfig: Property<NexusStagingRepositoryMutableTaskConfig> = project.objects.property()
+
+    init {
+        // TODO: Replace with convention() once only Gradle 5.1+ is supported
+        stagingRepositoryMutableTaskConfig.set(NexusStagingRepositoryMutableTaskConfig.empty())
+    }
 
     internal fun capitalizedName(): String {
         return name.capitalize()
