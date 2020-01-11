@@ -77,17 +77,17 @@ configurations {
 }
 
 dependencies {
-    shadowed("com.squareup.retrofit2:retrofit:2.6.1")
-    shadowed("com.squareup.retrofit2:converter-gson:2.6.1")
+    shadowed("com.squareup.retrofit2:retrofit:2.7.1")
+    shadowed("com.squareup.retrofit2:converter-gson:2.7.1")
 
-    val nexusStagingPlugin = create("io.codearte.gradle.nexus:gradle-nexus-staging-plugin:0.21.1")
+    val nexusStagingPlugin = create("io.codearte.gradle.nexus:gradle-nexus-staging-plugin:0.21.2")
     compileOnly(nexusStagingPlugin)
     testImplementation(nexusStagingPlugin)
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.5.2")
-    testImplementation("com.github.tomakehurst:wiremock:2.24.1")
+    testImplementation("com.github.tomakehurst:wiremock:2.25.1")
     testImplementation("ru.lanwen.wiremock:wiremock-junit5:1.3.1")
-    testImplementation("org.assertj:assertj-core:3.13.2")
+    testImplementation("org.assertj:assertj-core:3.14.0")
 }
 
 stutter {
