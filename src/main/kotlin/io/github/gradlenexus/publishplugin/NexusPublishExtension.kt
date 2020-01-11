@@ -16,14 +16,13 @@
 
 package io.github.gradlenexus.publishplugin
 
+import java.time.Duration
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.provider.Property
 import org.gradle.kotlin.dsl.container
 import org.gradle.kotlin.dsl.newInstance
 import org.gradle.kotlin.dsl.property
-
-import java.time.Duration
 
 @Suppress("UnstableApiUsage")
 open class NexusPublishExtension(project: Project) {

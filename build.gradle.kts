@@ -6,7 +6,7 @@ plugins {
     `maven-publish`
     id("com.gradle.build-scan") version "2.4.2"
     id("com.gradle.plugin-publish") version "0.10.1"
-    id("com.diffplug.gradle.spotless") version "3.24.2"
+    id("com.diffplug.gradle.spotless") version "3.27.0"
     id("com.github.johnrengelman.shadow") version "5.1.0"
     id("org.jetbrains.gradle.plugin.idea-ext")
     id("com.github.ben-manes.versions") version "0.25.0"

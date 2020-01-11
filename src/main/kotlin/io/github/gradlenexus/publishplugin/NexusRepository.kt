@@ -16,11 +16,11 @@
 
 package io.github.gradlenexus.publishplugin
 
+import java.net.URI
+import javax.inject.Inject
 import org.gradle.api.Project
 import org.gradle.api.provider.Property
 import org.gradle.kotlin.dsl.property
-import java.net.URI
-import javax.inject.Inject
 
 @Suppress("UnstableApiUsage")
 open class NexusRepository @Inject constructor(val name: String, project: Project) {

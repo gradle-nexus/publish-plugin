@@ -17,6 +17,8 @@
 package io.github.gradlenexus.publishplugin
 
 import io.codearte.gradle.nexus.NexusStagingExtension
+import java.net.URI
+import java.util.concurrent.ConcurrentHashMap
 import org.gradle.BuildAdapter
 import org.gradle.BuildResult
 import org.gradle.api.Plugin
@@ -34,8 +36,6 @@ import org.gradle.kotlin.dsl.named
 import org.gradle.kotlin.dsl.register
 import org.gradle.kotlin.dsl.the
 import org.gradle.kotlin.dsl.withType
-import java.net.URI
-import java.util.concurrent.ConcurrentHashMap
 
 @Suppress("UnstableApiUsage")
 class NexusPublishPlugin : Plugin<Project> {

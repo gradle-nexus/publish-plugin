@@ -17,11 +17,11 @@
 package io.github.gradlenexus.publishplugin
 
 import groovy.lang.Closure
+import java.net.URI
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.internal.NamedDomainObjectContainerConfigureDelegate
 import org.gradle.util.ConfigureUtil
-import java.net.URI
 
 internal class DefaultNexusRepositoryContainer(delegate: NamedDomainObjectContainer<NexusRepository>) : NexusRepositoryContainer, NamedDomainObjectContainer<NexusRepository> by delegate {
 

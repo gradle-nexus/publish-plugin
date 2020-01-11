@@ -16,8 +16,11 @@
 
 package io.github.gradlenexus.publishplugin
 
-import io.github.gradlenexus.publishplugin.internal.NexusClient
 import io.codearte.gradle.nexus.NexusStagingExtension
+import io.github.gradlenexus.publishplugin.internal.NexusClient
+import java.net.URI
+import java.time.Duration
+import javax.inject.Inject
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
@@ -30,9 +33,6 @@ import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
 import org.gradle.kotlin.dsl.property
 import org.gradle.kotlin.dsl.the
-import java.net.URI
-import java.time.Duration
-import javax.inject.Inject
 
 @Suppress("UnstableApiUsage")
 open class InitializeNexusStagingRepository @Inject
