@@ -1,4 +1,3 @@
-import org.jetbrains.dokka.gradle.PackageOptions
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -9,7 +8,7 @@ plugins {
     id("com.github.johnrengelman.shadow") version "5.1.0"
     id("org.jetbrains.gradle.plugin.idea-ext")
     id("com.github.ben-manes.versions") version "0.25.0"
-    id("org.jetbrains.dokka") version "0.9.18"
+    id("org.jetbrains.dokka") version "0.10.0"
     id("org.ajoberstar.stutter") version "0.5.0"
 }
 
@@ -139,14 +138,16 @@ tasks {
         maxParallelForks = 8
     }
     dokka {
-        outputFormat = "javadoc"
-        outputDirectory = "$buildDir/javadoc"
-        reportUndocumented = false
-        jdkVersion = 8
-        packageOptions(delegateClosureOf<PackageOptions> {
-            prefix = "io.github.gradlenexus.publishplugin.internal"
-            suppress = true
-        })
+        configuration {
+            outputFormat = "javadoc"
+            outputDirectory = "$buildDir/javadoc"
+            reportUndocumented = false
+            jdkVersion = 8
+            perPackageOption {
+                prefix = "io.github.gradlenexus.publishplugin.internal"
+                suppress = true
+            }
+        }
     }
 }
 
