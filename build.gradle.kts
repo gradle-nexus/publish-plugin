@@ -5,11 +5,11 @@ plugins {
     `maven-publish`
     id("com.gradle.plugin-publish") version "0.10.1"
     id("com.diffplug.gradle.spotless") version "3.27.0"
-    id("com.github.johnrengelman.shadow") version "5.1.0"
+    id("com.github.johnrengelman.shadow") version "5.2.0"
     id("org.jetbrains.gradle.plugin.idea-ext")
-    id("com.github.ben-manes.versions") version "0.25.0"
+    id("com.github.ben-manes.versions") version "0.27.0"
     id("org.jetbrains.dokka") version "0.10.0"
-    id("org.ajoberstar.stutter") version "0.5.0"
+    id("org.ajoberstar.stutter") version "0.5.1"
 }
 
 group = "io.github.gradle-nexus"
