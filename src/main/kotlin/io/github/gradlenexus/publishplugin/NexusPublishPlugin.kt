@@ -30,6 +30,7 @@ import org.gradle.api.publish.plugins.PublishingPlugin
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.apply
 import org.gradle.kotlin.dsl.create
+import org.gradle.kotlin.dsl.property
 import org.gradle.kotlin.dsl.register
 import org.gradle.kotlin.dsl.the
 import org.gradle.kotlin.dsl.withType
@@ -55,16 +56,23 @@ class NexusPublishPlugin : Plugin<Project> {
         val extension = project.extensions.create<NexusPublishExtension>(NexusPublishExtension.NAME, project)
 
         extension.repositories.all {
+            val stagingRepositoryId = project.objects.property<String>()
             project.tasks.register("publishTo${capitalizedName()}") {
                 description = "Publishes all Maven publications produced by this project to the '${this@all.name}' Nexus repository."
                 group = PublishingPlugin.PUBLISH_TASK_GROUP
             }
             project.tasks
-                    .register<InitializeNexusStagingRepository>("initialize${capitalizedName()}StagingRepository", project.objects, extension, this, serverUrlToStagingRepoUrl)
+                    .register<InitializeNexusStagingRepository>("initialize${capitalizedName()}StagingRepository", project.objects, extension, this, serverUrlToStagingRepoUrl, { id: String -> stagingRepositoryId.set(id) })
             project.tasks
                     .register<CloseNexusStagingRepository>("close${capitalizedName()}StagingRepository", project.objects, extension, this)
+                    .configure {
+                        this.stagingRepositoryId.set(stagingRepositoryId)
+                    }
             project.tasks
                     .register<ReleaseNexusStagingRepository>("release${capitalizedName()}StagingRepository", project.objects, extension, this)
+                    .configure {
+                        this.stagingRepositoryId.set(stagingRepositoryId)
+                    }
         }
         extension.repositories.whenObjectRemoved {
             project.tasks.remove(project.tasks.named("publishTo${capitalizedName()}") as Any)

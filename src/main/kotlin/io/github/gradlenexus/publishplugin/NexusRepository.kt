@@ -17,46 +17,36 @@
 package io.github.gradlenexus.publishplugin
 
 import org.gradle.api.Project
-import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.kotlin.dsl.property
 import java.net.URI
 import javax.inject.Inject
 
 @Suppress("UnstableApiUsage")
-open class NexusRepository @Inject constructor(@get:Input val name: String, project: Project) {
+open class NexusRepository @Inject constructor(@Input val name: String, project: Project) {
 
-    @get:Input
-    val nexusUrl: Property<URI> = project.objects.property()
+    @Input
+    val nexusUrl = project.objects.property<URI>()
 
-    @get:Input
-    val snapshotRepositoryUrl: Property<URI> = project.objects.property()
+    @Input
+    val snapshotRepositoryUrl = project.objects.property<URI>()
 
-    @get:Optional
-    @get:Input
-    val username: Property<String> = project.objects.property<String>().apply {
+    @Optional
+    @Input
+    val username = project.objects.property<String>().apply {
         set(project.provider { project.findProperty("${name}Username") as? String })
     }
 
-    @get:Optional
-    @get:Input
-    val password: Property<String> = project.objects.property<String>().apply {
+    @Optional
+    @Input
+    val password = project.objects.property<String>().apply {
         set(project.provider { project.findProperty("${name}Password") as? String })
     }
 
-    @get:Optional
-    @get:Input
-    val stagingProfileId: Property<String> = project.objects.property()
-
-    @get:Internal
-    val stagingRepositoryMutableTaskConfig: Property<NexusStagingRepositoryMutableTaskConfig> = project.objects.property()
-
-    init {
-        // TODO: Replace with convention() once only Gradle 5.1+ is supported
-        stagingRepositoryMutableTaskConfig.set(NexusStagingRepositoryMutableTaskConfig.empty())
-    }
+    @Optional
+    @Input
+    val stagingProfileId = project.objects.property<String>()
 
     internal fun capitalizedName(): String {
         return name.capitalize()

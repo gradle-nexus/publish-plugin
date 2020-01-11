@@ -18,18 +18,33 @@ package io.github.gradlenexus.publishplugin
 
 import io.codearte.gradle.nexus.NexusStagingExtension
 import io.github.gradlenexus.publishplugin.internal.NexusClient
+import org.gradle.api.GradleException
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.publish.PublishingExtension
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
+import org.gradle.kotlin.dsl.property
 import org.gradle.kotlin.dsl.the
 import java.net.URI
 import javax.inject.Inject
 
 @Suppress("UnstableApiUsage")
 open class InitializeNexusStagingRepository @Inject
-constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository: NexusRepository, private val serverUrlToStagingRepoUrl: MutableMap<URI, URI>) :
-        AbstractNexusStagingRepositoryTask(objects, extension, repository) {
+constructor(
+    objects: ObjectFactory,
+    extension: NexusPublishExtension,
+    repository: NexusRepository,
+    private val serverUrlToStagingRepoUrl: MutableMap<URI, URI>,
+    private val stagingRepositoryId: (String) -> Unit
+) : AbstractNexusStagingRepositoryTask(objects, extension, repository) {
+
+    @Optional
+    @Input
+    val packageGroup = objects.property<String>().apply {
+        set(extension.packageGroup)
+    }
 
     @TaskAction
     fun createStagingRepoAndReplacePublishingRepoUrl() {
@@ -40,10 +55,10 @@ constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository
     internal fun createStagingRepo(): URI {
         return serverUrlToStagingRepoUrl.computeIfAbsent(repository.get().nexusUrl.get()) { serverUrl ->
             val client = NexusClient(serverUrl, repository.get().username.orNull, repository.get().password.orNull, clientTimeout.orNull, connectTimeout.orNull)
-            val stagingProfileId = determineAndCacheStagingProfileId(client)
+            val stagingProfileId = determineStagingProfileId(client)
             logger.info("Creating staging repository for stagingProfileId '{}'", stagingProfileId)
             val stagingRepositoryIdAsString = client.createStagingRepository(stagingProfileId)
-            cacheStagingRepositoryForOtherTasks(stagingRepositoryIdAsString)
+            stagingRepositoryId.invoke(stagingRepositoryIdAsString)
 
             //TODO: To be removed in next iteration
             project.rootProject.plugins.withId("io.codearte.nexus-staging") {
@@ -59,6 +74,17 @@ constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository
             }
             client.getStagingRepositoryUri(stagingRepositoryIdAsString)
         }
+    }
+
+    private fun determineStagingProfileId(client: NexusClient): String {
+        var stagingProfileId = repository.get().stagingProfileId.orNull
+        if (stagingProfileId == null) {
+            val packageGroup = packageGroup.get()
+            logger.debug("No stagingProfileId set, querying for packageGroup '{}'", packageGroup)
+            stagingProfileId = client.findStagingProfileId(packageGroup)
+                    ?: throw GradleException("Failed to find staging profile for package group: $packageGroup")
+        }
+        return stagingProfileId
     }
 
     private fun replacePublishingRepoUrl(url: URI) {

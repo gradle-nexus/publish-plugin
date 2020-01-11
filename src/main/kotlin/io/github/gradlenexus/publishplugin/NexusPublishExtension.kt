@@ -18,11 +18,9 @@ package io.github.gradlenexus.publishplugin
 
 import org.gradle.api.Action
 import org.gradle.api.Project
-import org.gradle.api.provider.Property
 import org.gradle.kotlin.dsl.container
 import org.gradle.kotlin.dsl.newInstance
 import org.gradle.kotlin.dsl.property
-
 import java.time.Duration
 
 @Suppress("UnstableApiUsage")
@@ -32,19 +30,19 @@ open class NexusPublishExtension(project: Project) {
         internal const val NAME = "nexusPublishing"
     }
 
-    val useStaging: Property<Boolean> = project.objects.property<Boolean>().apply {
+    val useStaging = project.objects.property<Boolean>().apply {
         set(project.provider { !project.version.toString().endsWith("-SNAPSHOT") })
     }
 
-    val packageGroup: Property<String> = project.objects.property<String>().apply {
+    val packageGroup = project.objects.property<String>().apply {
         set(project.provider { project.group.toString() })
     }
 
-    val clientTimeout: Property<Duration> = project.objects.property<Duration>().apply {
+    val clientTimeout = project.objects.property<Duration>().apply {
         set(Duration.ofMinutes(1))
     }
 
-    val connectTimeout: Property<Duration> = project.objects.property<Duration>().apply {
+    val connectTimeout = project.objects.property<Duration>().apply {
         set(Duration.ofMinutes(1))
     }
 

@@ -16,15 +16,10 @@
 
 package io.github.gradlenexus.publishplugin
 
-import io.github.gradlenexus.publishplugin.internal.NexusClient
 import org.gradle.api.DefaultTask
-import org.gradle.api.GradleException
 import org.gradle.api.model.ObjectFactory
-import org.gradle.api.provider.Property
-import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
-import org.gradle.api.tasks.Optional
 import org.gradle.kotlin.dsl.property
 import java.time.Duration
 import javax.inject.Inject
@@ -33,47 +28,23 @@ import javax.inject.Inject
 abstract class AbstractNexusStagingRepositoryTask @Inject
 constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository: NexusRepository) : DefaultTask() {
 
-    @get:Optional
-    @get:Input
-    protected val packageGroup: Property<String> = objects.property()
+    @Internal
+    val clientTimeout = objects.property<Duration>().apply {
+        set(extension.clientTimeout)
+    }
 
-    @get:Internal
-    protected val clientTimeout: Property<Duration> = objects.property()
-
-    @get:Internal
-    protected val connectTimeout: Property<Duration> = objects.property()
+    @Internal
+    val connectTimeout = objects.property<Duration>().apply {
+        set(extension.connectTimeout)
+    }
 
     //TODO: Expose externally as interface with getters only
-    @get:Nested
-    protected val repository: Property<NexusRepository> = objects.property()
+    @Nested
+    val repository = objects.property<NexusRepository>().apply {
+        set(repository)
+    }
 
     init {
-        packageGroup.set(extension.packageGroup)
-        clientTimeout.set(extension.clientTimeout)
-        connectTimeout.set(extension.connectTimeout)
-        this.repository.set(repository)
         this.onlyIf { extension.useStaging.getOrElse(false) }
-    }
-
-    protected fun determineAndCacheStagingProfileId(client: NexusClient): String {
-        //NexusRepository.stagingProfileId is already finalized by Gradle at a time tasks are executed - workaround with non-property values is needed
-        var stagingProfileId = repository.get().stagingRepositoryMutableTaskConfig.orNull?.profileId
-                ?: repository.get().stagingProfileId.orNull
-        if (stagingProfileId == null) {
-            val packageGroup = packageGroup.get()
-            logger.debug("No stagingProfileId set, querying for packageGroup '{}'", packageGroup)
-            stagingProfileId = client.findStagingProfileId(packageGroup)
-                    ?: throw GradleException("Failed to find staging profile for package group: $packageGroup")
-            cacheStagingProfileIdForOtherTasks(stagingProfileId)
-        }
-        return stagingProfileId
-    }
-
-    private fun cacheStagingProfileIdForOtherTasks(stagingProfileId: String) {
-        repository.get().stagingRepositoryMutableTaskConfig.get().profileId = stagingProfileId
-    }
-
-    protected fun cacheStagingRepositoryForOtherTasks(stagingRepositoryId: String) {
-        repository.get().stagingRepositoryMutableTaskConfig.get().repositoryId = stagingRepositoryId
     }
 }

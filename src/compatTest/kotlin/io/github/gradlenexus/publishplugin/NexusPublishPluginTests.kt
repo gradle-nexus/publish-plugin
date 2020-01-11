@@ -706,7 +706,7 @@ class NexusPublishPluginTests {
         //and
         stubCloseStagingRepoRequestWithSubsequentQueryAboutItsState(server, OVERRIDDEN_STAGED_REPOSITORY_ID)
 
-        val result = run("closeSonatypeStagingRepository", "--stagingRepositoryId=$OVERRIDDEN_STAGED_REPOSITORY_ID")
+        val result = run("closeSonatypeStagingRepository", "--staging-repository-id=$OVERRIDDEN_STAGED_REPOSITORY_ID")
 
         assertSuccess(result, ":closeSonatypeStagingRepository")
         assertCloseOfStagingRepo(server, OVERRIDDEN_STAGED_REPOSITORY_ID)
@@ -719,7 +719,7 @@ class NexusPublishPluginTests {
         //and
         stubReleaseStagingRepoRequestWithSubsequentQueryAboutItsState(server, OVERRIDDEN_STAGED_REPOSITORY_ID)
 
-        val result = run("releaseSonatypeStagingRepository", "--stagingRepositoryId=$OVERRIDDEN_STAGED_REPOSITORY_ID")
+        val result = run("releaseSonatypeStagingRepository", "--staging-repository-id=$OVERRIDDEN_STAGED_REPOSITORY_ID")
 
         assertSuccess(result, ":releaseSonatypeStagingRepository")
         assertReleaseOfStagingRepo(server, OVERRIDDEN_STAGED_REPOSITORY_ID)
@@ -758,36 +758,6 @@ class NexusPublishPluginTests {
 
         assertSuccess(result, ":initializeSonatypeStagingRepository")
         assertSuccess(result, ":closeSonatypeStagingRepository")
-        //and
-        assertGetStagingProfile(server, 1)
-    }
-
-    @Test
-    internal fun `close task should resolve stagingProfileId if not provided and keep it for release task`(@Wiremock server: WireMockServer) {
-        gradleRunner.withDebug(true)
-
-        writeDefaultSingleProjectConfiguration()
-        //and
-        buildGradle.append("""
-            nexusPublishing {
-                repositories {
-                    sonatype {
-                        nexusUrl = uri('${server.baseUrl()}')
-                        //No staging profile defined
-                    }
-                }
-            }
-        """)
-        //and
-        stubGetStagingProfilesForOneProfileIdGivenId(server, STAGING_PROFILE_ID)
-        stubCreateStagingRepoRequest(server, "/staging/profiles/$STAGING_PROFILE_ID/start", STAGED_REPOSITORY_ID)
-        stubCloseStagingRepoRequestWithSubsequentQueryAboutItsState(server)
-        stubReleaseStagingRepoRequestWithSubsequentQueryAboutItsState(server)
-
-        val result = run("closeSonatypeStagingRepository", "--stagingRepositoryId=$STAGED_REPOSITORY_ID", "releaseSonatypeStagingRepository")
-
-        assertSuccess(result, ":closeSonatypeStagingRepository")
-        assertSuccess(result, ":releaseSonatypeStagingRepository")
         //and
         assertGetStagingProfile(server, 1)
     }
