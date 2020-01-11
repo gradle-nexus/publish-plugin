@@ -4,7 +4,6 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     `kotlin-dsl`
     `maven-publish`
-    id("com.gradle.build-scan") version "2.4.2"
     id("com.gradle.plugin-publish") version "0.10.1"
     id("com.diffplug.gradle.spotless") version "3.27.0"
     id("com.github.johnrengelman.shadow") version "5.1.0"
@@ -12,11 +11,6 @@ plugins {
     id("com.github.ben-manes.versions") version "0.25.0"
     id("org.jetbrains.dokka") version "0.9.18"
     id("org.ajoberstar.stutter") version "0.5.0"
-}
-
-buildScan {
-    termsOfServiceUrl = "https://gradle.com/terms-of-service"
-    termsOfServiceAgree = "yes"
 }
 
 group = "io.github.gradle-nexus"
