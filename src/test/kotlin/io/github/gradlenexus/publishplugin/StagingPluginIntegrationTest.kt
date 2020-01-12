@@ -24,6 +24,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.google.gson.Gson
 import io.codearte.gradle.nexus.NexusStagingExtension
 import io.codearte.gradle.nexus.NexusStagingPlugin
+import java.net.URI
 import org.assertj.core.api.Assertions.assertThat
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.apply
@@ -35,7 +36,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import ru.lanwen.wiremock.ext.WiremockResolver
 import ru.lanwen.wiremock.ext.WiremockResolver.Wiremock
-import java.net.URI
 
 @Suppress("UnstableApiUsage")
 @ExtendWith(WiremockResolver::class)

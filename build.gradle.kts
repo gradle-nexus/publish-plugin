@@ -1,22 +1,15 @@
-import org.jetbrains.dokka.gradle.PackageOptions
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     `kotlin-dsl`
     `maven-publish`
-    id("com.gradle.build-scan") version "2.4.2"
     id("com.gradle.plugin-publish") version "0.10.1"
-    id("com.diffplug.gradle.spotless") version "3.25.0"
-    id("com.github.johnrengelman.shadow") version "5.1.0"
+    id("com.diffplug.gradle.spotless") version "3.27.0"
+    id("com.github.johnrengelman.shadow") version "5.2.0"
     id("org.jetbrains.gradle.plugin.idea-ext")
-    id("com.github.ben-manes.versions") version "0.25.0"
-    id("org.jetbrains.dokka") version "0.9.18"
-    id("org.ajoberstar.stutter") version "0.5.0"
-}
-
-buildScan {
-    termsOfServiceUrl = "https://gradle.com/terms-of-service"
-    termsOfServiceAgree = "yes"
+    id("com.github.ben-manes.versions") version "0.27.0"
+    id("org.jetbrains.dokka") version "0.10.0"
+    id("org.ajoberstar.stutter") version "0.5.1"
 }
 
 group = "io.github.gradle-nexus"
@@ -85,17 +78,17 @@ configurations {
 }
 
 dependencies {
-    shadowed("com.squareup.retrofit2:retrofit:2.6.1")
-    shadowed("com.squareup.retrofit2:converter-gson:2.6.1")
+    shadowed("com.squareup.retrofit2:retrofit:2.7.1")
+    shadowed("com.squareup.retrofit2:converter-gson:2.7.1")
 
-    val nexusStagingPlugin = create("io.codearte.gradle.nexus:gradle-nexus-staging-plugin:0.21.1")
+    val nexusStagingPlugin = create("io.codearte.gradle.nexus:gradle-nexus-staging-plugin:0.21.2")
     compileOnly(nexusStagingPlugin)
     testImplementation(nexusStagingPlugin)
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.5.2")
-    testImplementation("com.github.tomakehurst:wiremock:2.24.1")
+    testImplementation("com.github.tomakehurst:wiremock:2.25.1")
     testImplementation("ru.lanwen.wiremock:wiremock-junit5:1.3.1")
-    testImplementation("org.assertj:assertj-core:3.13.2")
+    testImplementation("org.assertj:assertj-core:3.14.0")
 }
 
 stutter {
@@ -147,14 +140,16 @@ tasks {
         maxParallelForks = 8
     }
     dokka {
-        outputFormat = "javadoc"
-        outputDirectory = "$buildDir/javadoc"
-        reportUndocumented = false
-        jdkVersion = 8
-        packageOptions(delegateClosureOf<PackageOptions> {
-            prefix = "io.github.gradlenexus.publishplugin.internal"
-            suppress = true
-        })
+        configuration {
+            outputFormat = "javadoc"
+            outputDirectory = "$buildDir/javadoc"
+            reportUndocumented = false
+            jdkVersion = 8
+            perPackageOption {
+                prefix = "io.github.gradlenexus.publishplugin.internal"
+                suppress = true
+            }
+        }
     }
 }
 
