@@ -1,6 +1,9 @@
 # Gradle
 .gradle
-build
+/build/
+/buildSrc/build/
 
 # IDEA
-out
+/.idea/
+/buildSrc/out/
+/out/
