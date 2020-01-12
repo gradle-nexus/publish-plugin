@@ -1,10 +1,26 @@
+/*
+ * Copyright 2019 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     `kotlin-dsl`
     `maven-publish`
     id("com.gradle.plugin-publish") version "0.10.1"
-    id("com.diffplug.gradle.spotless") version "3.27.0"
+    id("com.github.autostyle") version "3.0"
     id("com.github.johnrengelman.shadow") version "5.2.0"
     id("org.jetbrains.gradle.plugin.idea-ext")
     id("com.github.ben-manes.versions") version "0.27.0"
@@ -41,11 +57,21 @@ repositories {
     jcenter()
 }
 
-val licenseHeaderFile = file("gradle/license-header.txt")
-spotless {
+val licenseHeader = file("gradle/license-header.txt").readText().trimEnd()
+autostyle {
     kotlin {
         ktlint()
-        licenseHeaderFile(licenseHeaderFile)
+        licenseHeader(licenseHeader) {
+            addBlankLineAfter.set(true)
+        }
+        trimTrailingWhitespace()
+    }
+    kotlinGradle {
+        ktlint()
+        licenseHeader(licenseHeader) {
+            addBlankLineAfter.set(true)
+        }
+        trimTrailingWhitespace()
     }
 }
 
@@ -56,7 +82,7 @@ idea {
                 useDefault = "Apache-2.0"
                 profiles {
                     create("Apache-2.0") {
-                        notice = readCopyrightHeader(licenseHeaderFile)
+                        notice = licenseHeader
                         keyword = "Copyright"
                     }
                 }
@@ -209,4 +235,3 @@ publishing {
 tasks.wrapper {
     distributionType = Wrapper.DistributionType.ALL
 }
-
