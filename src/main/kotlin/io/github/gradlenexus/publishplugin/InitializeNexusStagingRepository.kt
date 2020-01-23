@@ -18,64 +18,32 @@ package io.github.gradlenexus.publishplugin
 
 import io.codearte.gradle.nexus.NexusStagingExtension
 import io.github.gradlenexus.publishplugin.internal.NexusClient
-import java.net.URI
-import java.time.Duration
-import javax.inject.Inject
-import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
 import org.gradle.api.model.ObjectFactory
-import org.gradle.api.provider.Property
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
 import org.gradle.kotlin.dsl.property
 import org.gradle.kotlin.dsl.the
+import java.net.URI
+import javax.inject.Inject
 
 @Suppress("UnstableApiUsage")
 open class InitializeNexusStagingRepository @Inject
-constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository: NexusRepository, private val serverUrlToStagingRepoUrl: MutableMap<URI, URI>) : DefaultTask() {
+constructor(
+    objects: ObjectFactory,
+    extension: NexusPublishExtension,
+    repository: NexusRepository,
+    private val serverUrlToStagingRepoUrl: MutableMap<URI, URI>,
+    private val stagingRepositoryId: (String) -> Unit
+) : AbstractNexusStagingRepositoryTask(objects, extension, repository) {
 
-    @get:Input
-    val serverUrl: Property<URI> = objects.property()
-
-    @get:Optional
-    @get:Input
-    val username: Property<String> = objects.property()
-
-    @get:Optional
-    @get:Input
-    val password: Property<String> = objects.property()
-
-    @get:Optional
-    @get:Input
-    val packageGroup: Property<String> = objects.property()
-
-    @get:Optional
-    @get:Input
-    val stagingProfileId: Property<String> = objects.property()
-
-    @get:Input
-    val repositoryName: Property<String> = objects.property()
-
-    @get:Internal
-    val clientTimeout: Property<Duration> = objects.property()
-
-    @get:Internal
-    val connectTimeout: Property<Duration> = objects.property()
-
-    init {
-        serverUrl.set(repository.nexusUrl)
-        username.set(repository.username)
-        password.set(repository.password)
-        packageGroup.set(extension.packageGroup)
-        stagingProfileId.set(repository.stagingProfileId)
-        repositoryName.set(repository.name)
-        clientTimeout.set(extension.clientTimeout)
-        connectTimeout.set(extension.connectTimeout)
-        this.onlyIf { extension.useStaging.getOrElse(false) }
+    @Optional
+    @Input
+    val packageGroup = objects.property<String>().apply {
+        set(extension.packageGroup)
     }
 
     @TaskAction
@@ -85,15 +53,18 @@ constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository
     }
 
     internal fun createStagingRepo(): URI {
-        return serverUrlToStagingRepoUrl.computeIfAbsent(serverUrl.get()) { serverUrl ->
-            val client = NexusClient(serverUrl, username.orNull, password.orNull, clientTimeout.orNull, connectTimeout.orNull)
+        return serverUrlToStagingRepoUrl.computeIfAbsent(repository.get().nexusUrl.get()) { serverUrl ->
+            val client = NexusClient(serverUrl, repository.get().username.orNull, repository.get().password.orNull, clientTimeout.orNull, connectTimeout.orNull)
             val stagingProfileId = determineStagingProfileId(client)
             logger.info("Creating staging repository for stagingProfileId '{}'", stagingProfileId)
-            val stagingRepositoryId = client.createStagingRepository(stagingProfileId)
+            val stagingRepositoryIdAsString = client.createStagingRepository(stagingProfileId)
+            stagingRepositoryId.invoke(stagingRepositoryIdAsString)
+
+            //TODO: To be removed in next iteration
             project.rootProject.plugins.withId("io.codearte.nexus-staging") {
                 val nexusStagingExtension = project.rootProject.the<NexusStagingExtension>()
                 try {
-                    nexusStagingExtension.stagingRepositoryId.set(stagingRepositoryId)
+                    nexusStagingExtension.stagingRepositoryId.set(stagingRepositoryIdAsString)
                 } catch (e: NoSuchMethodError) {
                     logger.warn("For increased publishing reliability please update the io.codearte.nexus-staging plugin to at least version 0.20.0.\n" +
                             "If your version is at least 0.20.0, try to update the io.github.gradle-nexus.publish-plugin plugin to its latest version.\n" +
@@ -101,12 +72,12 @@ constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository
                     logger.debug("getStagingRepositoryId method not found on nexusStagingExtension", e)
                 }
             }
-            client.getStagingRepositoryUri(stagingRepositoryId)
+            client.getStagingRepositoryUri(stagingRepositoryIdAsString)
         }
     }
 
     private fun determineStagingProfileId(client: NexusClient): String {
-        var stagingProfileId = stagingProfileId.orNull
+        var stagingProfileId = repository.get().stagingProfileId.orNull
         if (stagingProfileId == null) {
             val packageGroup = packageGroup.get()
             logger.debug("No stagingProfileId set, querying for packageGroup '{}'", packageGroup)
@@ -118,7 +89,7 @@ constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository
 
     private fun replacePublishingRepoUrl(url: URI) {
         val publishing = project.the<PublishingExtension>()
-        val repository = publishing.repositories.getByName(repositoryName.get()) as MavenArtifactRepository
+        val repository = publishing.repositories.getByName(repository.get().name) as MavenArtifactRepository
         logger.info("Updating URL of publishing repository '{}' to '{}'", repository.name, url)
         repository.setUrl(url.toString())
     }

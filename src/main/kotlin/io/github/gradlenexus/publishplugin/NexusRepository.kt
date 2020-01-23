@@ -19,23 +19,36 @@ package io.github.gradlenexus.publishplugin
 import java.net.URI
 import javax.inject.Inject
 import org.gradle.api.Project
-import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Optional
 import org.gradle.kotlin.dsl.property
 
 @Suppress("UnstableApiUsage")
-open class NexusRepository @Inject constructor(val name: String, project: Project) {
+open class NexusRepository @Inject constructor(@Input val name: String, project: Project) {
 
-    val nexusUrl: Property<URI> = project.objects.property()
+    @Input
+    val nexusUrl = project.objects.property<URI>()
 
-    val snapshotRepositoryUrl: Property<URI> = project.objects.property()
+    @Input
+    val snapshotRepositoryUrl = project.objects.property<URI>()
 
-    val username: Property<String> = project.objects.property<String>().apply {
+    @Optional
+    @Input
+    val username = project.objects.property<String>().apply {
         set(project.provider { project.findProperty("${name}Username") as? String })
     }
 
-    val password: Property<String> = project.objects.property<String>().apply {
+    @Optional
+    @Input
+    val password = project.objects.property<String>().apply {
         set(project.provider { project.findProperty("${name}Password") as? String })
     }
 
-    val stagingProfileId: Property<String> = project.objects.property()
+    @Optional
+    @Input
+    val stagingProfileId = project.objects.property<String>()
+
+    internal fun capitalizedName(): String {
+        return name.capitalize()
+    }
 }

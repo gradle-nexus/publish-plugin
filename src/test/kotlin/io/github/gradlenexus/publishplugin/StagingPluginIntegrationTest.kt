@@ -37,6 +37,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 import ru.lanwen.wiremock.ext.WiremockResolver
 import ru.lanwen.wiremock.ext.WiremockResolver.Wiremock
 
+@Suppress("UnstableApiUsage")
 @ExtendWith(WiremockResolver::class)
 class StagingPluginIntegrationTest {
 

@@ -19,7 +19,9 @@ package io.github.gradlenexus.publishplugin
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
+import com.github.tomakehurst.wiremock.client.WireMock.containing
 import com.github.tomakehurst.wiremock.client.WireMock.get
+import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
@@ -37,25 +39,34 @@ import org.gradle.testkit.runner.TaskOutcome
 import org.gradle.testkit.runner.TaskOutcome.FAILED
 import org.gradle.testkit.runner.TaskOutcome.SKIPPED
 import org.gradle.testkit.runner.TaskOutcome.SUCCESS
+import org.gradle.util.GradleVersion
 import org.gradle.util.VersionNumber
 import org.junit.jupiter.api.Assumptions.assumeTrue
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.io.TempDir
 import ru.lanwen.wiremock.ext.WiremockResolver
 import ru.lanwen.wiremock.ext.WiremockResolver.Wiremock
 
+@Suppress("FunctionName") // TODO: How to suppress "kotlin:S100" from SonarLint?
 @ExtendWith(WiremockResolver::class)
 class NexusPublishPluginTests {
 
     companion object {
         private const val STAGING_PROFILE_ID = "someProfileId"
         private const val STAGED_REPOSITORY_ID = "orgexample-42"
+        private const val OVERRIDDEN_STAGED_REPOSITORY_ID = "orgexample-42o"
+    }
+
+    private enum class StagingRepoTransitionOperation(val urlSufix: String, val type: String) {
+        CLOSE("close", "CLOSED"), RELEASE("promote", "RELEASED")
     }
 
     private val gson = Gson()
 
-    private val gradleVersion = System.getProperty("compat.gradle.version")
+    private val gradleVersion = System.getProperty("compat.gradle.version") ?: GradleVersion.current().version
 
     private val gradleRunner = GradleRunner.create()
             .withPluginClasspath()
@@ -66,6 +77,13 @@ class NexusPublishPluginTests {
 
     @TempDir
     lateinit var projectDir: Path
+
+    lateinit var buildGradle: Path
+
+    @BeforeEach
+    internal fun setUp() {
+        buildGradle = projectDir.resolve("build.gradle")
+    }
 
     @Test
     fun `publish task depends on correct tasks`() {
@@ -133,11 +151,13 @@ class NexusPublishPluginTests {
                 repositories {
                     myNexus {
                         nexusUrl = uri('${server.baseUrl()}')
+                        snapshotRepositoryUrl = uri('${server.baseUrl()}/snapshots/')
                         username = 'username'
                         password = 'password'
                     }
                     someOtherNexus {
                         nexusUrl = uri('http://example.org')
+                        snapshotRepositoryUrl = uri('http://example.org/snapshots/')
                     }
                 }
             }
@@ -290,6 +310,7 @@ class NexusPublishPluginTests {
                     repositories {
                         myNexus {
                             nexusUrl = uri('${server.baseUrl()}/a/')
+                            snapshotRepositoryUrl = uri('${server.baseUrl()}/a/snapshots/')
                             stagingProfileId = 'profile-a'
                             username = 'username'
                             password = 'password'
@@ -302,6 +323,7 @@ class NexusPublishPluginTests {
                     repositories {
                         named('myNexus').configure {
                             nexusUrl = uri('${server.baseUrl()}/b/')
+                            snapshotRepositoryUrl = uri('${server.baseUrl()}/b/snapshots/')
                             stagingProfileId = 'profile-b'
                         }
                     }
@@ -415,6 +437,7 @@ class NexusPublishPluginTests {
                 repositories {
                     myNexus {
                         nexusUrl = uri('${server.baseUrl()}')
+                        snapshotRepositoryUrl = uri('${server.baseUrl()}/snapshots/')
                     }
                 }
             }
@@ -456,6 +479,7 @@ class NexusPublishPluginTests {
                 repositories {
                     myNexus {
                         nexusUrl = uri('${server.baseUrl()}')
+                        snapshotRepositoryUrl = uri('${server.baseUrl()}/snapshots/')
                         username = 'username'
                         password = 'password'
                     }
@@ -503,6 +527,7 @@ class NexusPublishPluginTests {
                 repositories {
                     myNexus {
                         nexusUrl = uri('http://$nonRoutableAddress/')
+                        snapshotRepositoryUrl = uri('$nonRoutableAddress/snapshots/')
                         username = 'username'
                         password = 'password'
                     }
@@ -615,6 +640,171 @@ class NexusPublishPluginTests {
                 .contains("b.snapshotRepositoryUrl = https://oss.sonatype.org/content/repositories/snapshots/")
     }
 
+    @Test
+    fun `should close staging repository`(@Wiremock server: WireMockServer) {
+        writeDefaultSingleProjectConfiguration()
+        writeMockedSonatypeNexusPublishingConfiguration(server)
+
+        stubCreateStagingRepoRequest(server, "/staging/profiles/$STAGING_PROFILE_ID/start", STAGED_REPOSITORY_ID)
+        stubCloseStagingRepoRequestWithSubsequentQueryAboutItsState(server, STAGED_REPOSITORY_ID)
+
+        val result = run("initializeSonatypeStagingRepository", "closeSonatypeStagingRepository")
+
+        assertSuccess(result, ":initializeSonatypeStagingRepository")
+        assertSuccess(result, ":closeSonatypeStagingRepository")
+        assertCloseOfStagingRepo(server)
+    }
+
+    private fun stubCloseStagingRepoRequestWithSubsequentQueryAboutItsState(
+        server: WireMockServer,
+        stagingRepositoryId: String = STAGED_REPOSITORY_ID
+    ) {
+        stubTransitToDesiredStateStagingRepoRequestWithSubsequentQueryAboutItsState(server, stagingRepositoryId, StagingRepoTransitionOperation.CLOSE)
+    }
+
+    private fun stubReleaseStagingRepoRequestWithSubsequentQueryAboutItsState(
+        server: WireMockServer,
+        stagingRepositoryId: String = STAGED_REPOSITORY_ID
+    ) {
+        stubTransitToDesiredStateStagingRepoRequestWithSubsequentQueryAboutItsState(server, stagingRepositoryId, StagingRepoTransitionOperation.RELEASE)
+    }
+
+    private fun stubTransitToDesiredStateStagingRepoRequestWithSubsequentQueryAboutItsState(
+        server: WireMockServer,
+        stagingRepositoryId: String,
+        operation: StagingRepoTransitionOperation
+    ) {
+        server.stubFor(post(urlEqualTo("/staging/bulk/${operation.urlSufix}"))
+                .withRequestBody(matchingJsonPath("\$.data[?(@.stagedRepositoryIds[0] == '$stagingRepositoryId')]"))
+                .withRequestBody(matchingJsonPath("\$.data[?(@.autoDropAfterRelease == true)]"))
+                .willReturn(aResponse().withHeader("Content-Type", "application/json").withBody("{}")))
+        server.stubFor(get(urlEqualTo("/staging/repository/$stagingRepositoryId"))
+                .willReturn(aResponse().withHeader("Content-Type", "application/json").withBody("{\"transitioning\":false,\"type\":\"${operation.type}\"}")))
+    }
+
+    @Test
+    fun `should close and release staging repository`(@Wiremock server: WireMockServer) {
+        writeDefaultSingleProjectConfiguration()
+        writeMockedSonatypeNexusPublishingConfiguration(server)
+
+        stubCreateStagingRepoRequest(server, "/staging/profiles/$STAGING_PROFILE_ID/start", STAGED_REPOSITORY_ID)
+        stubReleaseStagingRepoRequestWithSubsequentQueryAboutItsState(server, STAGED_REPOSITORY_ID)
+
+        val result = run("tasks", "initializeSonatypeStagingRepository", "releaseSonatypeStagingRepository")
+
+        assertSuccess(result, ":initializeSonatypeStagingRepository")
+        assertSuccess(result, ":releaseSonatypeStagingRepository")
+        assertReleaseOfStagingRepo(server)
+    }
+
+    //TODO: Move to separate subclass with command line tests for @Option
+    //TODO: Consider switching to parameterized tests for close and release
+    @Test
+    fun `should allow to take staging repo id to close from command line without its initialization`(@Wiremock server: WireMockServer) {
+        writeDefaultSingleProjectConfiguration()
+        writeMockedSonatypeNexusPublishingConfiguration(server)
+        //and
+        stubCloseStagingRepoRequestWithSubsequentQueryAboutItsState(server, OVERRIDDEN_STAGED_REPOSITORY_ID)
+
+        val result = run("closeSonatypeStagingRepository", "--staging-repository-id=$OVERRIDDEN_STAGED_REPOSITORY_ID")
+
+        assertSuccess(result, ":closeSonatypeStagingRepository")
+        assertCloseOfStagingRepo(server, OVERRIDDEN_STAGED_REPOSITORY_ID)
+    }
+
+    @Test
+    fun `should allow to take staging repo id to release from command line without its initialization`(@Wiremock server: WireMockServer) {
+        writeDefaultSingleProjectConfiguration()
+        writeMockedSonatypeNexusPublishingConfiguration(server)
+        //and
+        stubReleaseStagingRepoRequestWithSubsequentQueryAboutItsState(server, OVERRIDDEN_STAGED_REPOSITORY_ID)
+
+        val result = run("releaseSonatypeStagingRepository", "--staging-repository-id=$OVERRIDDEN_STAGED_REPOSITORY_ID")
+
+        assertSuccess(result, ":releaseSonatypeStagingRepository")
+        assertReleaseOfStagingRepo(server, OVERRIDDEN_STAGED_REPOSITORY_ID)
+    }
+
+    @Test
+    @Disabled("Should override or fail with meaningful error?")
+    fun `command line option should override initialized staging repository to close`() {
+    }
+
+    @Test
+    @Disabled("Should override or fail with meaningful error?")
+    fun `command line option should override initialized staging repository to release`() {
+    }
+
+    @Test
+    internal fun `initialize task should resolve stagingProfileId if not provided and keep it for close task`(@Wiremock server: WireMockServer) {
+        writeDefaultSingleProjectConfiguration()
+        //and
+        buildGradle.append("""
+            nexusPublishing {
+                repositories {
+                    sonatype {
+                        nexusUrl = uri('${server.baseUrl()}')
+                        //No staging profile defined
+                    }
+                }
+            }
+        """)
+        //and
+        stubGetStagingProfilesForOneProfileIdGivenId(server, STAGING_PROFILE_ID)
+        stubCreateStagingRepoRequest(server, "/staging/profiles/$STAGING_PROFILE_ID/start", STAGED_REPOSITORY_ID)
+        stubCloseStagingRepoRequestWithSubsequentQueryAboutItsState(server)
+
+        val result = run("initializeSonatypeStagingRepository", "closeSonatypeStagingRepository")
+
+        assertSuccess(result, ":initializeSonatypeStagingRepository")
+        assertSuccess(result, ":closeSonatypeStagingRepository")
+        //and
+        assertGetStagingProfile(server, 1)
+    }
+
+    // TODO: To be used also in other tests
+    private fun writeDefaultSingleProjectConfiguration() {
+        projectDir.resolve("settings.gradle").write("""
+            rootProject.name = 'sample'
+        """)
+        projectDir.resolve("build.gradle").write("""
+            buildscript {
+                repositories {
+                    gradlePluginPortal()
+                }
+                dependencies {
+                    classpath files($pluginClasspathAsString)
+                }
+            }
+            plugins {
+                id('java-library')
+            }
+            apply plugin: 'io.github.gradle-nexus.publish-plugin'
+            group = 'org.example'
+            version = '0.0.1'
+            publishing {
+                publications {
+                    mavenJava(MavenPublication) {
+                        from(components.java)
+                    }
+                }
+            }
+        """)
+    }
+
+    private fun writeMockedSonatypeNexusPublishingConfiguration(server: WireMockServer) {
+        buildGradle.append("""
+            nexusPublishing {
+                repositories {
+                    sonatype {
+                        nexusUrl = uri('${server.baseUrl()}')
+                        stagingProfileId = '$STAGING_PROFILE_ID'
+                    }
+                }
+            }
+        """)
+    }
+
     private fun run(vararg arguments: String): BuildResult {
         return gradleRunner(*arguments).build()
     }
@@ -636,6 +826,15 @@ class NexusPublishPluginTests {
     private fun stubCreateStagingRepoRequest(server: WireMockServer, url: String, stagedRepositoryId: String) {
         server.stubFor(post(urlEqualTo(url))
                 .willReturn(aResponse().withBody(gson.toJson(mapOf("data" to mapOf("stagedRepositoryId" to stagedRepositoryId))))))
+    }
+
+    private fun stubGetStagingProfilesForOneProfileIdGivenId(server: WireMockServer, stagingProfileId: String = STAGING_PROFILE_ID) {
+        server.stubFor(get(urlEqualTo("/staging/profiles"))
+                        .withHeader("Accept", containing("application/json"))
+                        .willReturn(aResponse()
+                            .withStatus(200)
+                            .withHeader("Content-Type", "application/json")
+                            .withBody(getOneStagingProfileWithGivenIdShrunkJsonResponseAsString(stagingProfileId))))
     }
 
     private fun expectArtifactUploads(server: WireMockServer, prefix: String) {
@@ -664,6 +863,10 @@ class NexusPublishPluginTests {
         assertThat(result.task(taskPath)).describedAs("Task $taskPath").isNull()
     }
 
+    private fun assertGetStagingProfile(server: WireMockServer, count: Int = 1) {
+        server.verify(count, getRequestedFor(urlMatching("/staging/profiles")))
+    }
+
     private fun assertUploadedToStagingRepo(server: WireMockServer, path: String) {
         assertUploaded(server, "/staging/deployByRepositoryId/$STAGED_REPOSITORY_ID$path")
     }
@@ -672,8 +875,37 @@ class NexusPublishPluginTests {
         server.verify(putRequestedFor(urlMatching(testUrl)))
     }
 
-    private fun assertCloseOfStagingRepo(server: WireMockServer) {
-        server.verify(postRequestedFor(urlMatching("/staging/bulk/close"))
-                .withRequestBody(matchingJsonPath("\$.data[?(@.stagedRepositoryIds[0] == '$STAGED_REPOSITORY_ID')]")))
+    private fun assertCloseOfStagingRepo(server: WireMockServer, stagingRepositoryId: String = STAGED_REPOSITORY_ID) {
+        assertGivenTransitionOperationOfStagingRepo(server, "close", stagingRepositoryId)
+    }
+
+    private fun assertReleaseOfStagingRepo(server: WireMockServer, stagingRepositoryId: String = STAGED_REPOSITORY_ID) {
+        assertGivenTransitionOperationOfStagingRepo(server, "promote", stagingRepositoryId)
+    }
+
+    private fun assertGivenTransitionOperationOfStagingRepo(server: WireMockServer, transitionOperation: String, stagingRepositoryId: String) {
+        server.verify(postRequestedFor(urlMatching("/staging/bulk/$transitionOperation"))
+                .withRequestBody(matchingJsonPath("\$.data[?(@.stagedRepositoryIds[0] == '$stagingRepositoryId')]")))
+    }
+
+    private fun getOneStagingProfileWithGivenIdShrunkJsonResponseAsString(stagingProfileId: String): String {
+        return """
+            {
+              "data": [
+                {
+                  "deployURI": "https://oss.sonatype.org/service/local/staging/deploy/maven2",
+                  "id": "$stagingProfileId",
+                  "inProgress": false,
+                  "mode": "BOTH",
+                  "name": "org.example",
+                  "order": 6445,
+                  "promotionTargetRepository": "releases",
+                  "repositoryType": "maven2",
+                  "resourceURI": "https://oss.sonatype.org/service/local/staging/profiles/$stagingProfileId",
+                  "targetGroups": ["staging"]
+                }
+              ]
+            }
+        """.trimIndent()
     }
 }

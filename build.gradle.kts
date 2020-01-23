@@ -44,7 +44,8 @@ repositories {
 val licenseHeaderFile = file("gradle/license-header.txt")
 spotless {
     kotlin {
-        ktlint()
+        //"import-ordering" required here as it started to fail after spotless plugin upgrade to 0.35.0 - resolve in separate PR
+        ktlint().userData(mapOf("disabled_rules" to "comment-spacing,import-ordering"))
         licenseHeaderFile(licenseHeaderFile)
     }
 }
@@ -91,6 +92,7 @@ dependencies {
 }
 
 stutter {
+    isSparse = (findProperty("stutter.sparce")?.toString()?.toBoolean()) ?: true
     java(8) {
         compatibleRange("4.10")
     }
