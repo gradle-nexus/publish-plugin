@@ -16,6 +16,7 @@
 
 package io.github.gradlenexus.publishplugin.internal
 
+import io.github.gradlenexus.publishplugin.StagingRepository
 import java.io.IOException
 import java.io.UncheckedIOException
 import java.net.URI
@@ -105,6 +106,23 @@ class NexusClient(private val baseUrl: URI, username: String?, password: String?
     fun getStagingRepositoryUri(stagingRepositoryId: String): URI =
             URI.create("${baseUrl.toString().removeSuffix("/")}/staging/deployByRepositoryId/$stagingRepositoryId")
 
+    fun getStagingRepositoryStateById(stagingRepositoryId: String): StagingRepository {
+        val response = api.getStagingRepoById(stagingRepositoryId).execute()
+        if (!response.isSuccessful) {
+            throw failure("get staging repository by id", response)
+        }
+        val readStagingRepo: ReadStagingRepository? = response.body()
+        if (readStagingRepo != null) {
+            require(stagingRepositoryId == readStagingRepo.repositoryId) {
+                "Unexpected read repository id ($stagingRepositoryId != ${readStagingRepo.repositoryId})"
+            }
+            return StagingRepository(readStagingRepo.repositoryId, StagingRepository.RepositoryState.parseString(readStagingRepo.type),
+                    readStagingRepo.transitioning)
+        } else {
+            return StagingRepository.notFound(stagingRepositoryId)
+        }
+    }
+
     // TODO: Cover all API calls with unified error handling (including unexpected IOExceptions)
     private fun failure(action: String, response: Response<*>): RuntimeException {
         var message = "Failed to " + action + ", server responded with status code " + response.code()
@@ -122,7 +140,7 @@ class NexusClient(private val baseUrl: URI, username: String?, password: String?
     private interface NexusApi {
 
         companion object {
-            private const val RELEASE_OPERATION_NAME_IN_NEXUS = "promote" // promote and release use the same operation, used body parameters matter
+            private const val RELEASE_OPERATION_NAME_IN_NEXUS = "promote" // promote and release use the same operation, provided body parameters matter
         }
 
         @get:Headers("Accept: application/json")
@@ -131,15 +149,20 @@ class NexusClient(private val baseUrl: URI, username: String?, password: String?
 
         @Headers("Content-Type: application/json")
         @POST("staging/profiles/{stagingProfileId}/start")
-        fun startStagingRepo(@Path("stagingProfileId") stagingProfileId: String, @Body description: Dto<Description>): Call<Dto<StagingRepository>>
+        fun startStagingRepo(@Path("stagingProfileId") stagingProfileId: String, @Body description: Dto<Description>):
+                Call<Dto<CreatedStagingRepository>>
 
         @Headers("Content-Type: application/json")
         @POST("staging/bulk/close")
-        fun closeStagingRepo(@Body stagingRepositoryToClose: Dto<StagingRepositoryToTransit>): Call<Unit>
+        fun closeStagingRepo(@Body stagingRepoToClose: Dto<StagingRepositoryToTransit>): Call<Unit>
 
         @Headers("Content-Type: application/json")
         @POST("staging/bulk/$RELEASE_OPERATION_NAME_IN_NEXUS")
-        fun releaseStagingRepo(@Body stagingRepositoryToClose: Dto<StagingRepositoryToTransit>): Call<Unit>
+        fun releaseStagingRepo(@Body stagingRepoToClose: Dto<StagingRepositoryToTransit>): Call<Unit>
+
+        @Headers("Accept: application/json")
+        @GET("staging/repository/{stagingRepoId}")
+        fun getStagingRepoById(@Path("stagingRepoId") stagingRepoId: String): Call<ReadStagingRepository>
     }
 
     data class Dto<T>(var data: T)
@@ -148,7 +171,9 @@ class NexusClient(private val baseUrl: URI, username: String?, password: String?
 
     data class Description(val description: String)
 
-    data class StagingRepository(var stagedRepositoryId: String)
+    data class CreatedStagingRepository(var stagedRepositoryId: String)
+
+    data class ReadStagingRepository(var repositoryId: String, var type: String, var transitioning: Boolean)
 
     data class StagingRepositoryToTransit(val stagedRepositoryIds: List<String>, val description: String, val autoDropAfterRelease: Boolean = true)
 }

@@ -678,8 +678,7 @@ class NexusPublishPluginTests {
                 .withRequestBody(matchingJsonPath("\$.data[?(@.stagedRepositoryIds[0] == '$stagingRepositoryId')]"))
                 .withRequestBody(matchingJsonPath("\$.data[?(@.autoDropAfterRelease == true)]"))
                 .willReturn(aResponse().withHeader("Content-Type", "application/json").withBody("{}")))
-        server.stubFor(get(urlEqualTo("/staging/repository/$stagingRepositoryId"))
-                .willReturn(aResponse().withHeader("Content-Type", "application/json").withBody("{\"transitioning\":false,\"type\":\"${operation.type}\"}")))
+        stubGetStagingRepoWithIdAndStateRequest(server, stagingRepositoryId, operation.type)
     }
 
     @Test
@@ -837,6 +836,15 @@ class NexusPublishPluginTests {
                             .withBody(getOneStagingProfileWithGivenIdShrunkJsonResponseAsString(stagingProfileId))))
     }
 
+    private fun stubGetStagingRepoWithIdAndStateRequest(server: WireMockServer, stagedRepositoryId: String, repoState: String) {
+        server.stubFor(get(urlEqualTo("/staging/repository/$stagedRepositoryId"))
+                        .withHeader("Accept", containing("application/json"))
+                        .willReturn(aResponse()
+                            .withStatus(200)
+                            .withHeader("Content-Type", "application/json")
+                            .withBody(getOneStagingRepoWithGivenIdJsonResponseAsString(stagedRepositoryId, repoState))))
+    }
+
     private fun expectArtifactUploads(server: WireMockServer, prefix: String) {
         server.stubFor(put(urlMatching("$prefix/.+"))
                 .willReturn(aResponse().withStatus(201)))
@@ -905,6 +913,39 @@ class NexusPublishPluginTests {
                   "targetGroups": ["staging"]
                 }
               ]
+            }
+        """.trimIndent()
+    }
+
+    private fun getOneStagingRepoWithGivenIdJsonResponseAsString(
+        stagingRepoId: String,
+        repoState: String,
+        stagingProfileId: String = STAGING_PROFILE_ID
+    ): String {
+        return """
+            {
+              "profileId": "$stagingProfileId",
+              "profileName": "some.profile.id",
+              "profileType": "repository",
+              "repositoryId": "$stagingRepoId",
+              "type": "$repoState",
+              "policy": "release",
+              "userId": "gradle-nexus-e2e",
+              "userAgent": "okhttp/3.14.4",
+              "ipAddress": "1.1.1.1",
+              "repositoryURI": "https://oss.sonatype.org/content/repositories/$stagingRepoId",
+              "created": "2020-01-28T09:51:42.804Z",
+              "createdDate": "Tue Jan 28 09:51:42 UTC 2020",
+              "createdTimestamp": 1580205102804,
+              "updated": "2020-01-28T10:23:49.616Z",
+              "updatedDate": "Tue Jan 28 10:23:49 UTC 2020",
+              "updatedTimestamp": 1580207029616,
+              "description": "Closed by io.github.gradle-nexus.publish-plugin Gradle plugin",
+              "provider": "maven2",
+              "releaseRepositoryId": "no-sync-releases",
+              "releaseRepositoryName": "No Sync Releases",
+              "notifications": 0,
+              "transitioning": false
             }
         """.trimIndent()
     }

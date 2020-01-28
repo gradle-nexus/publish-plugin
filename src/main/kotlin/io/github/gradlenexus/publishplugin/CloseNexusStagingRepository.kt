@@ -41,7 +41,9 @@ constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository
     fun closeStagingRepo() {
         val client = NexusClient(repository.get().nexusUrl.get(), repository.get().username.orNull, repository.get().password.orNull, clientTimeout.orNull, connectTimeout.orNull)
         logger.info("Closing staging repository with id '{}'", stagingRepositoryId.get())
-        client.closeStagingRepository(stagingRepositoryId.get()) //should be checked by @Input
+        client.closeStagingRepository(stagingRepositoryId.get())
+        val readStagingRepository = client.getStagingRepositoryStateById(stagingRepositoryId.get())
+        logger.lifecycle("Read staging repository: $readStagingRepository")
         // TODO: Broken with real Nexus - waiting for effective execution is also required https://github.com/gradle-nexus/publish-plugin/issues/7
     }
 }
