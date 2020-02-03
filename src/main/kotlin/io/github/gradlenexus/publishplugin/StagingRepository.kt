@@ -16,9 +16,9 @@
 
 package io.github.gradlenexus.publishplugin
 
-data class StagingRepository constructor(val id: String, val state: RepositoryState, val transitioning: Boolean) {
+data class StagingRepository constructor(val id: String, val state: State, val transitioning: Boolean) {
 
-    enum class RepositoryState {
+    enum class State {
         OPEN,
         CLOSED,
         RELEASED,
@@ -29,7 +29,7 @@ data class StagingRepository constructor(val id: String, val state: RepositorySt
         }
 
         companion object {
-            fun parseString(stateAsString: String): RepositoryState {
+            fun parseString(stateAsString: String): State {
                 try {
                     return valueOf(stateAsString.toUpperCase())
                 } catch (e: IllegalArgumentException) {
@@ -41,7 +41,7 @@ data class StagingRepository constructor(val id: String, val state: RepositorySt
 
     companion object {
         fun notFound(id: String): StagingRepository {
-            return StagingRepository(id, RepositoryState.NOT_FOUND, false)
+            return StagingRepository(id, State.NOT_FOUND, false)
         }
     }
 }

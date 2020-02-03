@@ -16,12 +16,16 @@
 
 package io.github.gradlenexus.publishplugin
 
+import groovy.lang.Closure
+import org.gradle.api.Action
 import java.net.URI
 import javax.inject.Inject
 import org.gradle.api.Project
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.kotlin.dsl.property
+import org.gradle.util.ConfigureUtil
 
 @Suppress("UnstableApiUsage")
 open class NexusRepository @Inject constructor(@Input val name: String, project: Project) {
@@ -47,6 +51,18 @@ open class NexusRepository @Inject constructor(@Input val name: String, project:
     @Optional
     @Input
     val stagingProfileId = project.objects.property<String>()
+
+    @Nested
+    val retrying = project.objects.property<RetryingConfig>().apply {
+        set(RetryingConfig(project))
+    }
+
+    fun retrying(action: Action<in RetryingConfig>) = action.execute(retrying.get())
+
+    //TODO: Fails anyway with Groovy for "maxNumber = 10" with "Cannot cast object '10' with class 'java.lang.Integer' to class 'org.gradle.api.provider.Property'"
+    fun retrying(closure: Closure<*>) {
+        retrying(ConfigureUtil.configureUsing(closure))
+    }
 
     internal fun capitalizedName(): String {
         return name.capitalize()

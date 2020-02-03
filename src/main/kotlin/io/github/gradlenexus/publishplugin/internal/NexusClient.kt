@@ -108,6 +108,9 @@ class NexusClient(private val baseUrl: URI, username: String?, password: String?
 
     fun getStagingRepositoryStateById(stagingRepositoryId: String): StagingRepository {
         val response = api.getStagingRepoById(stagingRepositoryId).execute()
+        if (response.code() == 404 && response.errorBody()?.string()?.contains(stagingRepositoryId) == true) {
+            return StagingRepository.notFound(stagingRepositoryId)
+        }
         if (!response.isSuccessful) {
             throw failure("get staging repository by id", response)
         }
@@ -116,10 +119,10 @@ class NexusClient(private val baseUrl: URI, username: String?, password: String?
             require(stagingRepositoryId == readStagingRepo.repositoryId) {
                 "Unexpected read repository id ($stagingRepositoryId != ${readStagingRepo.repositoryId})"
             }
-            return StagingRepository(readStagingRepo.repositoryId, StagingRepository.RepositoryState.parseString(readStagingRepo.type),
+            return StagingRepository(readStagingRepo.repositoryId, StagingRepository.State.parseString(readStagingRepo.type),
                     readStagingRepo.transitioning)
         } else {
-            return StagingRepository.notFound(stagingRepositoryId)
+            return StagingRepository.notFound(stagingRepositoryId) //Should not happen
         }
     }
 

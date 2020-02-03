@@ -80,6 +80,9 @@ configurations {
 dependencies {
     shadowed("com.squareup.retrofit2:retrofit:2.7.1")
     shadowed("com.squareup.retrofit2:converter-gson:2.7.1")
+    shadowed("io.github.alexo:retrier:0.1") {
+        exclude("org.mockito")  // https://github.com/alexo/retrier/pull/1
+    }
 
     val nexusStagingPlugin = create("io.codearte.gradle.nexus:gradle-nexus-staging-plugin:0.21.2")
     compileOnly(nexusStagingPlugin)
@@ -110,7 +113,9 @@ configurations {
 sourceSets {
     compatTest {
         compileClasspath += sourceSets["test"].output
+        compileClasspath += sourceSets["main"].output
         runtimeClasspath += sourceSets["test"].output
+        runtimeClasspath += sourceSets["main"].output
     }
 }
 
