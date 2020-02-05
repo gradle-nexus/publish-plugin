@@ -16,6 +16,7 @@
 
 package io.github.gradlenexus.publishplugin
 
+import io.github.gradlenexus.publishplugin.internal.BasicActionRetrier
 import io.github.gradlenexus.publishplugin.internal.NexusClient
 import io.github.gradlenexus.publishplugin.internal.StagingRepositoryTransitioner
 import org.gradle.api.model.ObjectFactory
@@ -42,7 +43,7 @@ constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository
     @TaskAction
     fun releaseStagingRepo() {
         val client = NexusClient(repository.get().nexusUrl.get(), repository.get().username.orNull, repository.get().password.orNull, clientTimeout.orNull, connectTimeout.orNull)
-        val repositoryTransitioner = StagingRepositoryTransitioner(client, repository.get().retrying.get())
+        val repositoryTransitioner = StagingRepositoryTransitioner(client, BasicActionRetrier.retryUntilRepoTransitionIsCompletedRetrier(repository.get().retrying.get()))
         logger.info("Releasing staging repository with id '{}'", stagingRepositoryId.get())
         repositoryTransitioner.effectivelyRelease(stagingRepositoryId.get())
         logger.info("Repository with id '{}' effectively released", stagingRepositoryId.get())

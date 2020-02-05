@@ -33,7 +33,7 @@ import retrofit2.http.Headers
 import retrofit2.http.POST
 import retrofit2.http.Path
 
-class NexusClient(private val baseUrl: URI, username: String?, password: String?, timeout: Duration?, connectTimeout: Duration?) {
+open class NexusClient(private val baseUrl: URI, username: String?, password: String?, timeout: Duration?, connectTimeout: Duration?) {
     private val api: NexusApi
 
     init {
@@ -89,14 +89,14 @@ class NexusClient(private val baseUrl: URI, username: String?, password: String?
         return response.body()?.data?.stagedRepositoryId ?: throw RuntimeException("No response body")
     }
 
-    fun closeStagingRepository(stagingRepositoryId: String) {
+    open fun closeStagingRepository(stagingRepositoryId: String) {
         val response = api.closeStagingRepo(Dto(StagingRepositoryToTransit(listOf(stagingRepositoryId), "Closed by io.github.gradle-nexus.publish-plugin Gradle plugin"))).execute()
         if (!response.isSuccessful) {
             throw failure("close staging repository", response)
         }
     }
 
-    fun releaseStagingRepository(stagingRepositoryId: String) {
+    open fun releaseStagingRepository(stagingRepositoryId: String) {
         val response = api.releaseStagingRepo(Dto(StagingRepositoryToTransit(listOf(stagingRepositoryId), "Release by io.github.gradle-nexus.publish-plugin Gradle plugin"))).execute()
         if (!response.isSuccessful) {
             throw failure("release staging repository", response)
@@ -106,7 +106,7 @@ class NexusClient(private val baseUrl: URI, username: String?, password: String?
     fun getStagingRepositoryUri(stagingRepositoryId: String): URI =
             URI.create("${baseUrl.toString().removeSuffix("/")}/staging/deployByRepositoryId/$stagingRepositoryId")
 
-    fun getStagingRepositoryStateById(stagingRepositoryId: String): StagingRepository {
+    open fun getStagingRepositoryStateById(stagingRepositoryId: String): StagingRepository {
         val response = api.getStagingRepoById(stagingRepositoryId).execute()
         if (response.code() == 404 && response.errorBody()?.string()?.contains(stagingRepositoryId) == true) {
             return StagingRepository.notFound(stagingRepositoryId)

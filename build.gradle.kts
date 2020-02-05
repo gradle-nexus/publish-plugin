@@ -92,6 +92,8 @@ dependencies {
     testImplementation("com.github.tomakehurst:wiremock:2.25.1")
     testImplementation("ru.lanwen.wiremock:wiremock-junit5:1.3.1")
     testImplementation("org.assertj:assertj-core:3.14.0")
+    testImplementation("org.mockito:mockito-junit-jupiter:3.2.4")
+    testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
 }
 
 stutter {

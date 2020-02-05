@@ -16,56 +16,48 @@
 
 package io.github.gradlenexus.publishplugin.internal
 
-import io.github.alexo.retrier.Retrier
-import io.github.alexo.retrier.Retrier.Strategies.stopAfter
-import io.github.gradlenexus.publishplugin.RetryingConfig
+import io.github.gradlenexus.publishplugin.RepositoryTransitionException
 import io.github.gradlenexus.publishplugin.StagingRepository
-import org.gradle.api.GradleException
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
-//TODO: RetryingConfig pullutes StagingRepositoryTransitioner with Gradle - problematic with unit testing
-class StagingRepositoryTransitioner(val nexusClient: NexusClient, val retryingConfig: RetryingConfig) {
+class StagingRepositoryTransitioner(val nexusClient: NexusClient, val retrier: ActionRetrier<StagingRepository>) {
+
+    companion object {
+        private val log: Logger = LoggerFactory.getLogger(StagingRepositoryTransitioner::class.java.simpleName)
+    }
 
     fun effectivelyClose(repoId: String) {
         effectivelyChangeState(repoId, StagingRepository.State.CLOSED, nexusClient::closeStagingRepository)
     }
 
+    //TODO: Add support for autoDrop=false
     fun effectivelyRelease(repoId: String) {
         effectivelyChangeState(repoId, StagingRepository.State.NOT_FOUND, nexusClient::releaseStagingRepository)
     }
 
     private fun effectivelyChangeState(repoId: String, desiredState: StagingRepository.State, transitionClientRequest: (String) -> Unit) {
         transitionClientRequest.invoke(repoId)
-        val readStagingRepository = createRetrier().execute { getStagingRepositoryStateById(repoId) }
+        val readStagingRepository = retrier.execute { getStagingRepositoryStateById(repoId) }
         assertRepositoryNotTransitioning(readStagingRepository)
         assertRepositoryInDesiredState(readStagingRepository, desiredState)
     }
 
-    @Suppress("UNCHECKED_CAST")
-    private fun createRetrier(): Retrier {
-        return Retrier.Builder()
-                .withWaitStrategy(Retrier.Strategies.waitConstantly(retryingConfig.delayBetween.get().toMillis()))
-                .withStopStrategy(stopAfter(retryingConfig.maxNumber.get()))
-                .withResultRetryStrategy({ repo: StagingRepository -> repo.transitioning } as ((Any) -> Boolean))
-                .build()
-    }
-
     private fun getStagingRepositoryStateById(repoId: String): StagingRepository {
         val readStagingRepository: StagingRepository = nexusClient.getStagingRepositoryStateById(repoId)
-        println("Read staging repository: state: ${readStagingRepository.state}, transitioning: ${readStagingRepository.transitioning}")
+        log.info("Current staging repository status: state: ${readStagingRepository.state}, transitioning: ${readStagingRepository.transitioning}")
         return readStagingRepository
     }
 
     private fun assertRepositoryNotTransitioning(repository: StagingRepository) {
         if (repository.transitioning) {
-            //TODO: Custom exception type
-            throw GradleException("Staging repository is still transitioning after defined time. Consider its increament. $repository")
+            throw RepositoryTransitionException("Staging repository is still transitioning after defined time. Consider its increment. $repository")
         }
     }
 
     private fun assertRepositoryInDesiredState(repository: StagingRepository, desiredState: StagingRepository.State) {
         if (repository.state != desiredState) {
-            //TODO: Custom exception type
-            throw GradleException("Staging repository is not in desired state ($desiredState): $repository. It is unexpected. Please report it " +
+            throw RepositoryTransitionException("Staging repository is not in desired state ($desiredState): $repository. It is unexpected. Please report it " +
                     "to https://github.com/gradle-nexus/publish-plugin/issues/ with '--info' logs")
         }
     }
