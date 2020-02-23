@@ -25,17 +25,17 @@ import javax.inject.Inject
 open class RetryingConfig @Inject constructor(project: Project) {
 
     companion object {
-        private val DEFAULT_DELAY_BETWEEN_ATTEMPTS = Duration.ofSeconds(5)
-        private const val DEFAULT_MAXIMUM_NUMBER_OF_ATTEMPTS = 30
+        private val DEFAULT_DELAY_BETWEEN_RETRIES = Duration.ofSeconds(5)
+        private const val DEFAULT_MAXIMUM_NUMBER_OF_RETRIES = 30
     }
 
     @Internal
-    val maxNumber = project.objects.property<Int>().apply {
-        set(DEFAULT_MAXIMUM_NUMBER_OF_ATTEMPTS)
+    val maxRetries = project.objects.property<Int>().apply {
+        set(DEFAULT_MAXIMUM_NUMBER_OF_RETRIES)
     }
 
     @Internal
     val delayBetween = project.objects.property<Duration>().apply {
-        set(DEFAULT_DELAY_BETWEEN_ATTEMPTS)
+        set(DEFAULT_DELAY_BETWEEN_RETRIES)
     }
 }

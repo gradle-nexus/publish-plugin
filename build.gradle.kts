@@ -80,9 +80,7 @@ configurations {
 dependencies {
     shadowed("com.squareup.retrofit2:retrofit:2.7.1")
     shadowed("com.squareup.retrofit2:converter-gson:2.7.1")
-    shadowed("io.github.alexo:retrier:0.1") {
-        exclude("org.mockito")  // https://github.com/alexo/retrier/pull/1
-    }
+    shadowed("net.jodah:failsafe:2.3.3")
 
     val nexusStagingPlugin = create("io.codearte.gradle.nexus:gradle-nexus-staging-plugin:0.21.2")
     compileOnly(nexusStagingPlugin)

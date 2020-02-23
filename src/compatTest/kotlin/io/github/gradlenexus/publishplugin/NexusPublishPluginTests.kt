@@ -836,7 +836,7 @@ class NexusPublishPluginTests {
                         nexusUrl = uri('${server.baseUrl()}')
                         stagingProfileId = '$STAGING_PROFILE_ID'
                         retrying {
-                            maxNumber.set(3)
+                            maxRetries.set(3)
                             delayBetween.set(java.time.Duration.ofMillis(1))
                         }
                     }

@@ -16,21 +16,20 @@
 
 package io.github.gradlenexus.publishplugin.internal
 
-import io.github.alexo.retrier.Retrier
 import io.github.gradlenexus.publishplugin.RetryingConfig
 import io.github.gradlenexus.publishplugin.StagingRepository
+import net.jodah.failsafe.Failsafe
+import net.jodah.failsafe.RetryPolicy
 
 open class BasicActionRetrier<R>(retryingConfig: RetryingConfig, stopFunction: (R) -> Boolean) : ActionRetrier<R> {
 
-    @Suppress("UNCHECKED_CAST")
-    private val retrier: Retrier = Retrier.Builder()
-                    .withWaitStrategy(Retrier.Strategies.waitConstantly(retryingConfig.delayBetween.get().toMillis()))
-                    .withStopStrategy(Retrier.Strategies.stopAfter(retryingConfig.maxNumber.get()))
-                    .withResultRetryStrategy(stopFunction as ((Any) -> Boolean))
-                    .build()
+    private val retrier: RetryPolicy<R> = RetryPolicy<R>()
+            .handleResultIf(stopFunction)
+            .withMaxRetries(retryingConfig.maxRetries.get())
+            .withDelay(retryingConfig.delayBetween.get())
 
     override fun execute(operationToExecuteWithRetrying: () -> R): R {
-        return retrier.execute(operationToExecuteWithRetrying)
+        return Failsafe.with(retrier).get(operationToExecuteWithRetrying)
     }
 
     companion object {
