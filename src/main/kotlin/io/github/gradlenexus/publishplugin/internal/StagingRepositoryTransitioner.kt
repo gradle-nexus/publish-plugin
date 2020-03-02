@@ -38,10 +38,13 @@ class StagingRepositoryTransitioner(val nexusClient: NexusClient, val retrier: A
 
     private fun effectivelyChangeState(repoId: String, desiredState: StagingRepository.State, transitionClientRequest: (String) -> Unit) {
         transitionClientRequest.invoke(repoId)
-        val readStagingRepository = retrier.execute { getStagingRepositoryStateById(repoId) }
+        val readStagingRepository = waitUntilTransitionIsDoneOrTimeoutAndReturnLastRepositoryState(repoId)
         assertRepositoryNotTransitioning(readStagingRepository)
         assertRepositoryInDesiredState(readStagingRepository, desiredState)
     }
+
+    private fun waitUntilTransitionIsDoneOrTimeoutAndReturnLastRepositoryState(repoId: String) =
+            retrier.execute { getStagingRepositoryStateById(repoId) }
 
     private fun getStagingRepositoryStateById(repoId: String): StagingRepository {
         val readStagingRepository: StagingRepository = nexusClient.getStagingRepositoryStateById(repoId)
