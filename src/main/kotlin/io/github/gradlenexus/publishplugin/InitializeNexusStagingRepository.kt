@@ -80,7 +80,7 @@ constructor(
         var stagingProfileId = repository.get().stagingProfileId.orNull
         if (stagingProfileId == null) {
             val packageGroup = packageGroup.get()
-            logger.debug("No stagingProfileId set, querying for packageGroup '{}'", packageGroup)
+            logger.info("No stagingProfileId set, querying for packageGroup '{}'", packageGroup)
             stagingProfileId = client.findStagingProfileId(packageGroup)
                     ?: throw GradleException("Failed to find staging profile for package group: $packageGroup")
         }

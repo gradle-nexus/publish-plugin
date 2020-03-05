@@ -80,6 +80,7 @@ configurations {
 dependencies {
     shadowed("com.squareup.retrofit2:retrofit:2.7.1")
     shadowed("com.squareup.retrofit2:converter-gson:2.7.1")
+    shadowed("net.jodah:failsafe:2.3.3")
 
     val nexusStagingPlugin = create("io.codearte.gradle.nexus:gradle-nexus-staging-plugin:0.21.2")
     compileOnly(nexusStagingPlugin)
@@ -89,6 +90,8 @@ dependencies {
     testImplementation("com.github.tomakehurst:wiremock:2.25.1")
     testImplementation("ru.lanwen.wiremock:wiremock-junit5:1.3.1")
     testImplementation("org.assertj:assertj-core:3.14.0")
+    testImplementation("org.mockito:mockito-junit-jupiter:3.2.4")
+    testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
 }
 
 stutter {
@@ -110,7 +113,9 @@ configurations {
 sourceSets {
     compatTest {
         compileClasspath += sourceSets["test"].output
+        compileClasspath += sourceSets["main"].output
         runtimeClasspath += sourceSets["test"].output
+        runtimeClasspath += sourceSets["main"].output
     }
 }
 

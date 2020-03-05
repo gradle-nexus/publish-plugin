@@ -16,10 +16,12 @@
 
 package io.github.gradlenexus.publishplugin
 
+import org.gradle.api.Action
 import java.net.URI
 import javax.inject.Inject
 import org.gradle.api.Project
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.kotlin.dsl.property
 
@@ -47,6 +49,13 @@ open class NexusRepository @Inject constructor(@Input val name: String, project:
     @Optional
     @Input
     val stagingProfileId = project.objects.property<String>()
+
+    @Nested
+    val retrying = project.objects.property<RetryingConfig>().apply {
+        set(RetryingConfig(project))
+    }
+
+    fun retrying(action: Action<in RetryingConfig>) = action.execute(retrying.get())
 
     internal fun capitalizedName(): String {
         return name.capitalize()
