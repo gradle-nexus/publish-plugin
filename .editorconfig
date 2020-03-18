@@ -1,0 +1,12 @@
+root = true
+
+[*]
+indent_style = space
+insert_final_newline = true
+charset = utf-8
+
+[*.{kt,kts}]
+ij_kotlin_code_style_defaults = KOTLIN_OFFICIAL
+ij_java_use_single_class_imports = true
+max_line_length = off
+trim_trailing_whitespace = true
