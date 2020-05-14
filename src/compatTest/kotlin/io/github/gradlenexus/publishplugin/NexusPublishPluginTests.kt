@@ -465,7 +465,7 @@ class NexusPublishPluginTests {
         """)
         projectDir.resolve("build.gradle").write("""
             import java.time.Duration
-            
+
             plugins {
                 id('java-library')
                 id('io.github.gradle-nexus.publish-plugin')
@@ -514,7 +514,7 @@ class NexusPublishPluginTests {
         """)
         projectDir.resolve("build.gradle").write("""
             import java.time.Duration
-            
+
             plugins {
                 id('java-library')
                 id('io.github.gradle-nexus.publish-plugin')
@@ -940,7 +940,7 @@ class NexusPublishPluginTests {
     private fun assertOutcome(result: BuildResult, taskPath: String, outcome: TaskOutcome) {
         assertThat(result.task(taskPath)).describedAs("Task $taskPath")
                 .isNotNull
-                .extracting { it.outcome }
+                .extracting { it!!.outcome }
                 .isEqualTo(outcome)
     }
 
