@@ -60,7 +60,8 @@ class StagingRepositoryTransitioner(val nexusClient: NexusClient, val retrier: A
 
     private fun assertRepositoryInDesiredState(repository: StagingRepository, desiredState: StagingRepository.State) {
         if (repository.state != desiredState) {
-            throw RepositoryTransitionException("Staging repository is not in desired state ($desiredState): $repository. It is unexpected. Please report it " +
+            throw RepositoryTransitionException("Staging repository is not in desired state ($desiredState): $repository. It is unexpected. Please check" +
+                    "Nexus logs using its web interface - it can be caused by validation rules violation. If not, please report it " +
                     "to https://github.com/gradle-nexus/publish-plugin/issues/ with '--info' logs")
         }
     }
