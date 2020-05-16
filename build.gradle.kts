@@ -104,6 +104,13 @@ stutter {
     }
 }
 
+val e2eTest by sourceSets.creating {    //separate infrastructure as compatTest is called multiple times with different Java versions
+    compileClasspath += sourceSets["compatTest"].output
+    compileClasspath += sourceSets["main"].output
+    runtimeClasspath += sourceSets["compatTest"].output
+    runtimeClasspath += sourceSets["main"].output
+}
+
 configurations {
     compatTestCompileClasspath {
         extendsFrom(testCompileClasspath.get())
@@ -111,10 +118,10 @@ configurations {
     compatTestRuntimeClasspath {
         extendsFrom(testRuntimeClasspath.get())
     }
-    create("e2eTestCompileClasspath") {
+    configurations.named(e2eTest.implementationConfigurationName) {
         extendsFrom(compatTestCompileClasspath.get())
     }
-    create("e2eTestRuntimeClasspath") {
+    configurations.named(e2eTest.runtimeOnlyConfigurationName) {
         extendsFrom(compatTestRuntimeClasspath.get())
     }
 }
@@ -124,12 +131,6 @@ sourceSets {
         compileClasspath += sourceSets["test"].output
         compileClasspath += sourceSets["main"].output
         runtimeClasspath += sourceSets["test"].output
-        runtimeClasspath += sourceSets["main"].output
-    }
-    create("e2eTest") {     //separate infrastructure as compatTest is called multiple times with different Java versions
-        compileClasspath += sourceSets["compatTest"].output
-        compileClasspath += sourceSets["main"].output
-        runtimeClasspath += sourceSets["compatTest"].output
         runtimeClasspath += sourceSets["main"].output
     }
 }
@@ -157,9 +158,9 @@ tasks {
     register<Test>("e2eTest") {
         description = "Run E2E tests."
         group = "Verification"
-        testClassesDirs = sourceSets.get("e2eTest").output.classesDirs
-        classpath = sourceSets.get("e2eTest").runtimeClasspath
-        listOf("sonatypeUsername", "sonatypePassword", "signing.gnupg.homeDir", "signing.gnupg.keyName", "signing.gnupg.passphrase").forEach {
+        testClassesDirs = e2eTest.output.classesDirs
+        classpath = e2eTest.runtimeClasspath
+        listOf("sonatypeUsername", "sonatypePassword", "signingKey", "signingPassword", "signing.gnupg.homeDir", "signing.gnupg.keyName", "signing.gnupg.passphrase").forEach {
             val e2eName = "${it}E2E"
             if (project.hasProperty(e2eName)) {
                 systemProperties.put("org.gradle.project.$e2eName", project.property(e2eName))

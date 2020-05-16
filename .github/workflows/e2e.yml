@@ -1,0 +1,31 @@
+name: E2E tests
+
+on:
+  push:
+    branches:
+      - master
+      - "szpak/*"
+      - "marc/*"
+
+jobs:
+  gradle:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout project with submodules
+      uses: actions/checkout@v2
+      with:
+        submodules: true
+    - name: Setup JDK 8
+      uses: actions/setup-java@v1
+      with:
+        java-version: 8
+    - name: Run sanity check
+      run: ./gradlew --scan --stacktrace test
+    - name: Run E2E tests
+      env:
+        ORG_GRADLE_PROJECT_sonatypeUsernameE2E: ${{ secrets.SONATYPE_USERNAME_E2E }}
+        ORG_GRADLE_PROJECT_sonatypePasswordE2E: ${{ secrets.SONATYPE_PASSWORD_E2E }}
+        ORG_GRADLE_PROJECT_signingKeyE2E: ${{ secrets.GPG_SIGNING_KEY_E2E }}
+        ORG_GRADLE_PROJECT_signingPasswordE2E: ${{ secrets.GPG_SIGNING_KEY_PASSPHRASE_E2E }}
+      run: |
+        ./gradlew --stacktrace --info e2eTest

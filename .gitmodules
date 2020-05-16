@@ -1,3 +1,3 @@
 [submodule "src/e2eTest/resources/nexus-publish-e2e-minimal"]
 	path = src/e2eTest/resources/nexus-publish-e2e-minimal
-	url = git@github.com:gradle-nexus-e2e/nexus-publish-e2e-minimal.git
+	url = git@github.com:gradle-nexus/nexus-publish-e2e-minimal.git
