@@ -111,6 +111,12 @@ configurations {
     compatTestRuntimeClasspath {
         extendsFrom(testRuntimeClasspath.get())
     }
+    create("e2eTestCompileClasspath") {
+        extendsFrom(compatTestCompileClasspath.get())
+    }
+    create("e2eTestRuntimeClasspath") {
+        extendsFrom(compatTestRuntimeClasspath.get())
+    }
 }
 
 sourceSets {
@@ -118,6 +124,12 @@ sourceSets {
         compileClasspath += sourceSets["test"].output
         compileClasspath += sourceSets["main"].output
         runtimeClasspath += sourceSets["test"].output
+        runtimeClasspath += sourceSets["main"].output
+    }
+    create("e2eTest") {     //separate infrastructure as compatTest is called multiple times with different Java versions
+        compileClasspath += sourceSets["compatTest"].output
+        compileClasspath += sourceSets["main"].output
+        runtimeClasspath += sourceSets["compatTest"].output
         runtimeClasspath += sourceSets["main"].output
     }
 }
@@ -141,6 +153,18 @@ tasks {
     pluginUnderTestMetadata {
         pluginClasspath.from.clear()
         pluginClasspath.from(shadowJar)
+    }
+    register<Test>("e2eTest") {
+        description = "Run E2E tests."
+        group = "Verification"
+        testClassesDirs = sourceSets.get("e2eTest").output.classesDirs
+        classpath = sourceSets.get("e2eTest").runtimeClasspath
+        listOf("sonatypeUsername", "sonatypePassword", "signing.gnupg.homeDir", "signing.gnupg.keyName", "signing.gnupg.passphrase").forEach {
+            val e2eName = "${it}E2E"
+            if (project.hasProperty(e2eName)) {
+                systemProperties.put("org.gradle.project.$e2eName", project.property(e2eName))
+            }
+        }
     }
     withType<Test>().configureEach {
         dependsOn(shadowJar)
