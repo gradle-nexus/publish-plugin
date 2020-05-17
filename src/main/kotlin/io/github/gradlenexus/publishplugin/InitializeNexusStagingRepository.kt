@@ -16,7 +16,6 @@
 
 package io.github.gradlenexus.publishplugin
 
-import io.codearte.gradle.nexus.NexusStagingExtension
 import io.github.gradlenexus.publishplugin.internal.NexusClient
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
@@ -59,19 +58,6 @@ constructor(
             logger.info("Creating staging repository for stagingProfileId '{}'", stagingProfileId)
             val stagingRepositoryIdAsString = client.createStagingRepository(stagingProfileId)
             stagingRepositoryId.invoke(stagingRepositoryIdAsString)
-
-            //TODO: To be removed in next iteration
-            project.rootProject.plugins.withId("io.codearte.nexus-staging") {
-                val nexusStagingExtension = project.rootProject.the<NexusStagingExtension>()
-                try {
-                    nexusStagingExtension.stagingRepositoryId.set(stagingRepositoryIdAsString)
-                } catch (e: NoSuchMethodError) {
-                    logger.warn("For increased publishing reliability please update the io.codearte.nexus-staging plugin to at least version 0.20.0.\n" +
-                            "If your version is at least 0.20.0, try to update the io.github.gradle-nexus.publish-plugin plugin to its latest version.\n" +
-                            "If this also does not make this warning go away, please report an issue for io.github.gradle-nexus.publish-plugin.")
-                    logger.debug("getStagingRepositoryId method not found on nexusStagingExtension", e)
-                }
-            }
             client.getStagingRepositoryUri(stagingRepositoryIdAsString)
         }
     }
