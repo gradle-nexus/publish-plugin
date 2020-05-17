@@ -17,14 +17,17 @@
 package io.github.gradlenexus.publishplugin
 
 import io.codearte.gradle.nexus.NexusStagingExtension
+import io.github.gradlenexus.publishplugin.internal.StagingRepositoryUrlRegistry
+import io.github.gradlenexus.publishplugin.internal.StagingRepositoryUrlRegistryBuildService
+import io.github.gradlenexus.publishplugin.internal.StaticStagingRepositoryUrlRegistry
 import java.net.URI
-import java.util.concurrent.ConcurrentHashMap
 import org.gradle.BuildAdapter
 import org.gradle.BuildResult
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
+import org.gradle.api.provider.Provider
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.plugins.MavenPublishPlugin
 import org.gradle.api.publish.maven.tasks.PublishToMavenRepository
@@ -36,23 +39,15 @@ import org.gradle.kotlin.dsl.property
 import org.gradle.kotlin.dsl.register
 import org.gradle.kotlin.dsl.the
 import org.gradle.kotlin.dsl.withType
+import org.gradle.util.GradleVersion
 
 @Suppress("UnstableApiUsage")
 class NexusPublishPlugin : Plugin<Project> {
 
-    companion object {
-        private val serverUrlToStagingRepoUrl = ConcurrentHashMap<URI, URI>()
-    }
-
     override fun apply(project: Project) {
         project.pluginManager.apply(MavenPublishPlugin::class)
 
-        project.gradle.addBuildListener(object : BuildAdapter() {
-            override fun buildFinished(result: BuildResult) {
-                serverUrlToStagingRepoUrl.clear()
-            }
-        })
-
+        val stagingRepositoryUrlRegistry = createStagingRepositoryUrlRegistry(project)
         val extension = project.extensions.create<NexusPublishExtension>(NexusPublishExtension.NAME, project)
 
         extension.repositories.all {
@@ -62,7 +57,7 @@ class NexusPublishPlugin : Plugin<Project> {
                 group = PublishingPlugin.PUBLISH_TASK_GROUP
             }
             project.tasks
-                    .register<InitializeNexusStagingRepository>("initialize${capitalizedName()}StagingRepository", project.objects, extension, this, serverUrlToStagingRepoUrl, { id: String -> stagingRepositoryId.set(id) })
+                    .register<InitializeNexusStagingRepository>("initialize${capitalizedName()}StagingRepository", project.objects, extension, this, stagingRepositoryUrlRegistry, { id: String -> stagingRepositoryId.set(id) })
             project.tasks
                     .register<CloseNexusStagingRepository>("close${capitalizedName()}StagingRepository", project.objects, extension, this)
                     .configure {
@@ -111,6 +106,20 @@ class NexusPublishPlugin : Plugin<Project> {
                 password.set(project.provider { nexusStagingExtension.password })
             }
         }
+    }
+
+    private fun createStagingRepositoryUrlRegistry(project: Project): Provider<StagingRepositoryUrlRegistry> {
+        if (GradleVersion.current() >= GradleVersion.version("6.1")) {
+            return project.gradle.sharedServices
+                    .registerIfAbsent("stagingRepositoryUrlRegistry", StagingRepositoryUrlRegistryBuildService::class.java) {}
+                    .map { it.registry }
+        }
+        project.gradle.addBuildListener(object : BuildAdapter() {
+            override fun buildFinished(result: BuildResult) {
+                StaticStagingRepositoryUrlRegistry.registry.clear()
+            }
+        })
+        return project.provider { StaticStagingRepositoryUrlRegistry.registry }
     }
 
     private fun addMavenRepositories(project: Project, extension: NexusPublishExtension): Map<NexusRepository, MavenArtifactRepository> {

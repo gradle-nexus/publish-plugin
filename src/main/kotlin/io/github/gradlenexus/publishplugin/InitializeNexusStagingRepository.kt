@@ -18,9 +18,11 @@ package io.github.gradlenexus.publishplugin
 
 import io.codearte.gradle.nexus.NexusStagingExtension
 import io.github.gradlenexus.publishplugin.internal.NexusClient
+import io.github.gradlenexus.publishplugin.internal.StagingRepositoryUrlRegistry
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Provider
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
@@ -36,7 +38,7 @@ constructor(
     objects: ObjectFactory,
     extension: NexusPublishExtension,
     repository: NexusRepository,
-    private val serverUrlToStagingRepoUrl: MutableMap<URI, URI>,
+    private val stagingRepositoryUrlRegistry: Provider<StagingRepositoryUrlRegistry>,
     private val stagingRepositoryId: (String) -> Unit
 ) : AbstractNexusStagingRepositoryTask(objects, extension, repository) {
 
@@ -53,7 +55,7 @@ constructor(
     }
 
     internal fun createStagingRepo(): URI {
-        return serverUrlToStagingRepoUrl.computeIfAbsent(repository.get().nexusUrl.get()) { serverUrl ->
+        return stagingRepositoryUrlRegistry.get().registerIfAbsent(repository.get().nexusUrl.get()) { serverUrl ->
             val client = NexusClient(serverUrl, repository.get().username.orNull, repository.get().password.orNull, clientTimeout.orNull, connectTimeout.orNull)
             val stagingProfileId = determineStagingProfileId(client)
             logger.info("Creating staging repository for stagingProfileId '{}'", stagingProfileId)
