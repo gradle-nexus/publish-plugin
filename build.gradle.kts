@@ -1,3 +1,5 @@
+import org.gradle.initialization.IGradlePropertiesLoader.ENV_PROJECT_PROPERTIES_PREFIX
+import org.gradle.initialization.IGradlePropertiesLoader.SYSTEM_PROJECT_PROPERTIES_PREFIX
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -160,10 +162,18 @@ tasks {
         group = "Verification"
         testClassesDirs = e2eTest.output.classesDirs
         classpath = e2eTest.runtimeClasspath
+        //pass E2E releasing properties to tests. Prefer environment variables which are not displayed with --info
+        // (unless non CI friendly properties with "." are used)
         listOf("sonatypeUsername", "sonatypePassword", "signingKey", "signingPassword", "signing.gnupg.homeDir", "signing.gnupg.keyName", "signing.gnupg.passphrase").forEach {
             val e2eName = "${it}E2E"
-            if (project.hasProperty(e2eName)) {
-                systemProperties.put("org.gradle.project.$e2eName", project.property(e2eName))
+            val e2eEnvName = "${ENV_PROJECT_PROPERTIES_PREFIX}${e2eName}"
+            //properties defined using ORG_GRADLE_PROJECT_ are accessible in child process anyway
+            if (project.hasProperty(e2eName) && System.getenv(e2eEnvName) == null) {
+                if (e2eName.contains(".")) {
+                    systemProperties.put("${SYSTEM_PROJECT_PROPERTIES_PREFIX}${e2eName}", project.property(e2eName))
+                } else {
+                    environment("$ENV_PROJECT_PROPERTIES_PREFIX${e2eName}", project.property(e2eName)!!)
+                }
             }
         }
     }

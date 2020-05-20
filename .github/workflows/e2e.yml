@@ -8,7 +8,7 @@ on:
       - "marc/*"
 
 jobs:
-  gradle:
+  single-module-release:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout project with submodules
