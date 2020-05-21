@@ -44,9 +44,10 @@ Finally, call `publishToSonatype` to publish all publications to Sonatype's OSSR
 
 ### Full example
 
-#### Groovy DSL
+<details open>
+<summary>Groovy</summary>
 
-```gradle
+```groovy
 plugins {
     id "java-library"
     id "io.github.gradle-nexus.publish-plugin" version "0.1.0-SNAPSHOT"
@@ -72,7 +73,9 @@ nexusPublishing {
 }
 ```
 
-#### Kotlin DSL
+</details>
+<details>
+<summary>Kotlin</summary>
 
 ```kotlin
 plugins {
@@ -99,6 +102,9 @@ nexusPublishing {
     }
 }
 ```
+
+</details>
+
 
 ### Integration with the Nexus Staging Plugin
 
