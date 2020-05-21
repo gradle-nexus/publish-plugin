@@ -84,10 +84,6 @@ dependencies {
     shadowed("com.squareup.retrofit2:converter-gson:2.8.1")
     shadowed("net.jodah:failsafe:2.3.5")
 
-    val nexusStagingPlugin = create("io.codearte.gradle.nexus:gradle-nexus-staging-plugin:0.21.2")
-    compileOnly(nexusStagingPlugin)
-    testImplementation(nexusStagingPlugin)
-
     testImplementation("org.junit.jupiter:junit-jupiter:5.6.2")
     testImplementation("com.github.tomakehurst:wiremock:2.26.3")
     testImplementation("ru.lanwen.wiremock:wiremock-junit5:1.3.1")

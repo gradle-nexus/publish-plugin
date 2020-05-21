@@ -16,7 +16,6 @@
 
 package io.github.gradlenexus.publishplugin
 
-import io.codearte.gradle.nexus.NexusStagingExtension
 import java.net.URI
 import java.util.concurrent.ConcurrentHashMap
 import org.gradle.BuildAdapter
@@ -92,23 +91,6 @@ class NexusPublishPlugin : Plugin<Project> {
                 val releaseTask = project.tasks.withType(ReleaseNexusStagingRepository::class)
                         .named("release${nexusRepo.capitalizedName()}StagingRepository")
                 configureTaskDependencies(project, publishToNexusTask, initializeTask, closeTask, releaseTask, mavenRepo)
-            }
-        }
-
-        project.rootProject.plugins.withId("io.codearte.nexus-staging") {
-            val nexusStagingExtension = project.rootProject.the<NexusStagingExtension>()
-
-            extension.packageGroup.set(project.provider {
-                if (nexusStagingExtension.packageGroup.isNullOrBlank()) {
-                    project.group.toString()
-                } else {
-                    nexusStagingExtension.packageGroup
-                }
-            })
-            extension.repositories.configureEach {
-                stagingProfileId.set(project.provider { nexusStagingExtension.stagingProfileId })
-                username.set(project.provider { nexusStagingExtension.username })
-                password.set(project.provider { nexusStagingExtension.password })
             }
         }
     }
