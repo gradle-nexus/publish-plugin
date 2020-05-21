@@ -24,6 +24,7 @@ import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
+import org.gradle.kotlin.dsl.findByType
 import org.gradle.kotlin.dsl.property
 import org.gradle.kotlin.dsl.the
 import java.net.URI
@@ -35,7 +36,6 @@ constructor(
     objects: ObjectFactory,
     extension: NexusPublishExtension,
     repository: NexusRepository,
-    private val serverUrlToStagingRepoUrl: MutableMap<URI, URI>,
     private val stagingRepositoryId: (String) -> Unit
 ) : AbstractNexusStagingRepositoryTask(objects, extension, repository) {
 
@@ -52,14 +52,13 @@ constructor(
     }
 
     internal fun createStagingRepo(): URI {
-        return serverUrlToStagingRepoUrl.computeIfAbsent(repository.get().nexusUrl.get()) { serverUrl ->
-            val client = NexusClient(serverUrl, repository.get().username.orNull, repository.get().password.orNull, clientTimeout.orNull, connectTimeout.orNull)
-            val stagingProfileId = determineStagingProfileId(client)
-            logger.info("Creating staging repository for stagingProfileId '{}'", stagingProfileId)
-            val stagingRepositoryIdAsString = client.createStagingRepository(stagingProfileId)
-            stagingRepositoryId.invoke(stagingRepositoryIdAsString)
-            client.getStagingRepositoryUri(stagingRepositoryIdAsString)
-        }
+        val serverUrl = repository.get().nexusUrl.get()
+        val client = NexusClient(serverUrl, repository.get().username.orNull, repository.get().password.orNull, clientTimeout.orNull, connectTimeout.orNull)
+        val stagingProfileId = determineStagingProfileId(client)
+        logger.info("Creating staging repository for stagingProfileId '{}'", stagingProfileId)
+        val stagingRepositoryIdAsString = client.createStagingRepository(stagingProfileId)
+        stagingRepositoryId.invoke(stagingRepositoryIdAsString)
+        return client.getStagingRepositoryUri(stagingRepositoryIdAsString)
     }
 
     private fun determineStagingProfileId(client: NexusClient): String {
@@ -74,9 +73,13 @@ constructor(
     }
 
     private fun replacePublishingRepoUrl(url: URI) {
-        val publishing = project.the<PublishingExtension>()
-        val repository = publishing.repositories.getByName(repository.get().name) as MavenArtifactRepository
-        logger.info("Updating URL of publishing repository '{}' to '{}'", repository.name, url)
-        repository.setUrl(url.toString())
+        project.allprojects {
+            val publishing = extensions.findByType<PublishingExtension>()
+            if (publishing != null) {
+                val repository = publishing.repositories.getByName(repository.get().name) as MavenArtifactRepository
+                logger.info("Updating URL of publishing repository '{}' to '{}'", repository.name, url)
+                repository.setUrl(url.toString())
+            }
+        }
     }
 }

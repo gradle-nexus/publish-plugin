@@ -17,19 +17,13 @@
 package io.github.gradlenexus.publishplugin
 
 import java.net.URI
-import java.util.concurrent.ConcurrentHashMap
-import org.gradle.BuildAdapter
-import org.gradle.BuildResult
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.Task
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
 import org.gradle.api.publish.PublishingExtension
-import org.gradle.api.publish.maven.plugins.MavenPublishPlugin
 import org.gradle.api.publish.maven.tasks.PublishToMavenRepository
 import org.gradle.api.publish.plugins.PublishingPlugin
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.kotlin.dsl.apply
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.property
 import org.gradle.kotlin.dsl.register
@@ -39,29 +33,43 @@ import org.gradle.kotlin.dsl.withType
 @Suppress("UnstableApiUsage")
 class NexusPublishPlugin : Plugin<Project> {
 
-    companion object {
-        private val serverUrlToStagingRepoUrl = ConcurrentHashMap<URI, URI>()
-    }
-
     override fun apply(project: Project) {
-        project.pluginManager.apply(MavenPublishPlugin::class)
-
-        project.gradle.addBuildListener(object : BuildAdapter() {
-            override fun buildFinished(result: BuildResult) {
-                serverUrlToStagingRepoUrl.clear()
-            }
-        })
+        require(project == project.rootProject) {
+            "Plugin must be applied to the root project"
+        }
 
         val extension = project.extensions.create<NexusPublishExtension>(NexusPublishExtension.NAME, project)
+        configureTasks(project, extension)
+        configureTaskDependenciesForAllProjects(project, extension)
+    }
 
+    private fun configureTaskDependenciesForAllProjects(rootProject: Project, extension: NexusPublishExtension) {
+        rootProject.afterEvaluate {
+            rootProject.allprojects {
+                val publishingProject = this
+                pluginManager.withPlugin("maven-publish") {
+                    publishingProject.afterEvaluate {
+                        val nexusRepositories = addMavenRepositories(publishingProject, extension)
+                        nexusRepositories.forEach { (nexusRepo, mavenRepo) ->
+                            val initializeTask = rootProject.tasks.withType(InitializeNexusStagingRepository::class)
+                                    .named("initialize${nexusRepo.capitalizedName()}StagingRepository")
+                            val closeTask = rootProject.tasks.withType(CloseNexusStagingRepository::class)
+                                    .named("close${nexusRepo.capitalizedName()}StagingRepository")
+                            val releaseTask = rootProject.tasks.withType(ReleaseNexusStagingRepository::class)
+                                    .named("release${nexusRepo.capitalizedName()}StagingRepository")
+                            configureTaskDependencies(publishingProject, initializeTask, closeTask, releaseTask, mavenRepo)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun configureTasks(project: Project, extension: NexusPublishExtension) {
         extension.repositories.all {
             val stagingRepositoryId = project.objects.property<String>()
-            project.tasks.register("publishTo${capitalizedName()}") {
-                description = "Publishes all Maven publications produced by this project to the '${this@all.name}' Nexus repository."
-                group = PublishingPlugin.PUBLISH_TASK_GROUP
-            }
             project.tasks
-                    .register<InitializeNexusStagingRepository>("initialize${capitalizedName()}StagingRepository", project.objects, extension, this, serverUrlToStagingRepoUrl, { id: String -> stagingRepositoryId.set(id) })
+                    .register<InitializeNexusStagingRepository>("initialize${capitalizedName()}StagingRepository", project.objects, extension, this, { id: String -> stagingRepositoryId.set(id) })
             project.tasks
                     .register<CloseNexusStagingRepository>("close${capitalizedName()}StagingRepository", project.objects, extension, this)
                     .configure {
@@ -74,24 +82,9 @@ class NexusPublishPlugin : Plugin<Project> {
                     }
         }
         extension.repositories.whenObjectRemoved {
-            project.tasks.remove(project.tasks.named("publishTo${capitalizedName()}") as Any)
             project.tasks.remove(project.tasks.named("initialize${capitalizedName()}StagingRepository") as Any)
             project.tasks.remove(project.tasks.named("close${capitalizedName()}StagingRepository") as Any)
             project.tasks.remove(project.tasks.named("release${capitalizedName()}StagingRepository") as Any)
-        }
-
-        project.afterEvaluate {
-            val nexusRepositories = addMavenRepositories(project, extension)
-            nexusRepositories.forEach { (nexusRepo, mavenRepo) ->
-                val publishToNexusTask = project.tasks.named("publishTo${nexusRepo.capitalizedName()}")
-                val initializeTask = project.tasks.withType(InitializeNexusStagingRepository::class)
-                        .named("initialize${nexusRepo.capitalizedName()}StagingRepository")
-                val closeTask = project.tasks.withType(CloseNexusStagingRepository::class)
-                        .named("close${nexusRepo.capitalizedName()}StagingRepository")
-                val releaseTask = project.tasks.withType(ReleaseNexusStagingRepository::class)
-                        .named("release${nexusRepo.capitalizedName()}StagingRepository")
-                configureTaskDependencies(project, publishToNexusTask, initializeTask, closeTask, releaseTask, mavenRepo)
-            }
         }
     }
 
@@ -110,7 +103,6 @@ class NexusPublishPlugin : Plugin<Project> {
 
     private fun configureTaskDependencies(
         project: Project,
-        publishToNexusTask: TaskProvider<Task>,
         initializeTask: TaskProvider<InitializeNexusStagingRepository>,
         closeTask: TaskProvider<CloseNexusStagingRepository>,
         releaseTask: TaskProvider<ReleaseNexusStagingRepository>,
@@ -119,7 +111,11 @@ class NexusPublishPlugin : Plugin<Project> {
         val publishTasks = project.tasks
                 .withType<PublishToMavenRepository>()
                 .matching { it.repository == nexusRepository }
-        publishToNexusTask.configure { dependsOn(publishTasks) }
+        project.tasks.register("publishTo${nexusRepository.name.capitalize()}") {
+            description = "Publishes all Maven publications produced by this project to the '${nexusRepository.name}' Nexus repository."
+            group = PublishingPlugin.PUBLISH_TASK_GROUP
+            dependsOn(publishTasks)
+        }
         // PublishToMavenRepository tasks may not yet have been initialized
         project.afterEvaluate {
             publishTasks.configureEach {

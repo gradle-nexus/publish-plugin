@@ -6,10 +6,9 @@ Gradle Plugin that explicitly creates a Staging Repository before publishing to 
 
 ## Usage
 
-The plugin does the following:
+The plugin must be applied to the root project and does the following:
 
-- Apply the `maven-publish` plugin
-- configure a Maven artifact repository for each repository defined in the `nexusPublishing { repositories { ... } }` block
+- configure a Maven artifact repository for each repository defined in the `nexusPublishing { repositories { ... } }` block in each subproject that applies the `maven-publish` plugin
 - create a `initialize${repository.name.capitalize()}StagingRepository` task that starts a new staging repository in case the project's version does not end with `-SNAPSHOT` (customizable via the `useStaging` property) and sets the URL of the corresponding Maven artifact repository accordingly. In case of a multi-project build, all subprojects with the same `nexusUrl` will use the same staging repository.
 - make all publishing tasks for each configured repository depend on the `initialize${repository.name.capitalize()}StagingRepository` task.
 - create a `publishTo${repository.name.capitalize()}` lifecycle task that depends on all publishing tasks for the corresponding Maven artifact repository.
@@ -48,6 +47,7 @@ Finally, call `publishToSonatype` to publish all publications to Sonatype's OSSR
 ```gradle
 plugins {
     id "java-library"
+    id "maven-publish"
     id "io.github.gradle-nexus.publish-plugin" version "0.1.0-SNAPSHOT"
 }
 
@@ -76,6 +76,7 @@ nexusPublishing {
 ```kotlin
 plugins {
     `java-library`
+    `maven-publish`
     id("io.github.gradle-nexus.publish-plugin") version "0.1.0-SNAPSHOT"
 }
 
