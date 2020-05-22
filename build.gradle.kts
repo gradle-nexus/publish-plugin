@@ -202,15 +202,24 @@ val javadocJar by tasks.creating(Jar::class) {
     from(tasks.dokka)
 }
 
-// used by plugin-publish plugin
-val archives by configurations.getting
-archives.artifacts.clear()
-artifacts {
-    add(archives.name, tasks.shadowJar) {
-        classifier = ""
+configurations {
+    configureEach {
+        outgoing {
+            val removed = artifacts.removeIf { it.classifier.isNullOrEmpty() }
+            if (removed) {
+                artifact(tasks.shadowJar) {
+                    classifier = ""
+                }
+            }
+        }
     }
-    add(archives.name, sourcesJar)
-    add(archives.name, javadocJar)
+    // used by plugin-publish plugin
+    archives {
+        outgoing {
+            artifact(sourcesJar)
+            artifact(javadocJar)
+        }
+    }
 }
 
 publishing {
@@ -250,4 +259,3 @@ publishing {
 tasks.wrapper {
     distributionType = Wrapper.DistributionType.ALL
 }
-
