@@ -26,7 +26,6 @@ import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
 import org.gradle.kotlin.dsl.findByType
 import org.gradle.kotlin.dsl.property
-import org.gradle.kotlin.dsl.the
 import java.net.URI
 import javax.inject.Inject
 

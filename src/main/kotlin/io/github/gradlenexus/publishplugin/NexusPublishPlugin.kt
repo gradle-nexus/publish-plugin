@@ -25,6 +25,8 @@ import org.gradle.api.publish.maven.tasks.PublishToMavenRepository
 import org.gradle.api.publish.plugins.PublishingPlugin
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.create
+import org.gradle.kotlin.dsl.invoke
+import org.gradle.kotlin.dsl.named
 import org.gradle.kotlin.dsl.property
 import org.gradle.kotlin.dsl.register
 import org.gradle.kotlin.dsl.the
@@ -41,28 +43,6 @@ class NexusPublishPlugin : Plugin<Project> {
         val extension = project.extensions.create<NexusPublishExtension>(NexusPublishExtension.NAME, project)
         configureTasks(project, extension)
         configureTaskDependenciesForAllProjects(project, extension)
-    }
-
-    private fun configureTaskDependenciesForAllProjects(rootProject: Project, extension: NexusPublishExtension) {
-        rootProject.afterEvaluate {
-            rootProject.allprojects {
-                val publishingProject = this
-                pluginManager.withPlugin("maven-publish") {
-                    publishingProject.afterEvaluate {
-                        val nexusRepositories = addMavenRepositories(publishingProject, extension)
-                        nexusRepositories.forEach { (nexusRepo, mavenRepo) ->
-                            val initializeTask = rootProject.tasks.withType(InitializeNexusStagingRepository::class)
-                                    .named("initialize${nexusRepo.capitalizedName()}StagingRepository")
-                            val closeTask = rootProject.tasks.withType(CloseNexusStagingRepository::class)
-                                    .named("close${nexusRepo.capitalizedName()}StagingRepository")
-                            val releaseTask = rootProject.tasks.withType(ReleaseNexusStagingRepository::class)
-                                    .named("release${nexusRepo.capitalizedName()}StagingRepository")
-                            configureTaskDependencies(publishingProject, initializeTask, closeTask, releaseTask, mavenRepo)
-                        }
-                    }
-                }
-            }
-        }
     }
 
     private fun configureTasks(project: Project, extension: NexusPublishExtension) {
@@ -85,6 +65,23 @@ class NexusPublishPlugin : Plugin<Project> {
             project.tasks.remove(project.tasks.named("initialize${capitalizedName()}StagingRepository") as Any)
             project.tasks.remove(project.tasks.named("close${capitalizedName()}StagingRepository") as Any)
             project.tasks.remove(project.tasks.named("release${capitalizedName()}StagingRepository") as Any)
+        }
+    }
+
+    private fun configureTaskDependenciesForAllProjects(rootProject: Project, extension: NexusPublishExtension) {
+        rootProject.afterEvaluate {
+            rootProject.allprojects {
+                val publishingProject = this
+                plugins.withId("maven-publish") {
+                    val nexusRepositories = addMavenRepositories(publishingProject, extension)
+                    nexusRepositories.forEach { (nexusRepo, mavenRepo) ->
+                        val initializeTask = rootProject.tasks.named<InitializeNexusStagingRepository>("initialize${nexusRepo.capitalizedName()}StagingRepository")
+                        val closeTask = rootProject.tasks.named<CloseNexusStagingRepository>("close${nexusRepo.capitalizedName()}StagingRepository")
+                        val releaseTask = rootProject.tasks.named<ReleaseNexusStagingRepository>("release${nexusRepo.capitalizedName()}StagingRepository")
+                        configureTaskDependencies(publishingProject, initializeTask, closeTask, releaseTask, mavenRepo)
+                    }
+                }
+            }
         }
     }
 
@@ -123,11 +120,11 @@ class NexusPublishPlugin : Plugin<Project> {
                 doFirst { logger.info("Uploading to {}", repository.url) }
             }
         }
-        closeTask.configure {
+        closeTask {
             mustRunAfter(initializeTask)
             mustRunAfter(publishTasks)
         }
-        releaseTask.configure {
+        releaseTask {
             mustRunAfter(initializeTask)
             mustRunAfter(closeTask)
             mustRunAfter(publishTasks)
