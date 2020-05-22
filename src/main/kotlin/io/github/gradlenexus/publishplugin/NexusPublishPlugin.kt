@@ -62,9 +62,15 @@ class NexusPublishPlugin : Plugin<Project> {
                     }
         }
         extension.repositories.whenObjectRemoved {
-            project.tasks.remove(project.tasks.named("initialize${capitalizedName()}StagingRepository") as Any)
-            project.tasks.remove(project.tasks.named("close${capitalizedName()}StagingRepository") as Any)
-            project.tasks.remove(project.tasks.named("release${capitalizedName()}StagingRepository") as Any)
+            project.tasks.named("initialize${capitalizedName()}StagingRepository").configure {
+                enabled = false
+            }
+            project.tasks.named("close${capitalizedName()}StagingRepository").configure {
+                enabled = false
+            }
+            project.tasks.named("release${capitalizedName()}StagingRepository").configure {
+                enabled = false
+            }
         }
     }
 

@@ -653,6 +653,25 @@ class NexusPublishPluginTests {
         assertGetStagingRepository(STAGED_REPOSITORY_ID, 2)
     }
 
+    @Test
+    fun `disables tasks for removed repos`() {
+        writeDefaultSingleProjectConfiguration()
+        projectDir.resolve("build.gradle").append("""
+            nexusPublishing {
+                repositories {
+                    remove(create("myNexus") {
+                        nexusUrl = uri('${server.baseUrl()}/b/')
+                        snapshotRepositoryUrl = uri('${server.baseUrl()}/b/snapshots/')
+                    })
+                }
+            }
+        """)
+
+        val result = run("initializeMyNexusStagingRepository")
+
+        assertSkipped(result, ":initializeMyNexusStagingRepository")
+    }
+
     // TODO: To be used also in other tests
     private fun writeDefaultSingleProjectConfiguration() {
         projectDir.resolve("settings.gradle").write("""
