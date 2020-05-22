@@ -18,7 +18,6 @@ package io.github.gradlenexus.publishplugin.internal
 
 import com.nhaarman.mockitokotlin2.anyOrNull
 import io.github.gradlenexus.publishplugin.RepositoryTransitionException
-import io.github.gradlenexus.publishplugin.StagingRepository
 import org.assertj.core.api.Assertions.assertThatExceptionOfType
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

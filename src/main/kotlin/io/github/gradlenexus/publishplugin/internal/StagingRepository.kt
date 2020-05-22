@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.github.gradlenexus.publishplugin
+package io.github.gradlenexus.publishplugin.internal
 
 data class StagingRepository constructor(val id: String, val state: State, val transitioning: Boolean) {
 

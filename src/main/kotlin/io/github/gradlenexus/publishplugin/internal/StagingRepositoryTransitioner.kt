@@ -17,7 +17,6 @@
 package io.github.gradlenexus.publishplugin.internal
 
 import io.github.gradlenexus.publishplugin.RepositoryTransitionException
-import io.github.gradlenexus.publishplugin.StagingRepository
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
