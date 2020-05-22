@@ -1,3 +1,4 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ConfigureShadowRelocation
 import org.gradle.initialization.IGradlePropertiesLoader.ENV_PROJECT_PROPERTIES_PREFIX
 import org.gradle.initialization.IGradlePropertiesLoader.SYSTEM_PROJECT_PROPERTIES_PREFIX
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
@@ -137,13 +138,14 @@ tasks {
     withType<KotlinCompile>().configureEach {
         kotlinOptions.jvmTarget = "1.8"
     }
+    val relocateShadowJar by registering(ConfigureShadowRelocation::class) {
+        target = shadowJar.get()
+        prefix = "${project.group}.nexus.shadow"
+    }
     shadowJar {
-        archiveClassifier.set("")
+        dependsOn(relocateShadowJar)
         configurations = listOf(shadowed)
-        exclude("META-INF/maven/**")
-        listOf("retrofit2", "okhttp3", "okio", "com").forEach {
-            relocate(it, "${project.group}.nexus.shadow.$it")
-        }
+        exclude("META-INF/maven/**", "META-INF/proguard/**", "META-INF/*.kotlin_module")
     }
     jar {
         enabled = false
