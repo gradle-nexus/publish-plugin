@@ -93,6 +93,12 @@ class NexusPublishPlugin : Plugin<Project> {
                             description = "Publishes all Maven publications produced by this project to the '${nexusRepo.name}' Nexus repository."
                             group = PublishingPlugin.PUBLISH_TASK_GROUP
                         }
+                        closeTask {
+                            mustRunAfter(publishAllTask)
+                        }
+                        releaseTask {
+                            mustRunAfter(publishAllTask)
+                        }
                         configureTaskDependencies(publishingProject, initializeTask, publishAllTask, closeTask, releaseTask, mavenRepo)
                     }
                 }
@@ -135,11 +141,9 @@ class NexusPublishPlugin : Plugin<Project> {
             }
             closeTask {
                 mustRunAfter(publishTask)
-                mustRunAfter(publishAllTask)
             }
             releaseTask {
                 mustRunAfter(publishTask)
-                mustRunAfter(publishAllTask)
             }
         }
     }
