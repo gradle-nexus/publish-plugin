@@ -122,7 +122,7 @@ class NexusPublishPlugin : Plugin<Project> {
         mavenRepo: MavenArtifactRepository
     ) {
         val mavenPublications = project.the<PublishingExtension>().publications.withType<MavenPublication>()
-        mavenPublications.all {
+        mavenPublications.configureEach {
             val publication = this
             val publishTask = project.tasks.withName<PublishToMavenRepository>(
                     "publish${publication.name.capitalize()}PublicationTo${mavenRepo.name.capitalize()}Repository")
