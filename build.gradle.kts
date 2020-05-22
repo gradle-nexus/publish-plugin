@@ -233,7 +233,7 @@ publishing {
                 pom {
                     name.set(readableName)
                     description.set(project.description)
-                    inceptionYear.set("2019")
+                    inceptionYear.set("2020")
                     url.set(repoUrl)
                     developers {
                         developer {
