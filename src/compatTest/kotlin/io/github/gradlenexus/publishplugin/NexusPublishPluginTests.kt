@@ -208,6 +208,11 @@ class NexusPublishPluginTests {
             rootProject.name = 'sample'
             include 'gradle-plugin'
         """)
+        if (GradleVersion.version(gradleVersion) < GradleVersion.version("5.0")) {
+            projectDir.resolve("settings.gradle").append("""
+                enableFeaturePreview("STABLE_PUBLISHING")
+            """)
+        }
 
         projectDir.resolve("build.gradle").write("""
             plugins {
