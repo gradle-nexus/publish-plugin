@@ -37,7 +37,7 @@ class NexusPublishPlugin : Plugin<Project> {
 
     override fun apply(project: Project) {
         require(project == project.rootProject) {
-            "Plugin must be applied to the root project"
+            "Plugin must be applied to the root project but was applied to ${project.path}"
         }
 
         val extension = project.extensions.create<NexusPublishExtension>(NexusPublishExtension.NAME, project)

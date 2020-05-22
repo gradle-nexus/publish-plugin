@@ -90,6 +90,25 @@ class NexusPublishPluginTests {
     }
 
     @Test
+    fun `must be applied to root project`() {
+        projectDir.resolve("settings.gradle").append("""
+            include('sub')
+        """)
+        buildGradle.append("""
+            plugins {
+                id('io.github.gradle-nexus.publish-plugin') apply false
+            }
+            subprojects {
+                apply plugin: 'io.github.gradle-nexus.publish-plugin'
+            }
+        """)
+
+        val result = gradleRunner("tasks").buildAndFail()
+
+        assertThat(result.output).contains("Plugin must be applied to the root project but was applied to :sub")
+    }
+
+    @Test
     fun `publish task depends on correct tasks`() {
         projectDir.resolve("settings.gradle").write("""
             rootProject.name = 'sample'
