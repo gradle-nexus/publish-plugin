@@ -93,6 +93,11 @@ dependencies {
     testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
 }
 
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
 stutter {
     isSparse = (findProperty("stutter.sparce")?.toString()?.toBoolean()) ?: true
     java(8) {
@@ -192,16 +197,12 @@ tasks {
             }
         }
     }
-}
-
-val sourcesJar by tasks.creating(Jar::class) {
-    archiveClassifier.set("sources")
-    from(sourceSets.main.map { it.allSource })
-}
-
-val javadocJar by tasks.creating(Jar::class) {
-    archiveClassifier.set("javadoc")
-    from(tasks.dokka)
+    javadoc {
+        enabled = false
+    }
+    named<Jar>("javadocJar").configure {
+        from(dokka)
+    }
 }
 
 configurations {
@@ -218,8 +219,8 @@ configurations {
     // used by plugin-publish plugin
     archives {
         outgoing {
-            artifact(sourcesJar)
-            artifact(javadocJar)
+            artifact(tasks.named("sourcesJar"))
+            artifact(tasks.named("javadocJar"))
         }
     }
 }
@@ -229,8 +230,6 @@ publishing {
         afterEvaluate {
             named<MavenPublication>("pluginMaven") {
                 artifactId = "publish-plugin"
-                artifact(sourcesJar)
-                artifact(javadocJar)
                 pom {
                     name.set(readableName)
                     description.set(project.description)
