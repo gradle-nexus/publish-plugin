@@ -19,6 +19,7 @@ package io.github.gradlenexus.publishplugin
 import java.net.URI
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.Task
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.tasks.PublishToMavenRepository
@@ -81,9 +82,9 @@ class NexusPublishPlugin : Plugin<Project> {
                 plugins.withId("maven-publish") {
                     val nexusRepositories = addMavenRepositories(publishingProject, extension)
                     nexusRepositories.forEach { (nexusRepo, mavenRepo) ->
-                        val initializeTask = rootProject.tasks.named<InitializeNexusStagingRepository>("initialize${nexusRepo.capitalizedName()}StagingRepository")
-                        val closeTask = rootProject.tasks.named<CloseNexusStagingRepository>("close${nexusRepo.capitalizedName()}StagingRepository")
-                        val releaseTask = rootProject.tasks.named<ReleaseNexusStagingRepository>("release${nexusRepo.capitalizedName()}StagingRepository")
+                        val initializeTask = rootProject.tasks.named("initialize${nexusRepo.capitalizedName()}StagingRepository")
+                        val closeTask = rootProject.tasks.named("close${nexusRepo.capitalizedName()}StagingRepository")
+                        val releaseTask = rootProject.tasks.named("release${nexusRepo.capitalizedName()}StagingRepository")
                         configureTaskDependencies(publishingProject, initializeTask, closeTask, releaseTask, mavenRepo)
                     }
                 }
@@ -106,9 +107,9 @@ class NexusPublishPlugin : Plugin<Project> {
 
     private fun configureTaskDependencies(
         project: Project,
-        initializeTask: TaskProvider<InitializeNexusStagingRepository>,
-        closeTask: TaskProvider<CloseNexusStagingRepository>,
-        releaseTask: TaskProvider<ReleaseNexusStagingRepository>,
+        initializeTask: TaskProvider<Task>,
+        closeTask: TaskProvider<Task>,
+        releaseTask: TaskProvider<Task>,
         nexusRepository: MavenArtifactRepository
     ) {
         val publishTasks = project.tasks
