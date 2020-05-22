@@ -54,7 +54,7 @@ constructor(
         val serverUrl = repository.get().nexusUrl.get()
         val client = NexusClient(serverUrl, repository.get().username.orNull, repository.get().password.orNull, clientTimeout.orNull, connectTimeout.orNull)
         val stagingProfileId = determineStagingProfileId(client)
-        logger.info("Creating staging repository for stagingProfileId '{}'", stagingProfileId)
+        logger.info("Creating staging repository for {} at {}, stagingProfileId '{}'", repository.get().name, serverUrl, stagingProfileId)
         val stagingRepositoryIdAsString = client.createStagingRepository(stagingProfileId)
         stagingRepositoryId.invoke(stagingRepositoryIdAsString)
         return client.getStagingRepositoryUri(stagingRepositoryIdAsString)
