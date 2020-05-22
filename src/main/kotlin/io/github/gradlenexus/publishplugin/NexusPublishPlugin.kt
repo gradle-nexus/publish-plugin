@@ -130,7 +130,7 @@ class NexusPublishPlugin : Plugin<Project> {
                 dependsOn(initializeTask)
                 doFirst { logger.info("Uploading to {}", repository.url) }
             }
-            publishAllTask.configure {
+            publishAllTask {
                 dependsOn(publishTask)
             }
             closeTask {
