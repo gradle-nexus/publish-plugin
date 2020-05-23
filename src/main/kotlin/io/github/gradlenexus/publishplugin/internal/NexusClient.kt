@@ -125,11 +125,11 @@ open class NexusClient(private val baseUrl: URI, username: String?, password: St
 
     // TODO: Cover all API calls with unified error handling (including unexpected IOExceptions)
     private fun failure(action: String, response: Response<*>): RuntimeException {
-        var message = "Failed to " + action + ", server responded with status code " + response.code()
+        var message = "Failed to $action, server at $baseUrl responded with status code ${response.code()}"
         val errorBody = response.errorBody()
         if (errorBody != null && errorBody.contentLength() > 0) {
             try {
-                message += ", body: " + errorBody.string()
+                message += ", body: $errorBody"
             } catch (e: IOException) {
                 throw UncheckedIOException("Failed to read body of error response", e)
             }
