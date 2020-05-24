@@ -16,12 +16,13 @@
 
 package io.github.gradlenexus.publishplugin
 
-import org.assertj.core.api.Assertions
+import org.assertj.core.api.Assertions.assertThat
 import org.gradle.testkit.runner.BuildResult
+import org.gradle.testkit.runner.BuildTask
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.jupiter.api.io.TempDir
-import java.nio.file.Path
+import java.io.File
 
 abstract class BaseGradleTest {
 
@@ -29,7 +30,7 @@ abstract class BaseGradleTest {
             .withPluginClasspath()
 
     @TempDir
-    protected lateinit var projectDir: Path
+    protected lateinit var projectDir: File
 
     protected fun run(vararg arguments: String): BuildResult {
         return gradleRunner(*arguments).build()
@@ -38,19 +39,22 @@ abstract class BaseGradleTest {
     protected fun gradleRunner(vararg arguments: String): GradleRunner {
         return gradleRunner
 //                .withDebug(true)
-                .withProjectDir(projectDir.toFile())
+                .withProjectDir(projectDir)
                 .withArguments(*arguments, "--stacktrace")
                 .forwardOutput()
     }
 
-    protected fun assertSuccess(result: BuildResult, taskPath: String) {
-        assertOutcome(result, taskPath, TaskOutcome.SUCCESS)
+    protected fun BuildResult.assertSuccess(taskPath: String) {
+        assertSuccess { it.path == taskPath }
     }
 
-    protected fun assertOutcome(result: BuildResult, taskPath: String, outcome: TaskOutcome) {
-        Assertions.assertThat(result.task(taskPath)).describedAs("Task $taskPath")
-                .isNotNull
-                .extracting { it!!.outcome }
-                .isEqualTo(outcome)
+    protected fun BuildResult.assertSuccess(taskPredicate: (BuildTask) -> Boolean) {
+        assertOutcome(taskPredicate, TaskOutcome.SUCCESS)
+    }
+
+    protected fun BuildResult.assertOutcome(taskPredicate: (BuildTask) -> Boolean, outcome: TaskOutcome) {
+        val tasks = tasks.filter(taskPredicate)
+        assertThat(tasks).hasSizeGreaterThanOrEqualTo(1)
+        assertThat(tasks.map { it.outcome }.distinct()).describedAs(tasks.toString()).containsExactly(outcome)
     }
 }
