@@ -17,7 +17,6 @@
 package io.github.gradlenexus.publishplugin.internal
 
 import io.github.gradlenexus.publishplugin.RetryingConfig
-import io.github.gradlenexus.publishplugin.StagingRepository
 import net.jodah.failsafe.Failsafe
 import net.jodah.failsafe.RetryPolicy
 import org.slf4j.Logger

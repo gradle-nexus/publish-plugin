@@ -19,7 +19,9 @@ package io.github.gradlenexus.publishplugin
 import io.github.gradlenexus.publishplugin.internal.BasicActionRetrier
 import io.github.gradlenexus.publishplugin.internal.NexusClient
 import io.github.gradlenexus.publishplugin.internal.StagingRepositoryTransitioner
+import io.github.gradlenexus.publishplugin.internal.StagingRepositoryDescriptorRegistry
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.options.Option
@@ -29,11 +31,13 @@ import javax.inject.Inject
 //TODO: Extract the same logic from CloseNexusStagingRepository and ReleaseNexusStagingRepository
 @Suppress("UnstableApiUsage")
 open class ReleaseNexusStagingRepository @Inject
-constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository: NexusRepository) :
+constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository: NexusRepository, registry: Provider<StagingRepositoryDescriptorRegistry>) :
         AbstractNexusStagingRepositoryTask(objects, extension, repository) {
 
     @Input
-    val stagingRepositoryId = objects.property<String>()
+    val stagingRepositoryId = objects.property<String>().apply {
+        set(registry.map { it[repository.name].stagingRepositoryId })
+    }
 
     @Option(option = "staging-repository-id", description = "staging repository id to release")
     fun setStagingRepositoryId(stagingRepositoryId: String) {

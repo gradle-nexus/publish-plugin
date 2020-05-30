@@ -31,6 +31,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlMatching
 import com.github.tomakehurst.wiremock.stubbing.Scenario
 import com.google.gson.Gson
+import io.github.gradlenexus.publishplugin.internal.StagingRepository
 import java.nio.file.Files
 import java.nio.file.Path
 import org.assertj.core.api.Assertions.assertThat
@@ -90,6 +91,25 @@ class NexusPublishPluginTests {
     }
 
     @Test
+    fun `must be applied to root project`() {
+        projectDir.resolve("settings.gradle").append("""
+            include('sub')
+        """)
+        buildGradle.append("""
+            plugins {
+                id('io.github.gradle-nexus.publish-plugin') apply false
+            }
+            subprojects {
+                apply plugin: 'io.github.gradle-nexus.publish-plugin'
+            }
+        """)
+
+        val result = gradleRunner("tasks").buildAndFail()
+
+        assertThat(result.output).contains("Plugin must be applied to the root project but was applied to :sub")
+    }
+
+    @Test
     fun `publish task depends on correct tasks`() {
         projectDir.resolve("settings.gradle").write("""
             rootProject.name = 'sample'
@@ -97,6 +117,7 @@ class NexusPublishPluginTests {
         projectDir.resolve("build.gradle").write("""
             plugins {
                 id('java-library')
+                id('maven-publish')
                 id('io.github.gradle-nexus.publish-plugin')
             }
             group = 'org.example'
@@ -140,6 +161,7 @@ class NexusPublishPluginTests {
         projectDir.resolve("build.gradle").write("""
             plugins {
                 id('java-library')
+                id('maven-publish')
                 id('io.github.gradle-nexus.publish-plugin')
             }
             group = 'org.example'
@@ -187,25 +209,23 @@ class NexusPublishPluginTests {
             rootProject.name = 'sample'
             include 'gradle-plugin'
         """)
+        if (GradleVersion.version(gradleVersion) < GradleVersion.version("5.0")) {
+            projectDir.resolve("settings.gradle").append("""
+                enableFeaturePreview("STABLE_PUBLISHING")
+            """)
+        }
 
         projectDir.resolve("build.gradle").write("""
-            buildscript {
-                dependencies {
-                    classpath files($pluginClasspathAsString)
-                }
+            plugins {
+                id('io.github.gradle-nexus.publish-plugin')
             }
-            allprojects {
-                plugins.withId('maven-publish') {
-                    project.apply plugin: 'io.github.gradle-nexus.publish-plugin'
-                    project.extensions.configure('nexusPublishing') { ext ->
-                        ext.repositories {
-                            sonatype {
-                                nexusUrl = uri('${server.baseUrl()}')
-                                stagingProfileId = '$STAGING_PROFILE_ID'
-                                username = 'username'
-                                password = 'password'
-                            }
-                        }
+            nexusPublishing {
+                repositories {
+                    sonatype {
+                        nexusUrl = uri('${server.baseUrl()}')
+                        stagingProfileId = '$STAGING_PROFILE_ID'
+                        username = 'username'
+                        password = 'password'
                     }
                 }
             }
@@ -241,7 +261,7 @@ class NexusPublishPluginTests {
 
         val result = run("publishToSonatype", "-s")
 
-        assertSuccess(result, ":gradle-plugin:initializeSonatypeStagingRepository")
+        assertSuccess(result, ":initializeSonatypeStagingRepository")
         assertUploadedToStagingRepo("/org/example/gradle-plugin/0.0.1/gradle-plugin-0.0.1.pom")
         assertUploadedToStagingRepo("/org/example/foo/org.example.foo.gradle.plugin/0.0.1/org.example.foo.gradle.plugin-0.0.1.pom")
     }
@@ -255,6 +275,7 @@ class NexusPublishPluginTests {
         projectDir.resolve("build.gradle").write("""
             plugins {
                 id('java-library')
+                id('maven-publish')
                 id('io.github.gradle-nexus.publish-plugin')
             }
             group = 'org.example'
@@ -288,71 +309,6 @@ class NexusPublishPluginTests {
     }
 
     @Test
-    fun `creates single staging repository per server url`() {
-        projectDir.resolve("settings.gradle").write("""
-            rootProject.name = 'sample'
-            include 'a1', 'a2', 'b'
-        """)
-
-        projectDir.resolve("build.gradle").write("""
-            plugins {
-                id('io.github.gradle-nexus.publish-plugin') apply false
-            }
-            subprojects {
-                apply plugin: 'java-library'
-                apply plugin: 'io.github.gradle-nexus.publish-plugin'
-                group = 'org.example'
-                version = '0.0.1'
-                publishing {
-                    publications {
-                        mavenJava(MavenPublication) {
-                            from(components.java)
-                        }
-                    }
-                }
-                nexusPublishing {
-                    repositories {
-                        myNexus {
-                            nexusUrl = uri('${server.baseUrl()}/a/')
-                            snapshotRepositoryUrl = uri('${server.baseUrl()}/a/snapshots/')
-                            stagingProfileId = 'profile-a'
-                            username = 'username'
-                            password = 'password'
-                        }
-                    }
-                }
-            }
-            project(':b:') {
-                nexusPublishing {
-                    repositories {
-                        named('myNexus').configure {
-                            nexusUrl = uri('${server.baseUrl()}/b/')
-                            snapshotRepositoryUrl = uri('${server.baseUrl()}/b/snapshots/')
-                            stagingProfileId = 'profile-b'
-                        }
-                    }
-                }
-            }
-        """)
-
-        stubCreateStagingRepoRequest("/a/staging/profiles/profile-a/start", "orgexample-a")
-        expectArtifactUploads("/a/staging/deployByRepositoryId/orgexample-a")
-        stubCreateStagingRepoRequest("/b/staging/profiles/profile-b/start", "orgexample-b")
-        expectArtifactUploads("/b/staging/deployByRepositoryId/orgexample-b")
-
-        val result = run("publishToMyNexus", "--parallel")
-
-        server.verify(1, postRequestedFor(urlEqualTo("/a/staging/profiles/profile-a/start")))
-        server.verify(1, postRequestedFor(urlEqualTo("/b/staging/profiles/profile-b/start")))
-        assertSuccess(result, ":a1:initializeMyNexusStagingRepository")
-        assertSuccess(result, ":a2:initializeMyNexusStagingRepository")
-        assertSuccess(result, ":b:initializeMyNexusStagingRepository")
-        assertUploaded("/a/staging/deployByRepositoryId/orgexample-a/org/example/a1/0.0.1/a1-0.0.1.pom")
-        assertUploaded("/a/staging/deployByRepositoryId/orgexample-a/org/example/a2/0.0.1/a2-0.0.1.pom")
-        assertUploaded("/b/staging/deployByRepositoryId/orgexample-b/org/example/b/0.0.1/b-0.0.1.jar")
-    }
-
-    @Test
     fun `uses configured timeout`() {
         projectDir.resolve("settings.gradle").write("""
             rootProject.name = 'sample'
@@ -362,6 +318,7 @@ class NexusPublishPluginTests {
 
             plugins {
                 id('java-library')
+                id('maven-publish')
                 id('io.github.gradle-nexus.publish-plugin')
             }
             group = 'org.example'
@@ -411,6 +368,7 @@ class NexusPublishPluginTests {
 
             plugins {
                 id('java-library')
+                id('maven-publish')
                 id('io.github.gradle-nexus.publish-plugin')
             }
             group = 'org.example'
@@ -448,31 +406,20 @@ class NexusPublishPluginTests {
     fun `uses default URLs for sonatype repos in Groovy DSL`() {
         projectDir.resolve("settings.gradle").write("""
             rootProject.name = 'sample'
-            include('a', 'b')
         """)
         projectDir.resolve("build.gradle").write("""
             plugins {
-                id('io.github.gradle-nexus.publish-plugin') apply false
+                id('io.github.gradle-nexus.publish-plugin')
             }
-            subprojects {
-                apply plugin: 'io.github.gradle-nexus.publish-plugin'
-                task printSonatypeConfig {
-                    doFirst {
-                        println "${"$"}{project.name}.nexusUrl = ${"$"}{nexusPublishing.repositories['sonatype'].nexusUrl.orNull}"
-                        println "${"$"}{project.name}.snapshotRepositoryUrl = ${"$"}{nexusPublishing.repositories['sonatype'].snapshotRepositoryUrl.orNull}"
-                    }
+            task printSonatypeConfig {
+                doFirst {
+                    println "nexusUrl = ${"$"}{nexusPublishing.repositories['sonatype'].nexusUrl.orNull}"
+                    println "snapshotRepositoryUrl = ${"$"}{nexusPublishing.repositories['sonatype'].snapshotRepositoryUrl.orNull}"
                 }
             }
-            project(':a').nexusPublishing {
+            nexusPublishing {
                 repositories {
                     sonatype()
-                }
-            }
-            project(':b').nexusPublishing {
-                repositories {
-                    sonatype {
-                        nexusUrl = uri('https://example.com')
-                    }
                 }
             }
         """)
@@ -480,52 +427,28 @@ class NexusPublishPluginTests {
         val result = run("printSonatypeConfig")
 
         assertThat(result.output)
-                .contains("a.nexusUrl = https://oss.sonatype.org/service/local/")
-                .contains("a.snapshotRepositoryUrl = https://oss.sonatype.org/content/repositories/snapshots/")
-                .contains("b.nexusUrl = https://example.com")
-                .contains("b.snapshotRepositoryUrl = https://oss.sonatype.org/content/repositories/snapshots/")
+                .contains("nexusUrl = https://oss.sonatype.org/service/local/")
+                .contains("snapshotRepositoryUrl = https://oss.sonatype.org/content/repositories/snapshots/")
     }
 
     @Test
     fun `uses default URLs for sonatype repos in Kotlin DSL`() {
         projectDir.resolve("settings.gradle").write("""
             rootProject.name = 'sample'
-            include('a', 'b')
         """)
-        projectDir.resolve("a/build.gradle.kts").write("""
+        projectDir.resolve("build.gradle.kts").write("""
             plugins {
                 id("io.github.gradle-nexus.publish-plugin")
+            }
+            tasks.create("printSonatypeConfig") {
+                doFirst {
+                    println("nexusUrl = ${"$"}{nexusPublishing.repositories["sonatype"].nexusUrl.orNull}")
+                    println("snapshotRepositoryUrl = ${"$"}{nexusPublishing.repositories["sonatype"].snapshotRepositoryUrl.orNull}")
+                }
             }
             nexusPublishing {
                 repositories {
                     sonatype()
-                }
-            }
-            tasks.create("printSonatypeConfig") {
-                doFirst {
-                    println("${"$"}{project.name}.nexusUrl = ${"$"}{nexusPublishing.repositories["sonatype"].nexusUrl.orNull}")
-                    println("${"$"}{project.name}.snapshotRepositoryUrl = ${"$"}{nexusPublishing.repositories["sonatype"].snapshotRepositoryUrl.orNull}")
-                }
-            }
-        """)
-        projectDir.resolve("b/build.gradle.kts").write("""
-            plugins {
-                id("io.github.gradle-nexus.publish-plugin")
-            }
-            nexusPublishing {
-                repositories {
-                    sonatype {
-                        nexusUrl.set(uri("https://example.com"))
-                    }
-                    create("anotherRepo") {
-                        nexusUrl.set(uri("https://example.org"))
-                    }
-                }
-            }
-            tasks.create("printSonatypeConfig") {
-                doFirst {
-                    println("${"$"}{project.name}.nexusUrl = ${"$"}{nexusPublishing.repositories["sonatype"].nexusUrl.orNull}")
-                    println("${"$"}{project.name}.snapshotRepositoryUrl = ${"$"}{nexusPublishing.repositories["sonatype"].snapshotRepositoryUrl.orNull}")
                 }
             }
         """)
@@ -533,10 +456,8 @@ class NexusPublishPluginTests {
         val result = run("printSonatypeConfig")
 
         assertThat(result.output)
-                .contains("a.nexusUrl = https://oss.sonatype.org/service/local/")
-                .contains("a.snapshotRepositoryUrl = https://oss.sonatype.org/content/repositories/snapshots/")
-                .contains("b.nexusUrl = https://example.com")
-                .contains("b.snapshotRepositoryUrl = https://oss.sonatype.org/content/repositories/snapshots/")
+                .contains("nexusUrl = https://oss.sonatype.org/service/local/")
+                .contains("snapshotRepositoryUrl = https://oss.sonatype.org/content/repositories/snapshots/")
     }
 
     @Test
@@ -692,6 +613,25 @@ class NexusPublishPluginTests {
         assertGetStagingRepository(STAGED_REPOSITORY_ID, 2)
     }
 
+    @Test
+    fun `disables tasks for removed repos`() {
+        writeDefaultSingleProjectConfiguration()
+        projectDir.resolve("build.gradle").append("""
+            nexusPublishing {
+                repositories {
+                    remove(create("myNexus") {
+                        nexusUrl = uri('${server.baseUrl()}/b/')
+                        snapshotRepositoryUrl = uri('${server.baseUrl()}/b/snapshots/')
+                    })
+                }
+            }
+        """)
+
+        val result = run("initializeMyNexusStagingRepository")
+
+        assertSkipped(result, ":initializeMyNexusStagingRepository")
+    }
+
     // TODO: To be used also in other tests
     private fun writeDefaultSingleProjectConfiguration() {
         projectDir.resolve("settings.gradle").write("""
@@ -708,6 +648,7 @@ class NexusPublishPluginTests {
             }
             plugins {
                 id('java-library')
+                id('maven-publish')
             }
             apply plugin: 'io.github.gradle-nexus.publish-plugin'
             group = 'org.example'

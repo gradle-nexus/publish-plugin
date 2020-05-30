@@ -16,7 +16,6 @@
 
 package io.github.gradlenexus.publishplugin.internal
 
-import io.github.gradlenexus.publishplugin.StagingRepository
 import java.io.IOException
 import java.io.UncheckedIOException
 import java.net.URI
@@ -81,12 +80,13 @@ open class NexusClient(private val baseUrl: URI, username: String?, password: St
                 ?.id
     }
 
-    fun createStagingRepository(stagingProfileId: String): String {
+    fun createStagingRepository(stagingProfileId: String): StagingRepositoryDescriptor {
         val response = api.startStagingRepo(stagingProfileId, Dto(Description("Created by io.github.gradle-nexus.publish-plugin Gradle plugin"))).execute()
         if (!response.isSuccessful) {
             throw failure("create staging repository", response)
         }
-        return response.body()?.data?.stagedRepositoryId ?: throw RuntimeException("No response body")
+        val stagingRepositoryId = response.body()?.data?.stagedRepositoryId ?: throw RuntimeException("No response body")
+        return StagingRepositoryDescriptor(baseUrl, stagingRepositoryId)
     }
 
     open fun closeStagingRepository(stagingRepositoryId: String) {
@@ -102,9 +102,6 @@ open class NexusClient(private val baseUrl: URI, username: String?, password: St
             throw failure("release staging repository", response)
         }
     }
-
-    fun getStagingRepositoryUri(stagingRepositoryId: String): URI =
-            URI.create("${baseUrl.toString().removeSuffix("/")}/staging/deployByRepositoryId/$stagingRepositoryId")
 
     open fun getStagingRepositoryStateById(stagingRepositoryId: String): StagingRepository {
         val response = api.getStagingRepoById(stagingRepositoryId).execute()
@@ -128,11 +125,11 @@ open class NexusClient(private val baseUrl: URI, username: String?, password: St
 
     // TODO: Cover all API calls with unified error handling (including unexpected IOExceptions)
     private fun failure(action: String, response: Response<*>): RuntimeException {
-        var message = "Failed to " + action + ", server responded with status code " + response.code()
+        var message = "Failed to $action, server at $baseUrl responded with status code ${response.code()}"
         val errorBody = response.errorBody()
         if (errorBody != null && errorBody.contentLength() > 0) {
             try {
-                message += ", body: " + errorBody.string()
+                message += ", body: $errorBody"
             } catch (e: IOException) {
                 throw UncheckedIOException("Failed to read body of error response", e)
             }

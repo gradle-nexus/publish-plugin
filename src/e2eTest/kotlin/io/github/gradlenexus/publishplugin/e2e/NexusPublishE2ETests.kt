@@ -17,25 +17,30 @@
 package io.github.gradlenexus.publishplugin.e2e
 
 import io.github.gradlenexus.publishplugin.BaseGradleTest
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import java.io.File
 
 @Suppress("FunctionName")
 class NexusPublishE2ETests : BaseGradleTest() {
 
-    private var extraParams: Array<String> = arrayOf()
+    @ParameterizedTest(name = "{0}")
+    @ValueSource(strings = ["nexus-publish-e2e-minimal", "nexus-publish-e2e-multi-project"])
+    fun `release project to real Sonatype Nexus`(projectName: String) {
+        File("src/e2eTest/resources/$projectName").copyRecursively(projectDir)
 
-    @BeforeEach
-    internal fun setup() {
-        File("src//e2eTest//resources//nexus-publish-e2e-minimal").copyRecursively(projectDir.toFile())
-    }
+        val result = run(
+                "publishToSonatype",
+                "closeSonatypeStagingRepository",
+                "releaseSonatypeStagingRepository",
+                "--info",
+                "--console=verbose"
+        )
 
-    @Test
-    fun `release minimal project to real Sonatype Nexus`() {
-        val result = run("publishToSonatype", "closeSonatypeStagingRepository", "releaseSonatypeStagingRepository", "-i", "--console=verbose", *extraParams)
-        assertSuccess(result, ":publishToSonatype")
-        assertSuccess(result, ":closeSonatypeStagingRepository")
-        assertSuccess(result, ":releaseSonatypeStagingRepository")
+        result.apply {
+            assertSuccess { it.path.substringAfterLast(':').matches("publish.+PublicationToSonatypeRepository".toRegex()) }
+            assertSuccess(":closeSonatypeStagingRepository")
+            assertSuccess(":releaseSonatypeStagingRepository")
+        }
     }
 }

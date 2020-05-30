@@ -86,6 +86,7 @@ class TaskOrchestrationTest {
 
     private fun initSingleProjectWithDefaultConfiguration() {
         project.apply(plugin = "java")
+        project.apply(plugin = "maven-publish")
         project.apply<NexusPublishPlugin>()
         project.extensions.configure<NexusPublishExtension> {
             repositories.sonatype()
