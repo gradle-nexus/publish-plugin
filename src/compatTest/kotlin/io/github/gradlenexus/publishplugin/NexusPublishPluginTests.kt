@@ -196,6 +196,7 @@ class NexusPublishPluginTests {
         val result = run("publishToMyNexus")
 
         assertSuccess(result, ":initializeMyNexusStagingRepository")
+        assertThat(result.output).containsOnlyOnce("Created staging repository '$STAGED_REPOSITORY_ID' at ${server.baseUrl()}/repositories/$STAGED_REPOSITORY_ID/content/")
         assertNotConsidered(result, ":initializeSomeOtherNexusStagingRepository")
         server.verify(postRequestedFor(urlEqualTo("/staging/profiles/$STAGING_PROFILE_ID/start"))
                 .withRequestBody(matchingJsonPath("\$.data[?(@.description == 'Created by io.github.gradle-nexus.publish-plugin Gradle plugin')]")))
