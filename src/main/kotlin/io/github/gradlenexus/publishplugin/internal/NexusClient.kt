@@ -55,7 +55,7 @@ open class NexusClient(private val baseUrl: URI, username: String?, password: St
                     }
         }
         httpClientBuilder.addInterceptor { chain ->
-            val version = javaClass.`package`.implementationVersion
+            val version = javaClass.`package`.implementationVersion ?: "dev"
             chain.proceed(chain.request().newBuilder()
                     .header("User-Agent", "gradle-nexus-publish-plugin/$version")
                     .build())
