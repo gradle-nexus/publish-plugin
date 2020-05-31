@@ -152,6 +152,9 @@ tasks {
         dependsOn(relocateShadowJar)
         configurations = listOf(shadowed)
         exclude("META-INF/maven/**", "META-INF/proguard/**", "META-INF/*.kotlin_module")
+        manifest {
+            attributes["Implementation-Version"] = project.version
+        }
     }
     jar {
         enabled = false
@@ -185,6 +188,9 @@ tasks {
         dependsOn(shadowJar)
         useJUnitPlatform()
         maxParallelForks = 8
+    }
+    withType<Test>().matching { it.name.startsWith("compatTest") }.configureEach {
+        systemProperty("plugin.version", project.version)
     }
     dokka {
         configuration {

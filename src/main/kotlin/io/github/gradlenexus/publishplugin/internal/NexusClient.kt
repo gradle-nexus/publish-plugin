@@ -54,6 +54,12 @@ open class NexusClient(private val baseUrl: URI, username: String?, password: St
                                 .build())
                     }
         }
+        httpClientBuilder.addInterceptor { chain ->
+            val version = javaClass.`package`.implementationVersion
+            chain.proceed(chain.request().newBuilder()
+                    .header("User-Agent", "gradle-nexus-publish-plugin/$version")
+                    .build())
+        }
         val retrofit = Retrofit.Builder()
                 .baseUrl(baseUrl.toString())
                 .client(httpClientBuilder.build())
