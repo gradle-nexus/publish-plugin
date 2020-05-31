@@ -20,6 +20,7 @@ import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
 import com.github.tomakehurst.wiremock.client.WireMock.containing
+import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
@@ -696,6 +697,7 @@ class NexusPublishPluginTests {
     @SafeVarargs
     private fun stubStagingProfileRequest(url: String, vararg stagingProfiles: Map<String, String>) {
         server.stubFor(get(urlEqualTo(url))
+                .withHeader("User-Agent", equalTo("gradle-nexus-publish-plugin/${System.getProperty("plugin.version")}"))
                 .willReturn(aResponse().withBody(gson.toJson(mapOf("data" to listOf(*stagingProfiles))))))
     }
 
