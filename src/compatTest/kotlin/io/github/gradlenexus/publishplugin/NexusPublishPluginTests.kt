@@ -20,9 +20,9 @@ import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
 import com.github.tomakehurst.wiremock.client.WireMock.containing
-import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.matching
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
@@ -33,8 +33,6 @@ import com.github.tomakehurst.wiremock.client.WireMock.urlMatching
 import com.github.tomakehurst.wiremock.stubbing.Scenario
 import com.google.gson.Gson
 import io.github.gradlenexus.publishplugin.internal.StagingRepository
-import java.nio.file.Files
-import java.nio.file.Path
 import org.assertj.core.api.Assertions.assertThat
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
@@ -52,6 +50,8 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.io.TempDir
 import ru.lanwen.wiremock.ext.WiremockResolver
 import ru.lanwen.wiremock.ext.WiremockResolver.Wiremock
+import java.nio.file.Files
+import java.nio.file.Path
 
 @Suppress("FunctionName") // TODO: How to suppress "kotlin:S100" from SonarLint?
 @ExtendWith(WiremockResolver::class)
@@ -697,7 +697,7 @@ class NexusPublishPluginTests {
     @SafeVarargs
     private fun stubStagingProfileRequest(url: String, vararg stagingProfiles: Map<String, String>) {
         server.stubFor(get(urlEqualTo(url))
-                .withHeader("User-Agent", equalTo("gradle-nexus-publish-plugin/${System.getProperty("plugin.version")}"))
+                .withHeader("User-Agent", matching("gradle-nexus-publish-plugin/.*"))
                 .willReturn(aResponse().withBody(gson.toJson(mapOf("data" to listOf(*stagingProfiles))))))
     }
 
