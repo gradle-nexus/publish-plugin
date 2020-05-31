@@ -18,6 +18,7 @@ package io.github.gradlenexus.publishplugin
 
 import io.github.gradlenexus.publishplugin.internal.NexusClient
 import io.github.gradlenexus.publishplugin.internal.StagingRepositoryDescriptorRegistry
+import okhttp3.HttpUrl
 import org.gradle.api.GradleException
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
@@ -48,7 +49,10 @@ open class InitializeNexusStagingRepository @Inject constructor(
         val client = NexusClient(serverUrl, repository.username.orNull, repository.password.orNull, clientTimeout.orNull, connectTimeout.orNull)
         val stagingProfileId = determineStagingProfileId(repository, client)
         logger.info("Creating staging repository for {} at {}, stagingProfileId '{}'", repository.name, serverUrl, stagingProfileId)
-        registry.get()[repository.name] = client.createStagingRepository(stagingProfileId)
+        val descriptor = client.createStagingRepository(stagingProfileId)
+        val consumerUrl = HttpUrl.get(serverUrl)!!.newBuilder().addEncodedPathSegments("repositories/${descriptor.stagingRepositoryId}/content/").build()
+        logger.lifecycle("Created staging repository '{}' at {}", descriptor.stagingRepositoryId, consumerUrl)
+        registry.get()[repository.name] = descriptor
     }
 
     private fun determineStagingProfileId(repository: NexusRepository, client: NexusClient): String {
