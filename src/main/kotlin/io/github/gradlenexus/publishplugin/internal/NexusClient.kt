@@ -86,8 +86,8 @@ open class NexusClient(private val baseUrl: URI, username: String?, password: St
                 ?.id
     }
 
-    fun createStagingRepository(stagingProfileId: String): StagingRepositoryDescriptor {
-        val response = api.startStagingRepo(stagingProfileId, Dto(Description("Created by io.github.gradle-nexus.publish-plugin Gradle plugin"))).execute()
+    fun createStagingRepository(stagingProfileId: String, description: String): StagingRepositoryDescriptor {
+        val response = api.startStagingRepo(stagingProfileId, Dto(Description(description))).execute()
         if (!response.isSuccessful) {
             throw failure("create staging repository", response)
         }
@@ -95,15 +95,15 @@ open class NexusClient(private val baseUrl: URI, username: String?, password: St
         return StagingRepositoryDescriptor(baseUrl, stagingRepositoryId)
     }
 
-    open fun closeStagingRepository(stagingRepositoryId: String) {
-        val response = api.closeStagingRepo(Dto(StagingRepositoryToTransit(listOf(stagingRepositoryId), "Closed by io.github.gradle-nexus.publish-plugin Gradle plugin"))).execute()
+    open fun closeStagingRepository(stagingRepositoryId: String, description: String) {
+        val response = api.closeStagingRepo(Dto(StagingRepositoryToTransit(listOf(stagingRepositoryId), description))).execute()
         if (!response.isSuccessful) {
             throw failure("close staging repository", response)
         }
     }
 
-    open fun releaseStagingRepository(stagingRepositoryId: String) {
-        val response = api.releaseStagingRepo(Dto(StagingRepositoryToTransit(listOf(stagingRepositoryId), "Release by io.github.gradle-nexus.publish-plugin Gradle plugin"))).execute()
+    open fun releaseStagingRepository(stagingRepositoryId: String, description: String) {
+        val response = api.releaseStagingRepo(Dto(StagingRepositoryToTransit(listOf(stagingRepositoryId), description))).execute()
         if (!response.isSuccessful) {
             throw failure("release staging repository", response)
         }

@@ -49,7 +49,7 @@ open class InitializeNexusStagingRepository @Inject constructor(
         val client = NexusClient(serverUrl, repository.username.orNull, repository.password.orNull, clientTimeout.orNull, connectTimeout.orNull)
         val stagingProfileId = determineStagingProfileId(repository, client)
         logger.info("Creating staging repository for {} at {}, stagingProfileId '{}'", repository.name, serverUrl, stagingProfileId)
-        val descriptor = client.createStagingRepository(stagingProfileId)
+        val descriptor = client.createStagingRepository(stagingProfileId, description.get())
         val consumerUrl = HttpUrl.get(serverUrl)!!.newBuilder().addEncodedPathSegments("repositories/${descriptor.stagingRepositoryId}/content/").build()
         logger.lifecycle("Created staging repository '{}' at {}", descriptor.stagingRepositoryId, consumerUrl)
         registry.get()[repository.name] = descriptor

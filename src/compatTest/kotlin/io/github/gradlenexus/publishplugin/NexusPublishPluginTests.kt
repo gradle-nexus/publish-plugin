@@ -200,7 +200,7 @@ class NexusPublishPluginTests {
         assertThat(result.output).containsOnlyOnce("Created staging repository '$STAGED_REPOSITORY_ID' at ${server.baseUrl()}/repositories/$STAGED_REPOSITORY_ID/content/")
         assertNotConsidered(result, ":initializeSomeOtherNexusStagingRepository")
         server.verify(postRequestedFor(urlEqualTo("/staging/profiles/$STAGING_PROFILE_ID/start"))
-                .withRequestBody(matchingJsonPath("\$.data[?(@.description == 'Created by io.github.gradle-nexus.publish-plugin Gradle plugin')]")))
+                .withRequestBody(matchingJsonPath("\$.data[?(@.description == 'org.example:sample:0.0.1')]")))
         assertUploadedToStagingRepo("/org/example/sample/0.0.1/sample-0.0.1.pom")
         assertUploadedToStagingRepo("/org/example/sample/0.0.1/sample-0.0.1.jar")
     }

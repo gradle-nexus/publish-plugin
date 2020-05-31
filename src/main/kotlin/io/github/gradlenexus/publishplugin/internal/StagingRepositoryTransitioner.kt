@@ -26,13 +26,13 @@ class StagingRepositoryTransitioner(val nexusClient: NexusClient, val retrier: A
         private val log: Logger = LoggerFactory.getLogger(StagingRepositoryTransitioner::class.java.simpleName)
     }
 
-    fun effectivelyClose(repoId: String) {
-        effectivelyChangeState(repoId, StagingRepository.State.CLOSED, nexusClient::closeStagingRepository)
+    fun effectivelyClose(repoId: String, description: String) {
+        effectivelyChangeState(repoId, StagingRepository.State.CLOSED) { nexusClient.closeStagingRepository(it, description) }
     }
 
     //TODO: Add support for autoDrop=false
-    fun effectivelyRelease(repoId: String) {
-        effectivelyChangeState(repoId, StagingRepository.State.NOT_FOUND, nexusClient::releaseStagingRepository)
+    fun effectivelyRelease(repoId: String, description: String) {
+        effectivelyChangeState(repoId, StagingRepository.State.NOT_FOUND) { nexusClient.releaseStagingRepository(it, description) }
     }
 
     private fun effectivelyChangeState(repoId: String, desiredState: StagingRepository.State, transitionClientRequest: (String) -> Unit) {
