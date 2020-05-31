@@ -50,7 +50,7 @@ constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository
         val client = NexusClient(repository.get().nexusUrl.get(), repository.get().username.orNull, repository.get().password.orNull, clientTimeout.orNull, connectTimeout.orNull)
         val repositoryTransitioner = StagingRepositoryTransitioner(client, BasicActionRetrier.retryUntilRepoTransitionIsCompletedRetrier(repository.get().retrying.get()))
         logger.info("Closing staging repository with id '{}'", stagingRepositoryId.get())
-        repositoryTransitioner.effectivelyClose(stagingRepositoryId.get())
+        repositoryTransitioner.effectivelyClose(stagingRepositoryId.get(), description.get())
         logger.info("Repository with id '{}' effectively closed", stagingRepositoryId.get())
     }
 }

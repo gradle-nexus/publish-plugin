@@ -18,6 +18,7 @@ package io.github.gradlenexus.publishplugin
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
 import org.gradle.kotlin.dsl.property
@@ -42,6 +43,11 @@ constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository
     @Nested
     val repository = objects.property<NexusRepository>().apply {
         set(repository)
+    }
+
+    @Input
+    val description = objects.property<String>().apply {
+        set(extension.description)
     }
 
     init {

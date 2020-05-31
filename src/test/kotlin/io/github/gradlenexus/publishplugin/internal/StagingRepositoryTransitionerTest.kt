@@ -33,6 +33,7 @@ internal class StagingRepositoryTransitionerTest {
 
     companion object {
         private const val TEST_STAGING_REPO_ID = "orgexample-42"
+        private const val DESCRIPTION = "some description"
     }
 
     @Mock
@@ -53,10 +54,10 @@ internal class StagingRepositoryTransitionerTest {
                 .willReturn(StagingRepository(TEST_STAGING_REPO_ID, StagingRepository.State.CLOSED, false))
         given(retrier.execute(anyOrNull())).willAnswer(executeFunctionPassedAsFirstArgument())
 
-        transitioner.effectivelyClose(TEST_STAGING_REPO_ID)
+        transitioner.effectivelyClose(TEST_STAGING_REPO_ID, DESCRIPTION)
 
         val inOrder = inOrder(nexusClient, retrier)
-        inOrder.verify(nexusClient).closeStagingRepository(TEST_STAGING_REPO_ID)
+        inOrder.verify(nexusClient).closeStagingRepository(TEST_STAGING_REPO_ID, DESCRIPTION)
         inOrder.verify(nexusClient).getStagingRepositoryStateById(TEST_STAGING_REPO_ID)
     }
 
@@ -66,10 +67,10 @@ internal class StagingRepositoryTransitionerTest {
                 .willReturn(StagingRepository(TEST_STAGING_REPO_ID, StagingRepository.State.NOT_FOUND, false))
         given(retrier.execute(anyOrNull())).willAnswer(executeFunctionPassedAsFirstArgument())
 
-        transitioner.effectivelyRelease(TEST_STAGING_REPO_ID)
+        transitioner.effectivelyRelease(TEST_STAGING_REPO_ID, DESCRIPTION)
 
         val inOrder = inOrder(nexusClient, retrier)
-        inOrder.verify(nexusClient).releaseStagingRepository(TEST_STAGING_REPO_ID)
+        inOrder.verify(nexusClient).releaseStagingRepository(TEST_STAGING_REPO_ID, DESCRIPTION)
         inOrder.verify(nexusClient).getStagingRepositoryStateById(TEST_STAGING_REPO_ID)
     }
 
@@ -80,7 +81,7 @@ internal class StagingRepositoryTransitionerTest {
         given(retrier.execute(anyOrNull())).willAnswer(executeFunctionPassedAsFirstArgument())
 
         assertThatExceptionOfType(RepositoryTransitionException::class.java)
-                .isThrownBy { transitioner.effectivelyClose(TEST_STAGING_REPO_ID) }
+                .isThrownBy { transitioner.effectivelyClose(TEST_STAGING_REPO_ID, DESCRIPTION) }
                 .withMessageContainingAll(TEST_STAGING_REPO_ID, "transitioning=true")
     }
 
@@ -91,7 +92,7 @@ internal class StagingRepositoryTransitionerTest {
         given(retrier.execute(anyOrNull())).willAnswer(executeFunctionPassedAsFirstArgument())
 
         assertThatExceptionOfType(RepositoryTransitionException::class.java)
-                .isThrownBy { transitioner.effectivelyClose(TEST_STAGING_REPO_ID) }
+                .isThrownBy { transitioner.effectivelyClose(TEST_STAGING_REPO_ID, DESCRIPTION) }
                 .withMessageContainingAll(TEST_STAGING_REPO_ID, StagingRepository.State.OPEN.toString(), StagingRepository.State.CLOSED.toString())
     }
 

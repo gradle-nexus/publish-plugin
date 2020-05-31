@@ -38,6 +38,10 @@ open class NexusPublishExtension(project: Project) {
         set(project.provider { project.group.toString() })
     }
 
+    val description = project.objects.property<String>().apply {
+        set(project.provider { project.run { "$group:$name:$version" } })
+    }
+
     val clientTimeout = project.objects.property<Duration>().apply {
         set(Duration.ofMinutes(1))
     }
