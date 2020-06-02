@@ -183,6 +183,11 @@ tasks {
                 }
             }
         }
+        if (project.findProperty("e2eVerboseOutput") != null && project.findProperty("e2eVerboseOutput") != "false") {
+            testLogging {
+                showStandardStreams = true
+            }
+        }
     }
     withType<Test>().configureEach {
         dependsOn(shadowJar)
