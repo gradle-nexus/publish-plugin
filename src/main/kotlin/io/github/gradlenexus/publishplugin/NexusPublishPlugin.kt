@@ -39,6 +39,12 @@ import org.gradle.util.GradleVersion
 @Suppress("UnstableApiUsage")
 class NexusPublishPlugin : Plugin<Project> {
 
+    companion object {
+        //visibility for testing
+        const val SIMPLIFIED_CLOSE_AND_RELEASE_TASK_NAME = "closeAndReleaseStagingRepository"
+        const val SIMPLIFIED_LEGACY_CLOSE_AND_RELEASE_TASK_NAME = "closeAndReleaseRepository"
+    }
+
     override fun apply(project: Project) {
         require(project == project.rootProject) {
             "Plugin must be applied to the root project but was applied to ${project.path}"
@@ -69,12 +75,17 @@ class NexusPublishPlugin : Plugin<Project> {
                     "close${capitalizedName}StagingRepository", project.objects, extension, repository, registry)
             val releaseTask = project.tasks.register<ReleaseNexusStagingRepository>(
                     "release${capitalizedName}StagingRepository", project.objects, extension, repository, registry)
+            val closeAndReleaseTask = project.tasks.register<Task>(
+                    "closeAndRelease${capitalizedName}StagingRepository")
             closeTask {
                 mustRunAfter(initializeTask)
             }
             releaseTask {
                 mustRunAfter(initializeTask)
                 mustRunAfter(closeTask)
+            }
+            closeAndReleaseTask {
+                dependsOn(closeTask, releaseTask)
             }
         }
         extension.repositories.whenObjectRemoved {
@@ -85,6 +96,9 @@ class NexusPublishPlugin : Plugin<Project> {
                 enabled = false
             }
             project.tasks.named("release${capitalizedName}StagingRepository").configure {
+                enabled = false
+            }
+            project.tasks.named("closeAndRelease${capitalizedName}StagingRepository").configure {
                 enabled = false
             }
         }

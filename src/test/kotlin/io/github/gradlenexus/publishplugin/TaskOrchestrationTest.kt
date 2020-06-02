@@ -84,6 +84,16 @@ class TaskOrchestrationTest {
         assertGivenTaskMustRunAfterAnother("releaseSonatypeStagingRepository", "closeSonatypeStagingRepository")
     }
 
+    @Test
+    internal fun `closeAndRelease for given repository should depend on close and release tasks`() {
+        initSingleProjectWithDefaultConfiguration()
+
+        val closeAndReleaseTask = getJustOneTaskByNameOrFail("closeAndReleaseSonatypeStagingRepository")
+
+        assertThat(closeAndReleaseTask.taskDependencies.getDependencies(null).map { it.name })
+                .contains("closeSonatypeStagingRepository", "releaseSonatypeStagingRepository")
+    }
+
     private fun initSingleProjectWithDefaultConfiguration() {
         project.apply(plugin = "java")
         project.apply(plugin = "maven-publish")
