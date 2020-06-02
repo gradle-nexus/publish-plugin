@@ -94,6 +94,28 @@ class TaskOrchestrationTest {
                 .contains("closeSonatypeStagingRepository", "releaseSonatypeStagingRepository")
     }
 
+    @Test
+    internal fun `simplified close and release task without repository name should be available if just one repository is configured`() {
+        initSingleProjectWithDefaultConfiguration()
+
+        val closeAndReleaseTask = getJustOneTaskByNameOrFail(NexusPublishPlugin.SIMPLIFIED_CLOSE_AND_RELEASE_TASK_NAME)
+
+        assertThat(closeAndReleaseTask.taskDependencies.getDependencies(null).map { it.name })
+                .contains("closeAndReleaseSonatypeStagingRepository")
+    }
+
+    @Test
+    internal fun `simplified close and release task should be not available for more defined repositories`() {
+        initSingleProjectWithDefaultConfiguration()
+        project.extensions.configure<NexusPublishExtension> {
+            repositories.create("otherNexus")
+        }
+
+        val simplifiedCloseAndReleaseTasks = project.getTasksByName(NexusPublishPlugin.SIMPLIFIED_CLOSE_AND_RELEASE_TASK_NAME, true)
+
+        assertThat(simplifiedCloseAndReleaseTasks).isEmpty()
+    }
+
     private fun initSingleProjectWithDefaultConfiguration() {
         project.apply(plugin = "java")
         project.apply(plugin = "maven-publish")

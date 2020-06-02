@@ -42,7 +42,6 @@ class NexusPublishPlugin : Plugin<Project> {
     companion object {
         //visibility for testing
         const val SIMPLIFIED_CLOSE_AND_RELEASE_TASK_NAME = "closeAndReleaseStagingRepository"
-        const val SIMPLIFIED_LEGACY_CLOSE_AND_RELEASE_TASK_NAME = "closeAndReleaseRepository"
     }
 
     override fun apply(project: Project) {
@@ -126,6 +125,14 @@ class NexusPublishPlugin : Plugin<Project> {
                         }
                         configureTaskDependencies(publishingProject, initializeTask, publishAllTask, closeTask, releaseTask, mavenRepo)
                     }
+                }
+            }
+            if (extension.repositories.size == 1) {
+                val repositoryCapitalizedName = extension.repositories.first().capitalizedName
+                val closeAndReleaseTask = rootProject.tasks.withName<Task>("closeAndRelease${repositoryCapitalizedName}StagingRepository")
+                val closeAndReleaseSimplifiedTask = rootProject.tasks.register<Task>(SIMPLIFIED_CLOSE_AND_RELEASE_TASK_NAME)
+                closeAndReleaseSimplifiedTask.configure {
+                    dependsOn(closeAndReleaseTask)
                 }
             }
         }
