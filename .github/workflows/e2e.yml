@@ -28,4 +28,4 @@ jobs:
         ORG_GRADLE_PROJECT_signingKeyE2E: ${{ secrets.GPG_SIGNING_KEY_E2E }}
         ORG_GRADLE_PROJECT_signingPasswordE2E: ${{ secrets.GPG_SIGNING_KEY_PASSPHRASE_E2E }}
       run: |
-        ./gradlew --stacktrace --info e2eTest
+        ./gradlew --stacktrace e2eTest
