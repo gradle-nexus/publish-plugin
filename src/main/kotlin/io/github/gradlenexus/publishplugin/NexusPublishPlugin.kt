@@ -127,12 +127,14 @@ class NexusPublishPlugin : Plugin<Project> {
                     }
                 }
             }
-            if (extension.repositories.size == 1) {
-                val repositoryCapitalizedName = extension.repositories.first().capitalizedName
-                val closeAndReleaseTask = rootProject.tasks.withName<Task>("closeAndRelease${repositoryCapitalizedName}StagingRepository")
+            if (extension.repositories.isNotEmpty()) {
                 val closeAndReleaseSimplifiedTask = rootProject.tasks.register<Task>(SIMPLIFIED_CLOSE_AND_RELEASE_TASK_NAME)
-                closeAndReleaseSimplifiedTask.configure {
-                    dependsOn(closeAndReleaseTask)
+                extension.repositories.all {
+                    val repositoryCapitalizedName = this.capitalizedName
+                    val closeAndReleaseTask = rootProject.tasks.withName<Task>("closeAndRelease${repositoryCapitalizedName}StagingRepository")
+                    closeAndReleaseSimplifiedTask.configure {
+                        dependsOn(closeAndReleaseTask)
+                    }
                 }
             }
         }
