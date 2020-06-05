@@ -77,13 +77,19 @@ class NexusPublishPlugin : Plugin<Project> {
             val closeAndReleaseTask = project.tasks.register<Task>(
                     "closeAndRelease${capitalizedName}StagingRepository")
             closeTask {
+                description = "Closes open staging repository in '${repository.name}' Nexus instance."
+                group = PublishingPlugin.PUBLISH_TASK_GROUP
                 mustRunAfter(initializeTask)
             }
             releaseTask {
+                description = "Releases closed staging repository in '${repository.name}' Nexus instance."
+                group = PublishingPlugin.PUBLISH_TASK_GROUP
                 mustRunAfter(initializeTask)
                 mustRunAfter(closeTask)
             }
             closeAndReleaseTask {
+                description = "Closes and releases open staging repository in '${repository.name}' Nexus instance."
+                group = PublishingPlugin.PUBLISH_TASK_GROUP
                 dependsOn(closeTask, releaseTask)
             }
         }
@@ -127,16 +133,7 @@ class NexusPublishPlugin : Plugin<Project> {
                     }
                 }
             }
-            if (extension.repositories.isNotEmpty()) {
-                val closeAndReleaseSimplifiedTask = rootProject.tasks.register<Task>(SIMPLIFIED_CLOSE_AND_RELEASE_TASK_NAME)
-                extension.repositories.all {
-                    val repositoryCapitalizedName = this.capitalizedName
-                    val closeAndReleaseTask = rootProject.tasks.withName<Task>("closeAndRelease${repositoryCapitalizedName}StagingRepository")
-                    closeAndReleaseSimplifiedTask.configure {
-                        dependsOn(closeAndReleaseTask)
-                    }
-                }
-            }
+            createSimplifiedCloseAndReleaseTask(rootProject, extension)
         }
     }
 
@@ -194,5 +191,23 @@ class NexusPublishPlugin : Plugin<Project> {
     // For compatibility with 4.10.x (same as built-in `named<T>(String)` extension function)
     private inline fun <reified T : Task> TaskContainer.withName(name: String): TaskProvider<T> {
         return withType<T>().named(name)
+    }
+
+    private fun createSimplifiedCloseAndReleaseTask(rootProject: Project, extension: NexusPublishExtension) {
+        if (extension.repositories.isNotEmpty()) {
+            val closeAndReleaseSimplifiedTask = rootProject.tasks.register<Task>(SIMPLIFIED_CLOSE_AND_RELEASE_TASK_NAME) {
+                val repositoryNamesAsString = extension.repositories.joinToString(",") { "'${it.name}'" }
+                val instanceCardinalityAwareString = if (extension.repositories.size > 1) { "instances" } else { "instance" }
+                description = "Closes and releases open staging repository in $repositoryNamesAsString Nexus $instanceCardinalityAwareString."
+                group = PublishingPlugin.PUBLISH_TASK_GROUP
+            }
+            extension.repositories.all {
+                val repositoryCapitalizedName = this.capitalizedName
+                val closeAndReleaseTask = rootProject.tasks.withName<Task>("closeAndRelease${repositoryCapitalizedName}StagingRepository")
+                closeAndReleaseSimplifiedTask.configure {
+                    dependsOn(closeAndReleaseTask)
+                }
+            }
+        }
     }
 }

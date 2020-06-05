@@ -121,6 +121,20 @@ class TaskOrchestrationTest {
                 .contains("closeAndReleaseOtherNexusStagingRepository")
     }
 
+    @Test
+    internal fun `description of simplified closeAndRelease task contains names of all defined Nexus instances`() {
+        initSingleProjectWithDefaultConfiguration()
+        project.extensions.configure<NexusPublishExtension> {
+            repositories.create("otherNexus")
+        }
+
+        val closeAndReleaseTask = getJustOneTaskByNameOrFail(NexusPublishPlugin.SIMPLIFIED_CLOSE_AND_RELEASE_TASK_NAME)
+
+        assertThat(closeAndReleaseTask.description)
+                .contains("sonatype")
+                .contains("otherNexus")
+    }
+
     private fun initSingleProjectWithDefaultConfiguration() {
         project.apply(plugin = "java")
         project.apply(plugin = "maven-publish")
