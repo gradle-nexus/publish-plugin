@@ -95,25 +95,30 @@ class TaskOrchestrationTest {
     }
 
     @Test
-    internal fun `simplified close and release task without repository name should be available if just one repository is configured`() {
-        initSingleProjectWithDefaultConfiguration()
-
-        val closeAndReleaseTask = getJustOneTaskByNameOrFail(NexusPublishPlugin.SIMPLIFIED_CLOSE_AND_RELEASE_TASK_NAME)
-
-        assertThat(closeAndReleaseTask.taskDependencies.getDependencies(null).map { it.name })
-                .contains("closeAndReleaseSonatypeStagingRepository")
-    }
-
-    @Test
-    internal fun `simplified close and release task should be not available for more defined repositories`() {
+    internal fun `simplified close and release task without repository name should be not available if no repositories are configured`() {
         initSingleProjectWithDefaultConfiguration()
         project.extensions.configure<NexusPublishExtension> {
-            repositories.create("otherNexus")
+            repositories.clear()
         }
 
         val simplifiedCloseAndReleaseTasks = project.getTasksByName(NexusPublishPlugin.SIMPLIFIED_CLOSE_AND_RELEASE_TASK_NAME, true)
 
         assertThat(simplifiedCloseAndReleaseTasks).isEmpty()
+    }
+
+    @Test
+    internal fun `simplified closeAndRelease task without repository name should depend on all closeAndRelease (created one per defined repository)`() {
+        initSingleProjectWithDefaultConfiguration()
+        project.extensions.configure<NexusPublishExtension> {
+            repositories.create("otherNexus")
+        }
+
+        val closeAndReleaseTask = getJustOneTaskByNameOrFail(NexusPublishPlugin.SIMPLIFIED_CLOSE_AND_RELEASE_TASK_NAME)
+
+        assertThat(closeAndReleaseTask.taskDependencies.getDependencies(null).map { it.name })
+                .hasSize(2)
+                .contains("closeAndReleaseSonatypeStagingRepository")
+                .contains("closeAndReleaseOtherNexusStagingRepository")
     }
 
     private fun initSingleProjectWithDefaultConfiguration() {
