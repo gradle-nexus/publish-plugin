@@ -38,7 +38,7 @@ open class NexusPublishExtension(project: Project) {
         set(project.provider { project.group.toString() })
     }
 
-    val description = project.objects.property<String>().apply {
+    val repositoryDescription = project.objects.property<String>().apply {
         set(project.provider { project.run { "$group:$name:$version" } })
     }
 
