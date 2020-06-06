@@ -46,8 +46,8 @@ constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository
     }
 
     @Input
-    val description = objects.property<String>().apply {
-        set(extension.description)
+    val repositoryDescription = objects.property<String>().apply {
+        set(extension.repositoryDescription)
     }
 
     init {

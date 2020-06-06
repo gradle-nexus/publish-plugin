@@ -634,12 +634,42 @@ class NexusPublishPluginTests {
         assertSkipped(result, ":initializeMyNexusStagingRepository")
     }
 
+    @Test
+    fun `repository description can be customized`() {
+        writeDefaultSingleProjectConfiguration()
+        writeMockedSonatypeNexusPublishingConfiguration()
+        buildGradle.append("""
+            nexusPublishing {
+                repositoryDescription = "Some custom description" 
+            }
+        """)
+
+        stubStagingProfileRequest("/staging/profiles", mapOf("id" to STAGING_PROFILE_ID, "name" to "org.example"))
+        stubCreateStagingRepoRequest("/staging/profiles/$STAGING_PROFILE_ID/start", STAGED_REPOSITORY_ID)
+        expectArtifactUploads("/staging/deployByRepositoryId/$STAGED_REPOSITORY_ID")
+        stubCloseStagingRepoRequestWithSubsequentQueryAboutItsState(STAGED_REPOSITORY_ID)
+
+        run("publishToSonatype", "closeSonatypeStagingRepository")
+
+        server.verify(postRequestedFor(urlEqualTo("/staging/profiles/$STAGING_PROFILE_ID/start"))
+                .withRequestBody(matchingJsonPath("\$.data[?(@.description == 'Some custom description')]")))
+        server.verify(postRequestedFor(urlEqualTo("/staging/bulk/close"))
+                .withRequestBody(matchingJsonPath("\$.data[?(@.description == 'Some custom description')]")))
+
+        stubReleaseStagingRepoRequestWithSubsequentQueryAboutItsState(STAGED_REPOSITORY_ID)
+
+        run("releaseSonatypeStagingRepository", "--staging-repository-id=$STAGED_REPOSITORY_ID")
+
+        server.verify(postRequestedFor(urlEqualTo("/staging/bulk/promote"))
+                .withRequestBody(matchingJsonPath("\$.data[?(@.description == 'Some custom description')]")))
+    }
+
     // TODO: To be used also in other tests
     private fun writeDefaultSingleProjectConfiguration() {
         projectDir.resolve("settings.gradle").write("""
             rootProject.name = 'sample'
         """)
-        projectDir.resolve("build.gradle").write("""
+        buildGradle.write("""
             buildscript {
                 repositories {
                     gradlePluginPortal()
@@ -671,6 +701,8 @@ class NexusPublishPluginTests {
                 repositories {
                     sonatype {
                         nexusUrl = uri('${server.baseUrl()}')
+                        username = 'username'
+                        password = 'password'
                         stagingProfileId = '$STAGING_PROFILE_ID'
                         retrying {
                             maxRetries.set(3)
