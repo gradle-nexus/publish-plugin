@@ -82,9 +82,9 @@ configurations {
 }
 
 dependencies {
-    shadowed("com.squareup.retrofit2:retrofit:2.8.1")
-    shadowed("com.squareup.retrofit2:converter-gson:2.8.1")
-    shadowed("net.jodah:failsafe:2.3.5")
+    shadowed("com.squareup.retrofit2:retrofit:2.9.0")
+    shadowed("com.squareup.retrofit2:converter-gson:2.9.0")
+    shadowed("net.jodah:failsafe:2.4.0")
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.7.0-M1")
     testImplementation("com.github.tomakehurst:wiremock:2.26.3")
