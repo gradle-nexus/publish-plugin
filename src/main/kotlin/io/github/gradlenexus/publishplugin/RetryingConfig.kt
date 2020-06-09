@@ -26,7 +26,7 @@ open class RetryingConfig @Inject constructor(project: Project) {
 
     companion object {
         private val DEFAULT_DELAY_BETWEEN_RETRIES = Duration.ofSeconds(5)
-        private const val DEFAULT_MAXIMUM_NUMBER_OF_RETRIES = 30
+        private const val DEFAULT_MAXIMUM_NUMBER_OF_RETRIES = 60
     }
 
     @Internal

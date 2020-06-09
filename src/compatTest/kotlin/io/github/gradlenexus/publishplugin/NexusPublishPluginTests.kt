@@ -640,7 +640,7 @@ class NexusPublishPluginTests {
         writeMockedSonatypeNexusPublishingConfiguration()
         buildGradle.append("""
             nexusPublishing {
-                repositoryDescription = "Some custom description" 
+                repositoryDescription = "Some custom description"
             }
         """)
 

@@ -43,7 +43,7 @@ open class NexusPublishExtension(project: Project) {
     }
 
     val clientTimeout = project.objects.property<Duration>().apply {
-        set(Duration.ofMinutes(1))
+        set(Duration.ofMinutes(5)) //staging repository initialization can take a few minutes on Sonatype Nexus
     }
 
     val connectTimeout = project.objects.property<Duration>().apply {
