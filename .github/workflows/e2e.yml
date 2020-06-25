@@ -1,6 +1,8 @@
 name: E2E tests
 
 on:
+  schedule:
+    - cron: "0 6 * * MON"
   push:
     branches:
       - master
