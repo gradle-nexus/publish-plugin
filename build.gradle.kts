@@ -6,13 +6,13 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     `kotlin-dsl`
     `maven-publish`
-    id("com.gradle.plugin-publish") version "0.11.0"
-    id("com.diffplug.gradle.spotless") version "3.30.0"
-    id("com.github.johnrengelman.shadow") version "5.2.0"
+    id("com.gradle.plugin-publish") version "0.12.0"
+    id("com.diffplug.spotless") version "5.8.2"
+    id("com.github.johnrengelman.shadow") version "6.1.0"
     id("org.jetbrains.gradle.plugin.idea-ext")
-    id("com.github.ben-manes.versions") version "0.28.0"
-    id("org.jetbrains.dokka") version "0.10.1"
-    id("org.ajoberstar.stutter") version "0.5.1"
+    id("com.github.ben-manes.versions") version "0.36.0"
+    id("org.jetbrains.dokka") version "1.4.20"
+    id("org.ajoberstar.stutter") version "0.6.0"
 }
 
 group = "io.github.gradle-nexus"
@@ -201,15 +201,14 @@ tasks {
     withType<Test>().matching { it.name.startsWith("compatTest") }.configureEach {
         systemProperty("plugin.version", project.version)
     }
-    dokka {
-        configuration {
-            outputFormat = "javadoc"
-            outputDirectory = "$buildDir/javadoc"
-            reportUndocumented = false
-            jdkVersion = 8
+    dokkaJavadoc {
+        outputDirectory.set(file("$buildDir/javadoc"))
+        dokkaSourceSets.configureEach {
+            reportUndocumented.set(false)
+            jdkVersion.set(8)
             perPackageOption {
-                prefix = "io.github.gradlenexus.publishplugin.internal"
-                suppress = true
+                matchingRegex.set(".*\\.internal($|\\.).*")
+                suppress.set(true)
             }
         }
     }
@@ -217,7 +216,7 @@ tasks {
         enabled = false
     }
     named<Jar>("javadocJar").configure {
-        from(dokka)
+        from(dokkaJavadoc)
     }
 }
 
