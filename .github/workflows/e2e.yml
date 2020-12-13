@@ -17,10 +17,10 @@ jobs:
       uses: actions/checkout@v2
       with:
         submodules: true
-    - name: Setup JDK 8
+    - name: Setup JDK
       uses: actions/setup-java@v1
       with:
-        java-version: 8
+        java-version: 11
     - name: Run sanity check
       run: ./gradlew --scan --stacktrace test
     - name: Run E2E tests
