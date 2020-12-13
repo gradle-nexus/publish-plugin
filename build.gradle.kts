@@ -140,6 +140,10 @@ sourceSets {
     }
 }
 
+kotlinDslPluginOptions {
+    experimentalWarning.set(false)
+}
+
 tasks {
     withType<KotlinCompile>().configureEach {
         kotlinOptions.jvmTarget = "1.8"
