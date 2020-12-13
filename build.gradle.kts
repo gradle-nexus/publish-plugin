@@ -86,11 +86,11 @@ dependencies {
     shadowed("com.squareup.retrofit2:converter-gson:2.9.0")
     shadowed("net.jodah:failsafe:2.4.0")
 
-    testImplementation("org.junit.jupiter:junit-jupiter:5.7.0-M1")
-    testImplementation("com.github.tomakehurst:wiremock:2.26.3")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.7.0")
+    testImplementation("com.github.tomakehurst:wiremock:2.27.2")
     testImplementation("ru.lanwen.wiremock:wiremock-junit5:1.3.1")
-    testImplementation("org.assertj:assertj-core:3.16.1")
-    testImplementation("org.mockito:mockito-junit-jupiter:3.3.3")
+    testImplementation("org.assertj:assertj-core:3.18.1")
+    testImplementation("org.mockito:mockito-junit-jupiter:3.6.28")
     testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
 }
 
