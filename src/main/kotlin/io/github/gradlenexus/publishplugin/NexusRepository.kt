@@ -34,14 +34,12 @@ open class NexusRepository @Inject constructor(@Input val name: String, project:
     @Input
     val snapshotRepositoryUrl = project.objects.property<URI>()
 
-    @Optional
-    @Input
+    @Internal
     val username = project.objects.property<String>().apply {
         set(project.provider { project.findProperty("${name}Username") as? String })
     }
 
-    @Optional
-    @Input
+    @Internal
     val password = project.objects.property<String>().apply {
         set(project.provider { project.findProperty("${name}Password") as? String })
     }
