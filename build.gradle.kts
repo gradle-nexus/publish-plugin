@@ -153,7 +153,7 @@ tasks {
     }
     val relocateShadowJar by registering(ConfigureShadowRelocation::class) {
         target = shadowJar.get()
-        prefix = "${project.group}.nexus.shadow"
+        prefix = "io.github.gradlenexus.publishplugin.shadow"
     }
     shadowJar {
         dependsOn(relocateShadowJar)
