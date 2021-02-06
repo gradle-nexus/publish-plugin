@@ -16,26 +16,14 @@
 
 package io.github.gradlenexus.publishplugin
 
-import org.gradle.api.Project
-import org.gradle.api.tasks.Internal
+import org.gradle.api.model.ObjectFactory
 import org.gradle.kotlin.dsl.property
 import java.time.Duration
 import javax.inject.Inject
 
-open class RetryingConfig @Inject constructor(project: Project) {
+open class RetryingConfig constructor(objects: ObjectFactory) {
 
-    companion object {
-        private val DEFAULT_DELAY_BETWEEN_RETRIES = Duration.ofSeconds(5)
-        private const val DEFAULT_MAXIMUM_NUMBER_OF_RETRIES = 60
-    }
+    val maxRetries = objects.property<Int>().value(60)
 
-    @Internal
-    val maxRetries = project.objects.property<Int>().apply {
-        set(DEFAULT_MAXIMUM_NUMBER_OF_RETRIES)
-    }
-
-    @Internal
-    val delayBetween = project.objects.property<Duration>().apply {
-        set(DEFAULT_DELAY_BETWEEN_RETRIES)
-    }
+    val delayBetween = objects.property<Duration>().value(Duration.ofSeconds(5))
 }

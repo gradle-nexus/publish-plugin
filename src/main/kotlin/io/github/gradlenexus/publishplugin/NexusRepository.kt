@@ -22,7 +22,6 @@ import javax.inject.Inject
 import org.gradle.api.Project
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.kotlin.dsl.property
 
@@ -51,10 +50,8 @@ open class NexusRepository @Inject constructor(@Input val name: String, project:
     @Input
     val stagingProfileId = project.objects.property<String>()
 
-    @Nested
-    val retrying = project.objects.property<RetryingConfig>().apply {
-        set(RetryingConfig(project))
-    }
+    @Internal
+    val retrying = project.objects.property<RetryingConfig>().value(RetryingConfig(project.objects))
 
     fun retrying(action: Action<in RetryingConfig>) = action.execute(retrying.get())
 
