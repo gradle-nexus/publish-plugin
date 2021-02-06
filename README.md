@@ -2,16 +2,19 @@
 
 [![CI Status](https://github.com/gradle-nexus/publish-plugin/workflows/CI/badge.svg)](https://github.com/gradle-nexus/publish-plugin/actions?workflow=CI) [![Gradle Plugin Portal](https://img.shields.io/maven-metadata/v/https/plugins.gradle.org/m2/io.github.gradle-nexus/publish-plugin/maven-metadata.xml.svg?label=Gradle%20Plugin%20Portal)](https://plugins.gradle.org/plugin/io.github.gradle-nexus.publish-plugin)
 
-Gradle Plugin that explicitly creates a Staging Repository before publishing to Nexus. This solves the problem that frequently occurs when uploading to Nexus from Travis, namely split staging repositories.
+Gradle Plugin that explicitly creates a _staging repository_ before publishing to Nexus. This solves the problem that frequently occurs when uploading to Nexus from Travis, namely split staging repositories. Moreover, the plugin provides tasks to close and release staging repositories.
 
 ## Usage
 
-The plugin must be applied to the root project and does the following:
+### Applying the plugin
 
-- configure a Maven artifact repository for each repository defined in the `nexusPublishing { repositories { ... } }` block in each subproject that applies the `maven-publish` plugin
-- create a `initialize${repository.name.capitalize()}StagingRepository` task that starts a new staging repository in case the project's version does not end with `-SNAPSHOT` (customizable via the `useStaging` property) and sets the URL of the corresponding Maven artifact repository accordingly. In case of a multi-project build, all subprojects with the same `nexusUrl` will use the same staging repository.
-- make all publishing tasks for each configured repository depend on the `initialize${repository.name.capitalize()}StagingRepository` task.
-- create a `publishTo${repository.name.capitalize()}` lifecycle task that depends on all publishing tasks for the corresponding Maven artifact repository.
+The plugin must be applied to the root project and requires Gradle 5.0 or later.
+
+```gradle
+plugins {
+    id("io.github.gradle-nexus.publish-plugin") version "«version»"
+}
+```
 
 ### Publishing to Maven Central via Sonatype OSSRH
 
@@ -25,7 +28,9 @@ nexusPublishing {
 }
 ```
 
-In addition, you need to set the `sonatypeUsername` and `sonatypePassword` project properties, e.g. in `~/.gradle/gradle.properties`. Alternatively, you can configure username and password in the `sonatype` block:
+In addition, you need to set the `sonatypeUsername` and `sonatypePassword` project properties, e.g. in `~/.gradle/gradle.properties` or via the `ORG_GRADLE_PROJECT_sonatypeUsername` and `ORG_GRADLE_PROJECT_sonatypePassword` environment variables.
+
+Alternatively, you can configure username and password in the `sonatype` block:
 
 ```gradle
 nexusPublishing {
@@ -103,3 +108,14 @@ nexusPublishing {
 ### HTTP Timeouts
 
 You can configure the `connectTimeout` and `clientTimeout` properties on the `nexusPublishing` extension to set the connect and read/write timeouts (both default to 1 minute). Good luck!
+
+---
+
+## Behind the scenes
+
+The plugin does the following:
+
+- configure a Maven artifact repository for each repository defined in the `nexusPublishing { repositories { ... } }` block in each subproject that applies the `maven-publish` plugin
+- create a `initialize${repository.name.capitalize()}StagingRepository` task that starts a new staging repository in case the project's version does not end with `-SNAPSHOT` (customizable via the `useStaging` property) and sets the URL of the corresponding Maven artifact repository accordingly. In case of a multi-project build, all subprojects with the same `nexusUrl` will use the same staging repository.
+- make all publishing tasks for each configured repository depend on the `initialize${repository.name.capitalize()}StagingRepository` task.
+- create a `publishTo${repository.name.capitalize()}` lifecycle task that depends on all publishing tasks for the corresponding Maven artifact repository.
