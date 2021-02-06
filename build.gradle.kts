@@ -248,7 +248,6 @@ publishing {
     publications {
         afterEvaluate {
             named<MavenPublication>("pluginMaven") {
-                artifactId = "publish-plugin"
                 pom {
                     name.set(readableName)
                     description.set(project.description)
