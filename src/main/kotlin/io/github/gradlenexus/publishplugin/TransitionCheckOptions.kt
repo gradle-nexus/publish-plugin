@@ -20,9 +20,10 @@ import org.gradle.api.model.ObjectFactory
 import org.gradle.kotlin.dsl.property
 import java.time.Duration
 
+@Suppress("UnstableApiUsage")
 open class TransitionCheckOptions(objects: ObjectFactory) {
 
     val maxRetries = objects.property<Int>().value(60)
 
-    val delayBetween = objects.property<Duration>().value(Duration.ofSeconds(5))
+    val delayBetween = objects.property<Duration>().value(Duration.ofSeconds(10))
 }
