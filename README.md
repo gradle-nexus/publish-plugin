@@ -53,7 +53,7 @@ Finally, call `publishToSonatype` to publish all publications to Sonatype's OSSR
 plugins {
     id "java-library"
     id "maven-publish"
-    id "io.github.gradle-nexus.publish-plugin" version "0.1.0-SNAPSHOT"
+    id "io.github.gradle-nexus.publish-plugin" version "«version»"
 }
 
 publishing {
@@ -82,7 +82,7 @@ nexusPublishing {
 plugins {
     `java-library`
     `maven-publish`
-    id("io.github.gradle-nexus.publish-plugin") version "0.1.0-SNAPSHOT"
+    id("io.github.gradle-nexus.publish-plugin") version "«version»"
 }
 
 publishing {
