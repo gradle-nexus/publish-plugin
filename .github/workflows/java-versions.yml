@@ -11,7 +11,7 @@ on:
       - '*'
 
 jobs:
-  openjdk14:
+  openjdk:
     strategy:
       matrix:
         jdk: [8, 11, 15]
