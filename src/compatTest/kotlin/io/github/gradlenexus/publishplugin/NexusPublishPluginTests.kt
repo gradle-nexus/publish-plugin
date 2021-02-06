@@ -179,6 +179,7 @@ class NexusPublishPluginTests {
                     myNexus {
                         nexusUrl = uri('${server.baseUrl()}')
                         snapshotRepositoryUrl = uri('${server.baseUrl()}/snapshots/')
+                        allowInsecureProtocol = true
                         username = 'username'
                         password = 'password'
                     }
@@ -226,6 +227,7 @@ class NexusPublishPluginTests {
                     sonatype {
                         nexusUrl = uri('${server.baseUrl()}')
                         stagingProfileId = '$STAGING_PROFILE_ID'
+                        allowInsecureProtocol = true
                         username = 'username'
                         password = 'password'
                     }
@@ -294,6 +296,7 @@ class NexusPublishPluginTests {
                     myNexus {
                         nexusUrl = uri('${server.baseUrl()}/shouldNotBeUsed')
                         snapshotRepositoryUrl = uri('${server.baseUrl()}/snapshots')
+                        allowInsecureProtocol = true
                         username = 'username'
                         password = 'password'
                     }
@@ -566,6 +569,7 @@ class NexusPublishPluginTests {
                 repositories {
                     sonatype {
                         nexusUrl = uri('${server.baseUrl()}')
+                        allowInsecureProtocol = true
                         //No staging profile defined
                     }
                 }
@@ -701,6 +705,7 @@ class NexusPublishPluginTests {
                 repositories {
                     sonatype {
                         nexusUrl = uri('${server.baseUrl()}')
+                        allowInsecureProtocol = true
                         username = 'username'
                         password = 'password'
                         stagingProfileId = '$STAGING_PROFILE_ID'

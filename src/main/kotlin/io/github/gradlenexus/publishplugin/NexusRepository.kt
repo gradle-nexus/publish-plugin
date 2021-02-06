@@ -44,6 +44,9 @@ open class NexusRepository @Inject constructor(@Input val name: String, project:
         set(project.provider { project.findProperty("${name}Password") as? String })
     }
 
+    @Internal
+    val allowInsecureProtocol = project.objects.property<Boolean>()
+
     @Optional
     @Input
     val stagingProfileId = project.objects.property<String>()

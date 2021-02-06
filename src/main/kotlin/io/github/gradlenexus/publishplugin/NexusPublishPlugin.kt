@@ -144,6 +144,14 @@ class NexusPublishPlugin : Plugin<Project> {
                 setUrl(project.provider {
                     getRepoUrl(nexusRepo, extension, registry)
                 })
+                val allowInsecureProtocol = nexusRepo.allowInsecureProtocol.orNull
+                if (allowInsecureProtocol != null) {
+                    if (GradleVersion.current() >= GradleVersion.version("6.0")) {
+                        isAllowInsecureProtocol = allowInsecureProtocol
+                    } else {
+                        project.logger.warn("Configuration of allowInsecureProtocol=${allowInsecureProtocol} will be ignored because it requires Gradle 6.0 or later")
+                    }
+                }
                 credentials {
                     username = nexusRepo.username.orNull
                     password = nexusRepo.password.orNull
