@@ -20,7 +20,7 @@ import org.gradle.api.model.ObjectFactory
 import org.gradle.kotlin.dsl.property
 import java.time.Duration
 
-open class RetryingConfig constructor(objects: ObjectFactory) {
+open class TransitionCheckOptions(objects: ObjectFactory) {
 
     val maxRetries = objects.property<Int>().value(60)
 

@@ -709,11 +709,11 @@ class NexusPublishPluginTests {
                         username = 'username'
                         password = 'password'
                         stagingProfileId = '$STAGING_PROFILE_ID'
-                        retrying {
-                            maxRetries.set(3)
-                            delayBetween.set(java.time.Duration.ofMillis(1))
-                        }
                     }
+                }
+                transitionCheckOptions {
+                    maxRetries.set(3)
+                    delayBetween.set(java.time.Duration.ofMillis(1))
                 }
             }
         """)

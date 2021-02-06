@@ -16,12 +16,12 @@
 
 package io.github.gradlenexus.publishplugin
 
-import java.time.Duration
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.container
 import org.gradle.kotlin.dsl.newInstance
 import org.gradle.kotlin.dsl.property
+import java.time.Duration
 
 @Suppress("UnstableApiUsage")
 open class NexusPublishExtension(project: Project) {
@@ -45,6 +45,10 @@ open class NexusPublishExtension(project: Project) {
     val clientTimeout = project.objects.property<Duration>().value(Duration.ofMinutes(5)) //staging repository initialization can take a few minutes on Sonatype Nexus
 
     val connectTimeout = project.objects.property<Duration>().value(Duration.ofMinutes(1))
+
+    val transitionCheckOptions = project.objects.property<TransitionCheckOptions>().value(TransitionCheckOptions(project.objects))
+
+    fun transitionCheckOptions(action: Action<in TransitionCheckOptions>) = action.execute(transitionCheckOptions.get())
 
     val repositories: NexusRepositoryContainer = DefaultNexusRepositoryContainer(project.container(NexusRepository::class) { name ->
         project.objects.newInstance(NexusRepository::class, name, project)

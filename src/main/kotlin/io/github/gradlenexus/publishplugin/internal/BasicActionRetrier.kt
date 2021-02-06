@@ -16,7 +16,6 @@
 
 package io.github.gradlenexus.publishplugin.internal
 
-import io.github.gradlenexus.publishplugin.RetryingConfig
 import net.jodah.failsafe.Failsafe
 import net.jodah.failsafe.RetryPolicy
 import org.slf4j.Logger
@@ -28,24 +27,19 @@ open class BasicActionRetrier<R>(maxRetries: Int, delayBetween: Duration, stopFu
     private val maxAttempts: Int = maxRetries + 1
 
     private val retrier: RetryPolicy<R> = RetryPolicy<R>()
-            //TODO: Some exceptions could be handled separately
-            .handleResultIf(stopFunction)
-            .onFailedAttempt { event ->
-                log.info("Attempt ${event.attemptCount}/$maxAttempts failed with result: ${event.lastResult}")
-            }
-            .withMaxRetries(maxRetries)
-            .withDelay(delayBetween)
+        //TODO: Some exceptions could be handled separately
+        .handleResultIf(stopFunction)
+        .onFailedAttempt { event ->
+            log.info("Attempt ${event.attemptCount}/$maxAttempts failed with result: ${event.lastResult}")
+        }
+        .withMaxRetries(maxRetries)
+        .withDelay(delayBetween)
 
     override fun execute(operationToExecuteWithRetrying: () -> R): R {
         return Failsafe.with(retrier).get(operationToExecuteWithRetrying)
     }
 
     companion object {
-        private val log: Logger = LoggerFactory.getLogger(BasicActionRetrier::class.java.simpleName)
-
-        fun retryUntilRepoTransitionIsCompletedRetrier(retryingConfig: RetryingConfig): BasicActionRetrier<StagingRepository> =
-                BasicActionRetrier(retryingConfig.maxRetries.get(), retryingConfig.delayBetween.get()) { repo: StagingRepository ->
-                    repo.transitioning
-                }
+        private val log: Logger = LoggerFactory.getLogger(BasicActionRetrier::class.java)
     }
 }

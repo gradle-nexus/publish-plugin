@@ -16,8 +16,6 @@
 
 package io.github.gradlenexus.publishplugin
 
-import java.lang.RuntimeException
-
 open class NexusPublishException(message: String) : RuntimeException(message)
 
 open class RepositoryTransitionException(message: String) : NexusPublishException(message)

@@ -16,10 +16,6 @@
 
 package io.github.gradlenexus.publishplugin.internal
 
-import java.io.IOException
-import java.io.UncheckedIOException
-import java.net.URI
-import java.time.Duration
 import okhttp3.Credentials
 import okhttp3.OkHttpClient
 import retrofit2.Call
@@ -31,6 +27,10 @@ import retrofit2.http.GET
 import retrofit2.http.Headers
 import retrofit2.http.POST
 import retrofit2.http.Path
+import java.io.IOException
+import java.io.UncheckedIOException
+import java.net.URI
+import java.time.Duration
 
 open class NexusClient(private val baseUrl: URI, username: String?, password: String?, timeout: Duration?, connectTimeout: Duration?) {
     private val api: NexusApi
