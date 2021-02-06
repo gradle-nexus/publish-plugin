@@ -162,6 +162,7 @@ tasks {
         manifest {
             attributes["Implementation-Version"] = project.version
         }
+        archiveClassifier.set("")
     }
     jar {
         enabled = false
