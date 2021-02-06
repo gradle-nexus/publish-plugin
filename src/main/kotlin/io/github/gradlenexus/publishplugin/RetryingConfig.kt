@@ -19,7 +19,6 @@ package io.github.gradlenexus.publishplugin
 import org.gradle.api.model.ObjectFactory
 import org.gradle.kotlin.dsl.property
 import java.time.Duration
-import javax.inject.Inject
 
 open class RetryingConfig constructor(objects: ObjectFactory) {
 

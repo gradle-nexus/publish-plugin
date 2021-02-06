@@ -149,7 +149,7 @@ class NexusPublishPlugin : Plugin<Project> {
                     if (GradleVersion.current() >= GradleVersion.version("6.0")) {
                         isAllowInsecureProtocol = allowInsecureProtocol
                     } else {
-                        project.logger.warn("Configuration of allowInsecureProtocol=${allowInsecureProtocol} will be ignored because it requires Gradle 6.0 or later")
+                        project.logger.warn("Configuration of allowInsecureProtocol=$allowInsecureProtocol will be ignored because it requires Gradle 6.0 or later")
                     }
                 }
                 credentials {
