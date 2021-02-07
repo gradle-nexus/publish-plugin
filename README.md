@@ -18,7 +18,7 @@ plugins {
 
 ### Publishing to Maven Central via Sonatype OSSRH
 
-In order to publish to Maven Central via Sonatype's OSSRH Nexus, you simply need to add the `sonatype()` repository like in the example below. It's `nexusUrl` and `snapshotRepositoryUrl` are pre-configured.
+In order to publish to Maven Central (aka the Central Repository or just Central) via Sonatype's OSSRH Nexus, you simply need to add the `sonatype()` repository like in the example below. It's `nexusUrl` and `snapshotRepositoryUrl` are pre-configured.
 
 ```gradle
 nexusPublishing {
@@ -43,7 +43,9 @@ nexusPublishing {
 }
 ```
 
-Finally, call `publishToSonatype` to publish all publications to Sonatype's OSSRH Nexus.
+Finally, call `publishToSonatype closeAndReleaseRepository` to publish all publications to Sonatype's OSSRH Nexus and subsequently close and release the corresponding staging repository, effectively making the artifacts available in Maven Central (usually after a few minutes).
+
+Please bear in mind that - especially on the initial project publishing to Maven Central - it might be wise to call just `publishToSonatype closeSonatypeReleaseRepository` and manually verify that the artifacts placed in the closed staging repository in Nexus looks ok. After that, the staging repository might be dropped (if needed) or manually released from the Nexus UI.  
 
 ### Full example
 
