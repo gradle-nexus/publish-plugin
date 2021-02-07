@@ -2,7 +2,7 @@
 
 [![CI Status](https://github.com/gradle-nexus/publish-plugin/workflows/CI/badge.svg)](https://github.com/gradle-nexus/publish-plugin/actions?workflow=CI) [![Gradle Plugin Portal](https://img.shields.io/maven-metadata/v/https/plugins.gradle.org/m2/io.github.gradle-nexus/publish-plugin/maven-metadata.xml.svg?label=Gradle%20Plugin%20Portal)](https://plugins.gradle.org/plugin/io.github.gradle-nexus.publish-plugin)
 
-Gradle Plugin that explicitly creates a _staging repository_ before publishing to Nexus. This solves the problem that frequently occurs when uploading to Nexus from Travis, namely split staging repositories. Moreover, the plugin provides tasks to close and release staging repositories.
+Gradle Plugin that explicitly creates a _staging repository_ before publishing to Nexus. This solves the problem that frequently occurs when uploading to Nexus (e.g. from Travis), namely split staging repositories. Moreover, the plugin provides tasks to close and release staging repositories, covering the whole releasing process to Maven Central.
 
 ## Usage
 
@@ -124,3 +124,10 @@ The plugin does the following:
 - create `close${repository.name.capitalize()}StagingRepository` and `release${repository.name.capitalize()}StagingRepository` tasks that must run after the all publishing tasks
   - to simplify the common use case also a `closeAndRelease${repository.name.capitalize()}StagingRepository` task is created which depends on all the `close*` and `release*` tasks for a given repository
 
+---
+
+## Historical background
+
+In 2015, [Marcin Zajączkowski](https://blog.solidsoft.pl/) created [gradle-nexus-staging-plugin](https://github.com/Codearte/gradle-nexus-staging-plugin/) which was providing an ability to close and release staging repositories in Nexus repository manager. It opened an oportunity to manage releasing Gradle projects to Maven Central completely from code. Over the years, it has been adopted by various projects across the globe, however there was a small problem. Due to technical limitations in the publishing process in Gradle, it was required to use heuristics to track implicitly created staging repositories, what often failed for multiple repositories in a given state. The situation became even worse when Travis changed its network architecture in late 2019 and the majority of releases started to fail.
+Here, [Marc Philipp](https://github.com/marcphilipp/) entered the stage who created [Nexus Publish Plugin](https://github.com/marcphilipp/nexus-publish-plugin) which was enriching the publishing mechanism in Gradle to explicitly create staging repositories and publish (upload) artifacts directly to it.
+Those two plugins nicely worked together, providing a reliable way to handle publishing arfifacts to Maven Central (and to other Nexus instances in general). However, the need of using two plugins was very often confusing for the users. As a result, an idea to create one plugin mixing the aforementioned capabilities emerged. It materialized in 2020/2021 as Gradle Nexus Publish Plugin, an effect of combined work of Marc and Marcin, supported by a pack of [contributors](https://github.com/gradle-nexus/publish-plugin/graphs/contributors).      
