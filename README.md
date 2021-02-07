@@ -109,7 +109,7 @@ nexusPublishing {
 
 ### HTTP Timeouts
 
-You can configure the `connectTimeout` and `clientTimeout` properties on the `nexusPublishing` extension to set the connect and read/write timeouts (both default to 1 minute). Good luck!
+You can configure the `connectTimeout` and `clientTimeout` properties on the `nexusPublishing` extension to set the connect and read/write timeouts (both default to 5 minutes). Good luck!
 
 ---
 
