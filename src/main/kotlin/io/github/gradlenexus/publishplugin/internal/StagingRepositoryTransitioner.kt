@@ -30,16 +30,15 @@ class StagingRepositoryTransitioner(val nexusClient: NexusClient, val retrier: A
         effectivelyChangeState(repoId, StagingRepository.State.CLOSED) { nexusClient.closeStagingRepository(it, description) }
     }
 
-    //TODO: Add support for autoDrop=false
     fun effectivelyRelease(repoId: String, description: String) {
-        effectivelyChangeState(repoId, StagingRepository.State.NOT_FOUND) { nexusClient.releaseStagingRepository(it, description) }
+        effectivelyChangeState(repoId, StagingRepository.State.RELEASED, StagingRepository.State.NOT_FOUND) { nexusClient.releaseStagingRepository(it, description) }
     }
 
-    private fun effectivelyChangeState(repoId: String, desiredState: StagingRepository.State, transitionClientRequest: (String) -> Unit) {
+    private fun effectivelyChangeState(repoId: String, vararg desiredStates: StagingRepository.State, transitionClientRequest: (String) -> Unit) {
         transitionClientRequest.invoke(repoId)
         val readStagingRepository = waitUntilTransitionIsDoneOrTimeoutAndReturnLastRepositoryState(repoId)
         assertRepositoryNotTransitioning(readStagingRepository)
-        assertRepositoryInDesiredState(readStagingRepository, desiredState)
+        assertRepositoryInDesiredState(readStagingRepository, *desiredStates)
     }
 
     private fun waitUntilTransitionIsDoneOrTimeoutAndReturnLastRepositoryState(repoId: String) =
@@ -57,9 +56,9 @@ class StagingRepositoryTransitioner(val nexusClient: NexusClient, val retrier: A
         }
     }
 
-    private fun assertRepositoryInDesiredState(repository: StagingRepository, desiredState: StagingRepository.State) {
-        if (repository.state != desiredState) {
-            throw RepositoryTransitionException("Staging repository is not in desired state ($desiredState): $repository. It is unexpected. Please check" +
+    private fun assertRepositoryInDesiredState(repository: StagingRepository, vararg desiredStates: StagingRepository.State) {
+        if (repository.state !in desiredStates) {
+            throw RepositoryTransitionException("Staging repository is not in desired state ${desiredStates.contentToString()}: $repository. It is unexpected. Please check" +
                     "Nexus logs using its web interface - it can be caused by validation rules violation. If not, please report it " +
                     "to https://github.com/gradle-nexus/publish-plugin/issues/ with '--info' logs")
         }
