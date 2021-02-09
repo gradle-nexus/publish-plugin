@@ -17,11 +17,11 @@
 package io.github.gradlenexus.publishplugin.internal
 
 import com.nhaarman.mockitokotlin2.anyOrNull
+import io.github.gradlenexus.publishplugin.KotlinParameterizeTest
 import io.github.gradlenexus.publishplugin.RepositoryTransitionException
 import org.assertj.core.api.Assertions.assertThatExceptionOfType
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -31,7 +31,7 @@ import org.mockito.Mockito.inOrder
 import org.mockito.invocation.InvocationOnMock
 import org.mockito.junit.jupiter.MockitoExtension
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS) //for non static argument provider
+@KotlinParameterizeTest
 @ExtendWith(MockitoExtension::class)
 internal class StagingRepositoryTransitionerTest {
 

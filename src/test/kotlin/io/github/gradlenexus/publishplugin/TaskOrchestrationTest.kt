@@ -30,8 +30,11 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.nio.file.Path
 
+@KotlinParameterizeTest
 class TaskOrchestrationTest {
 
     @TempDir
@@ -44,39 +47,35 @@ class TaskOrchestrationTest {
         project = ProjectBuilder.builder().withProjectDir(projectDir.toFile()).build()
     }
 
-    @Test
-    internal fun `close task should run after init`() {
+    @ParameterizedTest(name = "task: {0}")
+    @MethodSource("transitioningTaskNamesForSonatype")
+    internal fun `transitioning task should run after init`(transitioningTaskName: String) {
         initSingleProjectWithDefaultConfiguration()
-        assertGivenTaskMustRunAfterAnother("closeSonatypeStagingRepository", "initializeSonatypeStagingRepository")
+        assertGivenTaskMustRunAfterAnother(transitioningTaskName, "initializeSonatypeStagingRepository")
     }
 
-    @Test
-    @Disabled("Broken - must run only after publishMavenJavaPublicationToSonatypeRepository not publishToSonatypeRepository")
-    internal fun `close task should run after related publish`() {
+    @ParameterizedTest(name = "task: {0}")
+    @MethodSource("transitioningTaskNamesForSonatype")
+    internal fun `transitioning task should run after related publish`(transitioningTaskName: String) {
         initSingleProjectWithDefaultConfiguration()
-        assertGivenTaskMustRunAfterAnother("closeSonatypeStagingRepository", "publishToSonatypeRepository")
+        assertGivenTaskMustRunAfterAnother(transitioningTaskName, "publishToSonatype")
     }
 
-    @Test
-    @Disabled("TODO")
-    internal fun `close task should not run after non-related publish`() {}
+    @ParameterizedTest(name = "task: {0}")
+    @MethodSource("transitioningTaskNamesForSonatype")
+    internal fun `transitioning task should not run after non-related publish`(transitioningTaskName: String) {
+        //given
+        initSingleProjectWithDefaultConfiguration()
+        project.extensions.configure<NexusPublishExtension> {
+            repositories.add(NexusRepository("myNexus", project))
+        }
+        //expect
+        assertGivenTaskMustNotRunAfterAnother(transitioningTaskName, "publishToMyNexus")
+    }
 
     @Test
     @Disabled("TODO")
     internal fun `close task should run after all related publish tasks in multi-project build`() {}
-
-    @Test
-    internal fun `release task should run after init`() {
-        initSingleProjectWithDefaultConfiguration()
-        assertGivenTaskMustRunAfterAnother("releaseSonatypeStagingRepository", "initializeSonatypeStagingRepository")
-    }
-
-    @Test
-    @Disabled("Broken - must run only after publishMavenJavaPublicationToSonatypeRepository not publishToSonatypeRepository")
-    internal fun `release task should run after related publish`() {
-        initSingleProjectWithDefaultConfiguration()
-        assertGivenTaskMustRunAfterAnother("releaseSonatypeStagingRepository", "publishToSonatypeRepository")
-    }
 
     @Test
     internal fun `release task should run after close`() {
@@ -156,9 +155,18 @@ class TaskOrchestrationTest {
         assertThat(task.mustRunAfter.getDependencies(task)).contains(expectedPredecessor)
     }
 
+    private fun assertGivenTaskMustNotRunAfterAnother(taskName: String, notExpectedPredecessorName: String) {
+        val task = getJustOneTaskByNameOrFail(taskName)
+        val notExpectedPredecessor = getJustOneTaskByNameOrFail(notExpectedPredecessorName)
+        assertThat(task.mustRunAfter.getDependencies(task)).doesNotContain(notExpectedPredecessor)
+    }
+
     private fun getJustOneTaskByNameOrFail(taskName: String): Task {
         val tasks = project.getTasksByName(taskName, true) // forces project evaluation
-        assertThat(tasks.size).describedAs("Expected just one task: $taskName. Found: ${project.tasks}").isOne()
+        assertThat(tasks.size).describedAs("Expected just one task: $taskName. Found: ${project.tasks.names}").isOne()
         return tasks.first()
     }
+
+    @Suppress("unused")
+    private fun transitioningTaskNamesForSonatype(): List<String> = listOf("closeSonatypeStagingRepository", "releaseSonatypeStagingRepository")
 }
