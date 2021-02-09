@@ -95,7 +95,7 @@ class TaskOrchestrationTest {
     }
 
     @Test
-    internal fun `simplified close and release task without repository name should be not available if no repositories are configured`() {
+    internal fun `simplified close and release task without repository name should be available but trigger nothing if no repositories are configured`() {
         initSingleProjectWithDefaultConfiguration()
         project.extensions.configure<NexusPublishExtension> {
             repositories.clear()
@@ -103,7 +103,8 @@ class TaskOrchestrationTest {
 
         val simplifiedCloseAndReleaseTasks = project.getTasksByName(NexusPublishPlugin.SIMPLIFIED_CLOSE_AND_RELEASE_TASK_NAME, true)
 
-        assertThat(simplifiedCloseAndReleaseTasks).isEmpty()
+        assertThat(simplifiedCloseAndReleaseTasks).hasSize(1)
+        assertThat(simplifiedCloseAndReleaseTasks.first().dependsOn).isEmpty()
     }
 
     @Test

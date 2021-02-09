@@ -27,10 +27,10 @@ import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.publish.maven.tasks.PublishToMavenRepository
 import org.gradle.api.publish.plugins.PublishingPlugin
-import org.gradle.api.tasks.TaskContainer
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.invoke
+import org.gradle.kotlin.dsl.named
 import org.gradle.kotlin.dsl.register
 import org.gradle.kotlin.dsl.the
 import org.gradle.kotlin.dsl.withType
@@ -55,26 +55,26 @@ class NexusPublishPlugin : Plugin<Project> {
         configurePublishingForAllProjects(project, extension, registry)
     }
 
-    private fun createRegistry(project: Project): Provider<StagingRepositoryDescriptorRegistry> {
+    private fun createRegistry(rootProject: Project): Provider<StagingRepositoryDescriptorRegistry> {
         if (GradleVersion.current() >= GradleVersion.version("6.1")) {
-            return project.gradle.sharedServices
+            return rootProject.gradle.sharedServices
                     .registerIfAbsent("stagingRepositoryUrlRegistry", StagingRepositoryDescriptorRegistryBuildService::class.java) {}
                     .map { it.registry }
         }
         val registry = StagingRepositoryDescriptorRegistry()
-        return project.provider { registry }
+        return rootProject.provider { registry }
     }
 
-    private fun configureNexusTasks(project: Project, extension: NexusPublishExtension, registry: Provider<StagingRepositoryDescriptorRegistry>) {
+    private fun configureNexusTasks(rootProject: Project, extension: NexusPublishExtension, registry: Provider<StagingRepositoryDescriptorRegistry>) {
         extension.repositories.all {
             val repository = this
-            val initializeTask = project.tasks.register<InitializeNexusStagingRepository>(
-                    "initialize${capitalizedName}StagingRepository", project.objects, extension, repository, registry)
-            val closeTask = project.tasks.register<CloseNexusStagingRepository>(
-                    "close${capitalizedName}StagingRepository", project.objects, extension, repository, registry)
-            val releaseTask = project.tasks.register<ReleaseNexusStagingRepository>(
-                    "release${capitalizedName}StagingRepository", project.objects, extension, repository, registry)
-            val closeAndReleaseTask = project.tasks.register<Task>(
+            val initializeTask = rootProject.tasks.register<InitializeNexusStagingRepository>(
+                    "initialize${capitalizedName}StagingRepository", rootProject.objects, extension, repository, registry)
+            val closeTask = rootProject.tasks.register<CloseNexusStagingRepository>(
+                    "close${capitalizedName}StagingRepository", rootProject.objects, extension, repository, registry)
+            val releaseTask = rootProject.tasks.register<ReleaseNexusStagingRepository>(
+                    "release${capitalizedName}StagingRepository", rootProject.objects, extension, repository, registry)
+            val closeAndReleaseTask = rootProject.tasks.register<Task>(
                     "closeAndRelease${capitalizedName}StagingRepository")
             closeTask {
                 description = "Closes open staging repository in '${repository.name}' Nexus instance."
@@ -94,18 +94,23 @@ class NexusPublishPlugin : Plugin<Project> {
             }
         }
         extension.repositories.whenObjectRemoved {
-            project.tasks.named("initialize${capitalizedName}StagingRepository").configure {
+            rootProject.tasks.named("initialize${capitalizedName}StagingRepository").configure {
                 enabled = false
             }
-            project.tasks.named("close${capitalizedName}StagingRepository").configure {
+            rootProject.tasks.named("close${capitalizedName}StagingRepository").configure {
                 enabled = false
             }
-            project.tasks.named("release${capitalizedName}StagingRepository").configure {
+            rootProject.tasks.named("release${capitalizedName}StagingRepository").configure {
                 enabled = false
             }
-            project.tasks.named("closeAndRelease${capitalizedName}StagingRepository").configure {
+            rootProject.tasks.named("closeAndRelease${capitalizedName}StagingRepository").configure {
                 enabled = false
             }
+        }
+        rootProject.tasks.register<Task>(SIMPLIFIED_CLOSE_AND_RELEASE_TASK_NAME) {
+            description = "Closes and releases open staging repositories in all configured Nexus instances."
+            group = PublishingPlugin.PUBLISH_TASK_GROUP
+            enabled = false
         }
     }
 
@@ -116,9 +121,9 @@ class NexusPublishPlugin : Plugin<Project> {
                 plugins.withId("maven-publish") {
                     val nexusRepositories = addMavenRepositories(publishingProject, extension, registry)
                     nexusRepositories.forEach { (nexusRepo, mavenRepo) ->
-                        val initializeTask = rootProject.tasks.withName<InitializeNexusStagingRepository>("initialize${nexusRepo.capitalizedName}StagingRepository")
-                        val closeTask = rootProject.tasks.withName<CloseNexusStagingRepository>("close${nexusRepo.capitalizedName}StagingRepository")
-                        val releaseTask = rootProject.tasks.withName<ReleaseNexusStagingRepository>("release${nexusRepo.capitalizedName}StagingRepository")
+                        val initializeTask = rootProject.tasks.named<InitializeNexusStagingRepository>("initialize${nexusRepo.capitalizedName}StagingRepository")
+                        val closeTask = rootProject.tasks.named<CloseNexusStagingRepository>("close${nexusRepo.capitalizedName}StagingRepository")
+                        val releaseTask = rootProject.tasks.named<ReleaseNexusStagingRepository>("release${nexusRepo.capitalizedName}StagingRepository")
                         val publishAllTask = publishingProject.tasks.register("publishTo${nexusRepo.capitalizedName}") {
                             description = "Publishes all Maven publications produced by this project to the '${nexusRepo.name}' Nexus repository."
                             group = PublishingPlugin.PUBLISH_TASK_GROUP
@@ -133,7 +138,7 @@ class NexusPublishPlugin : Plugin<Project> {
                     }
                 }
             }
-            createSimplifiedCloseAndReleaseTask(rootProject, extension)
+            configureSimplifiedCloseAndReleaseTask(rootProject, extension)
         }
     }
 
@@ -171,7 +176,7 @@ class NexusPublishPlugin : Plugin<Project> {
         val mavenPublications = project.the<PublishingExtension>().publications.withType<MavenPublication>()
         mavenPublications.configureEach {
             val publication = this
-            val publishTask = project.tasks.withName<PublishToMavenRepository>(
+            val publishTask = project.tasks.named<PublishToMavenRepository>(
                     "publish${publication.name.capitalize()}PublicationTo${mavenRepo.name.capitalize()}Repository")
             publishTask {
                 dependsOn(initializeTask)
@@ -196,22 +201,18 @@ class NexusPublishPlugin : Plugin<Project> {
             nexusRepo.snapshotRepositoryUrl.get()
         }
 
-    // For compatibility with 4.10.x (same as built-in `named<T>(String)` extension function)
-    private inline fun <reified T : Task> TaskContainer.withName(name: String): TaskProvider<T> {
-        return withType<T>().named(name)
-    }
-
-    private fun createSimplifiedCloseAndReleaseTask(rootProject: Project, extension: NexusPublishExtension) {
+    private fun configureSimplifiedCloseAndReleaseTask(rootProject: Project, extension: NexusPublishExtension) {
         if (extension.repositories.isNotEmpty()) {
-            val closeAndReleaseSimplifiedTask = rootProject.tasks.register<Task>(SIMPLIFIED_CLOSE_AND_RELEASE_TASK_NAME) {
-                val repositoryNamesAsString = extension.repositories.joinToString(",") { "'${it.name}'" }
+            val closeAndReleaseSimplifiedTask = rootProject.tasks.named(SIMPLIFIED_CLOSE_AND_RELEASE_TASK_NAME)
+            closeAndReleaseSimplifiedTask.configure {
+                val repositoryNamesAsString = extension.repositories.joinToString(", ") { "'${it.name}'" }
                 val instanceCardinalityAwareString = if (extension.repositories.size > 1) { "instances" } else { "instance" }
-                description = "Closes and releases open staging repository in $repositoryNamesAsString Nexus $instanceCardinalityAwareString."
-                group = PublishingPlugin.PUBLISH_TASK_GROUP
+                description = "Closes and releases open staging repositories in the following Nexus $instanceCardinalityAwareString: $repositoryNamesAsString"
+                enabled = true
             }
             extension.repositories.all {
                 val repositoryCapitalizedName = this.capitalizedName
-                val closeAndReleaseTask = rootProject.tasks.withName<Task>("closeAndRelease${repositoryCapitalizedName}StagingRepository")
+                val closeAndReleaseTask = rootProject.tasks.named<Task>("closeAndRelease${repositoryCapitalizedName}StagingRepository")
                 closeAndReleaseSimplifiedTask.configure {
                     dependsOn(closeAndReleaseTask)
                 }
