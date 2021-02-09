@@ -1,8 +1,10 @@
-# Nexus Publish Plugin
+# Gradle Nexus Publish Plugin
 
 [![CI Status](https://github.com/gradle-nexus/publish-plugin/workflows/CI/badge.svg)](https://github.com/gradle-nexus/publish-plugin/actions?workflow=CI) [![Gradle Plugin Portal](https://img.shields.io/maven-metadata/v/https/plugins.gradle.org/m2/io.github.gradle-nexus/publish-plugin/maven-metadata.xml.svg?label=Gradle%20Plugin%20Portal)](https://plugins.gradle.org/plugin/io.github.gradle-nexus.publish-plugin)
 
 Gradle Plugin that explicitly creates a _staging repository_ before publishing to Nexus. This solves the problem that frequently occurs when uploading to Nexus (e.g. from Travis), namely split staging repositories. Moreover, the plugin provides tasks to close and release staging repositories, covering the whole releasing process to Maven Central.
+
+This plugin is intended as a replacement of the [Gradle Nexus Staging Plugin](https://github.com/Codearte/gradle-nexus-staging-plugin/) and [Nexus Publish Plugin](https://github.com/marcphilipp/nexus-publish-plugin) due.
 
 ## Usage
 
