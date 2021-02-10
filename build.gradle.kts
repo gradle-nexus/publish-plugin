@@ -11,7 +11,7 @@ plugins {
     id("com.github.johnrengelman.shadow") version "6.1.0"
     id("org.jetbrains.gradle.plugin.idea-ext")
     id("com.github.ben-manes.versions") version "0.38.0"
-    id("org.jetbrains.dokka") version "1.4.30"
+    id("org.jetbrains.dokka") version "1.4.32"
     id("org.ajoberstar.stutter") version "0.6.0"
 }
 
@@ -41,7 +41,6 @@ gradlePlugin {
 
 repositories {
     mavenCentral()
-    jcenter()
 }
 
 val licenseHeaderFile = file("gradle/license-header.txt")
