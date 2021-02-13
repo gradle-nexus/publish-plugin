@@ -19,14 +19,14 @@ group = "io.github.gradle-nexus"
 version = "1.0.0-SNAPSHOT"
 
 val readableName = "Nexus Publish Plugin"
-description = "Gradle Plugin for publishing, closing, and releasing to Nexus staging repositories"
+description = "Gradle Plugin for publishing to Nexus that automates creating, closing, and releasing staging repositories"
 val repoUrl = "https://github.com/gradle-nexus/publish-plugin"
 
 pluginBundle {
     description = project.description
     website = repoUrl
     vcsUrl = repoUrl
-    tags = listOf("publishing", "maven", "nexus", "travis")
+    tags = listOf("publishing", "maven", "nexus")
 }
 
 gradlePlugin {
