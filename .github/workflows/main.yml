@@ -4,8 +4,8 @@ on:
   push:
     branches:
       - master
-      - "szpak/*"
-      - "marc/*"
+      - "szpak/**"
+      - "marc/**"
   pull_request:
     branches:
       - '*'

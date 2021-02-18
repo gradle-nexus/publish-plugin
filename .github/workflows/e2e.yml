@@ -6,8 +6,8 @@ on:
   push:
     branches:
       - master
-      - "szpak/*"
-      - "marc/*"
+      - "szpak/**"
+      - "marc/**"
 
 jobs:
   tests:
