@@ -111,6 +111,32 @@ class NexusPublishPluginTests {
     }
 
     @Test
+    fun `can get StagingProfileId from Nexus`() {
+        writeDefaultSingleProjectConfiguration()
+        //and
+        buildGradle.append("""
+            nexusPublishing {
+                repositories {
+                    sonatype {
+                        nexusUrl = uri('${server.baseUrl()}')
+                        allowInsecureProtocol = true
+                        //No staging profile defined
+                    }
+                }
+            }
+        """)
+        //and
+        stubGetStagingProfilesForOneProfileIdGivenId(STAGING_PROFILE_ID)
+
+        val result = run("retrieveSonatypeStagingProfile")
+
+        assertSuccess(result, ":retrieveSonatypeStagingProfile")
+        assertThat(result.output).containsOnlyOnce("Received staging profile id: '$STAGING_PROFILE_ID' for package org.example")
+        // and
+        assertGetStagingProfile(1)
+    }
+
+    @Test
     fun `publish task depends on correct tasks`() {
         projectDir.resolve("settings.gradle").write("""
             rootProject.name = 'sample'
@@ -204,6 +230,73 @@ class NexusPublishPluginTests {
                 .withRequestBody(matchingJsonPath("\$.data[?(@.description == 'org.example:sample:0.0.1')]")))
         assertUploadedToStagingRepo("/org/example/sample/0.0.1/sample-0.0.1.pom")
         assertUploadedToStagingRepo("/org/example/sample/0.0.1/sample-0.0.1.jar")
+    }
+
+    @Test
+    fun `publishes to two Nexus repositories`() {
+        val otherServer = WireMockServer()
+        otherServer.start()
+        projectDir.resolve("settings.gradle").write("""
+            rootProject.name = 'sample'
+        """)
+        projectDir.resolve("build.gradle").write("""
+            plugins {
+                id('java-library')
+                id('maven-publish')
+                id('io.github.gradle-nexus.publish-plugin')
+            }
+            group = 'org.example'
+            version = '0.0.1'
+            publishing {
+                publications {
+                    mavenJava(MavenPublication) {
+                        from(components.java)
+                    }
+                }
+            }
+            nexusPublishing {
+                repositories {
+                    myNexus {
+                        nexusUrl = uri('${server.baseUrl()}')
+                        snapshotRepositoryUrl = uri('${server.baseUrl()}/snapshots/')
+                        allowInsecureProtocol = true
+                        username = 'username'
+                        password = 'password'
+                    }
+                    someOtherNexus {
+                        nexusUrl = uri('${otherServer.baseUrl()}')
+                        snapshotRepositoryUrl = uri('${otherServer.baseUrl()}/snapshots/')
+                        allowInsecureProtocol = true
+                        username = 'someUsername'
+                        password = 'somePassword'
+                    }
+                }
+            }
+        """)
+
+        val otherStagingProfileId = "otherStagingProfileId"
+        val otherStagingRepositoryId = "orgexample-43"
+        stubStagingProfileRequest("/staging/profiles", mapOf("id" to STAGING_PROFILE_ID, "name" to "org.example"))
+        stubStagingProfileRequest("/staging/profiles", mapOf("id" to otherStagingProfileId, "name" to "org.example"), wireMockServer = otherServer)
+        stubCreateStagingRepoRequest("/staging/profiles/$STAGING_PROFILE_ID/start", STAGED_REPOSITORY_ID)
+        stubCreateStagingRepoRequest("/staging/profiles/$otherStagingProfileId/start", otherStagingRepositoryId, wireMockServer = otherServer)
+        expectArtifactUploads("/staging/deployByRepositoryId/$STAGED_REPOSITORY_ID")
+        expectArtifactUploads("/staging/deployByRepositoryId/$otherStagingRepositoryId", wireMockServer = otherServer)
+
+        val result = run("publishToMyNexus", "publishToSomeOtherNexus")
+
+        assertSuccess(result, ":initializeMyNexusStagingRepository")
+        assertSuccess(result, ":initializeSomeOtherNexusStagingRepository")
+        assertThat(result.output).containsOnlyOnce("Created staging repository '$STAGED_REPOSITORY_ID' at ${server.baseUrl()}/repositories/$STAGED_REPOSITORY_ID/content/")
+        assertThat(result.output).containsOnlyOnce("Created staging repository '$otherStagingRepositoryId' at ${otherServer.baseUrl()}/repositories/$otherStagingRepositoryId/content/")
+        server.verify(postRequestedFor(urlEqualTo("/staging/profiles/$STAGING_PROFILE_ID/start"))
+            .withRequestBody(matchingJsonPath("\$.data[?(@.description == 'org.example:sample:0.0.1')]")))
+        otherServer.verify(postRequestedFor(urlEqualTo("/staging/profiles/$otherStagingProfileId/start"))
+            .withRequestBody(matchingJsonPath("\$.data[?(@.description == 'org.example:sample:0.0.1')]")))
+        assertUploadedToStagingRepo("/org/example/sample/0.0.1/sample-0.0.1.pom")
+        assertUploadedToStagingRepo("/org/example/sample/0.0.1/sample-0.0.1.jar")
+        assertUploadedToStagingRepo("/org/example/sample/0.0.1/sample-0.0.1.pom", stagingRepositoryId = otherStagingRepositoryId, wireMockServer = otherServer)
+        assertUploadedToStagingRepo("/org/example/sample/0.0.1/sample-0.0.1.jar", stagingRepositoryId = otherStagingRepositoryId, wireMockServer = otherServer)
     }
 
     @Test
@@ -352,6 +445,7 @@ class NexusPublishPluginTests {
 
         val result = gradleRunner("initializeMyNexusStagingRepository").buildAndFail()
 
+        // we assert that the first task that sends an HTTP request to server fails as expected
         assertOutcome(result, ":initializeMyNexusStagingRepository", FAILED)
         assertThat(result.output).contains("SocketTimeoutException")
     }
@@ -732,14 +826,18 @@ class NexusPublishPluginTests {
     }
 
     @SafeVarargs
-    private fun stubStagingProfileRequest(url: String, vararg stagingProfiles: Map<String, String>) {
-        server.stubFor(get(urlEqualTo(url))
+    private fun stubStagingProfileRequest(
+        url: String,
+        vararg stagingProfiles: Map<String, String>,
+        wireMockServer: WireMockServer = server
+    ) {
+        wireMockServer.stubFor(get(urlEqualTo(url))
                 .withHeader("User-Agent", matching("gradle-nexus-publish-plugin/.*"))
                 .willReturn(aResponse().withBody(gson.toJson(mapOf("data" to listOf(*stagingProfiles))))))
     }
 
-    private fun stubCreateStagingRepoRequest(url: String, stagedRepositoryId: String) {
-        server.stubFor(post(urlEqualTo(url))
+    private fun stubCreateStagingRepoRequest(url: String, stagedRepositoryId: String, wireMockServer: WireMockServer = server) {
+        wireMockServer.stubFor(post(urlEqualTo(url))
                 .willReturn(aResponse().withBody(gson.toJson(mapOf("data" to mapOf("stagedRepositoryId" to stagedRepositoryId))))))
     }
 
@@ -797,10 +895,10 @@ class NexusPublishPluginTests {
                         .withBody(getOneStagingRepoWithGivenIdJsonResponseAsString(stagingRepository2))))
     }
 
-    private fun expectArtifactUploads(prefix: String) {
-        server.stubFor(put(urlMatching("$prefix/.+"))
+    private fun expectArtifactUploads(prefix: String, wireMockServer: WireMockServer = server) {
+        wireMockServer.stubFor(put(urlMatching("$prefix/.+"))
                 .willReturn(aResponse().withStatus(201)))
-        server.stubFor(get(urlMatching("$prefix/.+/maven-metadata.xml"))
+        wireMockServer.stubFor(get(urlMatching("$prefix/.+/maven-metadata.xml"))
                 .willReturn(aResponse().withStatus(404)))
     }
 
@@ -827,12 +925,12 @@ class NexusPublishPluginTests {
         server.verify(count, getRequestedFor(urlMatching("/staging/profiles")))
     }
 
-    private fun assertUploadedToStagingRepo(path: String) {
-        assertUploaded("/staging/deployByRepositoryId/$STAGED_REPOSITORY_ID$path")
+    private fun assertUploadedToStagingRepo(path: String, stagingRepositoryId: String = STAGED_REPOSITORY_ID, wireMockServer: WireMockServer = server) {
+        assertUploaded("/staging/deployByRepositoryId/$stagingRepositoryId$path", wireMockServer = wireMockServer)
     }
 
-    private fun assertUploaded(testUrl: String) {
-        server.verify(putRequestedFor(urlMatching(testUrl)))
+    private fun assertUploaded(testUrl: String, wireMockServer: WireMockServer = server) {
+        wireMockServer.verify(putRequestedFor(urlMatching(testUrl)))
     }
 
     private fun assertCloseOfStagingRepo(stagingRepositoryId: String = STAGED_REPOSITORY_ID) {
