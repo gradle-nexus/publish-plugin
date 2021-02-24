@@ -13,7 +13,7 @@ This plugin is intended as a replacement of the [Gradle Nexus Staging Plugin](ht
 ### Applying the plugin
 
 The plugin must be applied to the root project and requires Gradle 5.0 or later. It is important to
-set the group and the version to the root project so the plugin can detect if it is a snapshot
+set the group and the version to the root project, so the plugin can detect if it is a snapshot
 version or not in order to select the correct repository where artifacts will be published.
 
 ```gradle
