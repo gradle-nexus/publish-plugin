@@ -32,7 +32,7 @@ nexusPublishing {
 }
 ```
 
-**Important**. Users registered in Sonatype after [24 February 2021](https://central.sonatype.org/articles/2021/Feb/23/new-users-on-s01osssonatypeorg/) should tune up the Nexus URLs configuration:
+**Important**. Users registered in Sonatype after [24 February 2021](https://central.sonatype.org/articles/2021/Feb/23/new-users-on-s01osssonatypeorg/) need to customize the following URLs:
 
 ```gradle
 nexusPublishing {
@@ -44,9 +44,9 @@ nexusPublishing {
     }
 }
 ```
-(when ensure check the server addresses in a corresponding JIRA ticket for your project in Sonatype Jira)
+(if unsure check the server address in a corresponding ticket for your project in Sonatype's Jira)
 
-In addition, for both group of users, you need to set the `sonatypeUsername` and `sonatypePassword` project properties, e.g. in `~/.gradle/gradle.properties` or via the `ORG_GRADLE_PROJECT_sonatypeUsername` and `ORG_GRADLE_PROJECT_sonatypePassword` environment variables.
+In addition, for both groups of users, you need to set the `sonatypeUsername` and `sonatypePassword` project properties, e.g. in `~/.gradle/gradle.properties` or via the `ORG_GRADLE_PROJECT_sonatypeUsername` and `ORG_GRADLE_PROJECT_sonatypePassword` environment variables.
 
 Alternatively, you can configure username and password in the `sonatype` block:
 
