@@ -48,13 +48,12 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.io.TempDir
-import ru.lanwen.wiremock.ext.WiremockResolver
 import ru.lanwen.wiremock.ext.WiremockResolver.Wiremock
 import java.nio.file.Files
 import java.nio.file.Path
 
 @Suppress("FunctionName") // TODO: How to suppress "kotlin:S100" from SonarLint?
-@ExtendWith(WiremockResolver::class)
+@ExtendWith(MethodScopeWiremockResolver::class)
 class NexusPublishPluginTests {
 
     companion object {
@@ -233,9 +232,7 @@ class NexusPublishPluginTests {
     }
 
     @Test
-    fun `publishes to two Nexus repositories`() {
-        val otherServer = WireMockServer()
-        otherServer.start()
+    fun `publishes to two Nexus repositories`(@MethodScopeWiremockResolver.MethodScopedWiremockServer @Wiremock otherServer: WireMockServer) {
         projectDir.resolve("settings.gradle").write("""
             rootProject.name = 'sample'
         """)
