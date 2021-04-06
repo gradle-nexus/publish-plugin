@@ -59,12 +59,14 @@ Alternatively, you can configure username and password in the `sonatype` block:
 nexusPublishing {
     repositories {
         sonatype {
-            username = "your-username"
-            password = "your-password"
+            username = "your-username"    //preferably your API username
+            password = "your-password"    //preferably your API key
         }
     }
 }
 ```
+
+To increase security, it is advised to use the [API username and key pair](https://blog.solidsoft.pl/2015/09/08/deploy-to-maven-central-using-api-key-aka-auth-token/) (instead of regular credentials).
 
 Finally, call `publishToSonatype closeAndReleaseSonatypeStagingRepository` to publish all publications to Sonatype's OSSRH Nexus and subsequently close and release the corresponding staging repository, effectively making the artifacts available in Maven Central (usually after a few minutes).
 
