@@ -133,11 +133,11 @@ open class NexusClient(private val baseUrl: URI, username: String?, password: St
     private fun failure(action: String, response: Response<*>): RuntimeException {
         var message = "Failed to $action, server at $baseUrl responded with status code ${response.code()}"
         val errorBody = response.errorBody()
-        if (errorBody != null && errorBody.contentLength() > 0) {
+        if (errorBody != null) {
             message += try {
                 ", body: ${errorBody.string()}"
             } catch (exception: IOException) {
-                ", body: (error during read body of error response, message: ${exception.message})"
+                ", body: <error while reading body of error response, message: ${exception.message}>"
             }
         }
         return RuntimeException(message)
