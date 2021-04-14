@@ -134,10 +134,10 @@ open class NexusClient(private val baseUrl: URI, username: String?, password: St
         var message = "Failed to $action, server at $baseUrl responded with status code ${response.code()}"
         val errorBody = response.errorBody()
         if (errorBody != null && errorBody.contentLength() > 0) {
-            try {
-                message += ", body: $errorBody"
-            } catch (e: IOException) {
-                throw UncheckedIOException("Failed to read body of error response", e)
+            message += try {
+                ", body: ${errorBody.string()}"
+            } catch (exception: IOException) {
+                ", body: (error during read body of error response, message: ${exception.message})"
             }
         }
         return RuntimeException(message)
