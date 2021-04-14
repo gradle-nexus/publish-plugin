@@ -270,6 +270,7 @@ class NexusPublishPluginTests {
         val result = runAndFail("publishToMyNexus")
 
         assertFailure(result, ":initializeMyNexusStagingRepository")
+        assertThat(result.output).contains("status code 404")
         assertThat(result.output).contains("""{"failure":"message"}""")
     }
 
