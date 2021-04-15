@@ -28,7 +28,6 @@ import retrofit2.http.Headers
 import retrofit2.http.POST
 import retrofit2.http.Path
 import java.io.IOException
-import java.io.UncheckedIOException
 import java.net.URI
 import java.time.Duration
 
@@ -133,11 +132,11 @@ open class NexusClient(private val baseUrl: URI, username: String?, password: St
     private fun failure(action: String, response: Response<*>): RuntimeException {
         var message = "Failed to $action, server at $baseUrl responded with status code ${response.code()}"
         val errorBody = response.errorBody()
-        if (errorBody != null && errorBody.contentLength() > 0) {
-            try {
-                message += ", body: $errorBody"
-            } catch (e: IOException) {
-                throw UncheckedIOException("Failed to read body of error response", e)
+        if (errorBody != null) {
+            message += try {
+                ", body: ${errorBody.string()}"
+            } catch (exception: IOException) {
+                ", body: <error while reading body of error response, message: ${exception.message}>"
             }
         }
         return RuntimeException(message)

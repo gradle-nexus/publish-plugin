@@ -24,6 +24,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.matching
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
+import com.github.tomakehurst.wiremock.client.WireMock.notFound
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.put
@@ -229,6 +230,48 @@ class NexusPublishPluginTests {
                 .withRequestBody(matchingJsonPath("\$.data[?(@.description == 'org.example:sample:0.0.1')]")))
         assertUploadedToStagingRepo("/org/example/sample/0.0.1/sample-0.0.1.pom")
         assertUploadedToStagingRepo("/org/example/sample/0.0.1/sample-0.0.1.jar")
+    }
+
+    @Test
+    fun `displays the error response to the user when a request fails`() {
+        projectDir.resolve("settings.gradle").write("""
+            rootProject.name = 'sample'
+        """)
+        projectDir.resolve("build.gradle").write("""
+            plugins {
+                id('java-library')
+                id('maven-publish')
+                id('io.github.gradle-nexus.publish-plugin')
+            }
+            group = 'org.example'
+            version = '0.0.1'
+            publishing {
+                publications {
+                    mavenJava(MavenPublication) {
+                        from(components.java)
+                    }
+                }
+            }
+            nexusPublishing {
+                repositories {
+                    myNexus {
+                        nexusUrl = uri('${server.baseUrl()}')
+                        snapshotRepositoryUrl = uri('${server.baseUrl()}/snapshots/')
+                        allowInsecureProtocol = true
+                        username = 'username'
+                        password = 'password'
+                    }
+                }
+            }
+        """)
+
+        stubMissingStagingProfileRequest("/staging/profiles")
+
+        val result = runAndFail("publishToMyNexus")
+
+        assertFailure(result, ":initializeMyNexusStagingRepository")
+        assertThat(result.output).contains("status code 404")
+        assertThat(result.output).contains("""{"failure":"message"}""")
     }
 
     @Test
@@ -810,9 +853,11 @@ class NexusPublishPluginTests {
         """)
     }
 
-    private fun run(vararg arguments: String): BuildResult {
-        return gradleRunner(*arguments).build()
-    }
+    private fun run(vararg arguments: String): BuildResult =
+        gradleRunner(*arguments).build()
+
+    private fun runAndFail(vararg arguments: String): BuildResult =
+        gradleRunner(*arguments).buildAndFail()
 
     private fun gradleRunner(vararg arguments: String): GradleRunner {
         return gradleRunner
@@ -831,6 +876,12 @@ class NexusPublishPluginTests {
         wireMockServer.stubFor(get(urlEqualTo(url))
                 .withHeader("User-Agent", matching("gradle-nexus-publish-plugin/.*"))
                 .willReturn(aResponse().withBody(gson.toJson(mapOf("data" to listOf(*stagingProfiles))))))
+    }
+
+    private fun stubMissingStagingProfileRequest(url: String, wireMockServer: WireMockServer = server) {
+        wireMockServer.stubFor(get(urlEqualTo(url))
+                .withHeader("User-Agent", matching("gradle-nexus-publish-plugin/.*"))
+                .willReturn(notFound().withBody(gson.toJson(mapOf("failure" to "message")))))
     }
 
     private fun stubCreateStagingRepoRequest(url: String, stagedRepositoryId: String, wireMockServer: WireMockServer = server) {
@@ -901,6 +952,10 @@ class NexusPublishPluginTests {
 
     private fun assertSuccess(result: BuildResult, taskPath: String) {
         assertOutcome(result, taskPath, SUCCESS)
+    }
+
+    private fun assertFailure(result: BuildResult, taskPath: String) {
+        assertOutcome(result, taskPath, FAILED)
     }
 
     private fun assertSkipped(result: BuildResult, taskPath: String) {
