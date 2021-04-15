@@ -33,4 +33,4 @@ jobs:
       - name: Test cross Java versions compatibility
         run: |
           ./gradlew --version
-          ./gradlew --stacktrace
+          ./gradlew --stacktrace build
