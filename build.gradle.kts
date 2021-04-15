@@ -6,12 +6,12 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     `kotlin-dsl`
     `maven-publish`
-    id("com.gradle.plugin-publish") version "0.12.0"
-    id("com.diffplug.spotless") version "5.9.0"
+    id("com.gradle.plugin-publish") version "0.14.0"
+    id("com.diffplug.spotless") version "5.12.1"
     id("com.github.johnrengelman.shadow") version "6.1.0"
     id("org.jetbrains.gradle.plugin.idea-ext")
-    id("com.github.ben-manes.versions") version "0.36.0"
-    id("org.jetbrains.dokka") version "1.4.20"
+    id("com.github.ben-manes.versions") version "0.38.0"
+    id("org.jetbrains.dokka") version "1.4.30"
     id("org.ajoberstar.stutter") version "0.6.0"
 }
 
@@ -90,7 +90,7 @@ dependencies {
     testImplementation("com.github.tomakehurst:wiremock:2.27.2")
     testImplementation("ru.lanwen.wiremock:wiremock-junit5:1.3.1")
     testImplementation("org.assertj:assertj-core:3.19.0")
-    testImplementation("org.mockito:mockito-junit-jupiter:3.7.7")
+    testImplementation("org.mockito:mockito-junit-jupiter:3.9.0")
     testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
 }
 
