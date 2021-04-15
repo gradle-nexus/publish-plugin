@@ -28,7 +28,6 @@ import retrofit2.http.Headers
 import retrofit2.http.POST
 import retrofit2.http.Path
 import java.io.IOException
-import java.io.UncheckedIOException
 import java.net.URI
 import java.time.Duration
 
