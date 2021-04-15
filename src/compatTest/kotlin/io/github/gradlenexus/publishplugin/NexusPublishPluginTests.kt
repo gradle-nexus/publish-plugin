@@ -854,7 +854,7 @@ class NexusPublishPluginTests {
     }
 
     private fun run(vararg arguments: String): BuildResult =
-         gradleRunner(*arguments).build()
+        gradleRunner(*arguments).build()
 
     private fun runAndFail(vararg arguments: String): BuildResult =
         gradleRunner(*arguments).buildAndFail()
