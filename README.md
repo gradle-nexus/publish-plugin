@@ -51,22 +51,20 @@ nexusPublishing {
 ```
 (if unsure check the server address in a corresponding ticket for your project in Sonatype's Jira)
 
-In addition, for both groups of users, you need to set the `sonatypeUsername` and `sonatypePassword` project properties, e.g. in `~/.gradle/gradle.properties` or via the `ORG_GRADLE_PROJECT_sonatypeUsername` and `ORG_GRADLE_PROJECT_sonatypePassword` environment variables.
+In addition, for both groups of users, you need to set your Nexus credentials. To increase security, it is advised to use the [API username and key pair](https://blog.solidsoft.pl/2015/09/08/deploy-to-maven-central-using-api-key-aka-auth-token/) (instead of regular username and password). Those values should be set as the `sonatypeUsername` and `sonatypePassword` project properties, e.g. in `~/.gradle/gradle.properties` or via the `ORG_GRADLE_PROJECT_sonatypeUsername` and `ORG_GRADLE_PROJECT_sonatypePassword` environment variables.
 
-Alternatively, you can configure username and password in the `sonatype` block:
+Alternatively, you can configure credentials in the `sonatype` block:
 
 ```gradle
 nexusPublishing {
     repositories {
         sonatype {
-            username = "your-username"    //preferably your API username
-            password = "your-password"    //preferably your API key
+            username = "your-api-username"
+            password = "your-api-key"
         }
     }
 }
 ```
-
-To increase security, it is advised to use the [API username and key pair](https://blog.solidsoft.pl/2015/09/08/deploy-to-maven-central-using-api-key-aka-auth-token/) (instead of regular credentials).
 
 Finally, call `publishToSonatype closeAndReleaseSonatypeStagingRepository` to publish all publications to Sonatype's OSSRH Nexus and subsequently close and release the corresponding staging repository, effectively making the artifacts available in Maven Central (usually after a few minutes).
 
