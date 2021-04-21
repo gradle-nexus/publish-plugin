@@ -37,7 +37,7 @@ nexusPublishing {
 }
 ```
 
-**Important**. Users registered in Sonatype after [24 February 2021](https://central.sonatype.org/articles/2021/Feb/23/new-users-on-s01osssonatypeorg/) need to customize the following URLs:
+**Important**. Users registered in Sonatype after [24 February 2021](https://central.sonatype.org/news/20210223_new-users-on-s01/) need to customize the following URLs:
 
 ```gradle
 nexusPublishing {
