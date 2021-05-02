@@ -51,16 +51,16 @@ nexusPublishing {
 ```
 (if unsure check the server address in a corresponding ticket for your project in Sonatype's Jira)
 
-In addition, for both groups of users, you need to set the `sonatypeUsername` and `sonatypePassword` project properties, e.g. in `~/.gradle/gradle.properties` or via the `ORG_GRADLE_PROJECT_sonatypeUsername` and `ORG_GRADLE_PROJECT_sonatypePassword` environment variables.
+In addition, for both groups of users, you need to set your Nexus credentials. To increase security, it is advised to use the [user token's username and password pair](https://blog.solidsoft.pl/2015/09/08/deploy-to-maven-central-using-api-key-aka-auth-token/) (instead of regular username and password). Those values should be set as the `sonatypeUsername` and `sonatypePassword` project properties, e.g. in `~/.gradle/gradle.properties` or via the `ORG_GRADLE_PROJECT_sonatypeUsername` and `ORG_GRADLE_PROJECT_sonatypePassword` environment variables.
 
-Alternatively, you can configure username and password in the `sonatype` block:
+Alternatively, you can configure credentials in the `sonatype` block:
 
 ```gradle
 nexusPublishing {
     repositories {
         sonatype {
-            username = "your-username"
-            password = "your-password"
+            username = "your-user-token-username"
+            password = "your-user-token-password"
         }
     }
 }
