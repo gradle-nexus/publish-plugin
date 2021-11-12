@@ -11,7 +11,6 @@ plugins {
     id("com.github.johnrengelman.shadow") version "6.1.0"
     id("org.jetbrains.gradle.plugin.idea-ext")
     id("com.github.ben-manes.versions") version "0.39.0"
-    id("org.jetbrains.dokka") version "1.4.32"
     id("org.ajoberstar.stutter") version "0.6.0"
 }
 
@@ -94,7 +93,6 @@ dependencies {
 }
 
 java {
-    withJavadocJar()
     withSourcesJar()
 }
 
@@ -204,23 +202,6 @@ tasks {
     withType<Test>().matching { it.name.startsWith("compatTest") }.configureEach {
         systemProperty("plugin.version", project.version)
     }
-    dokkaJavadoc {
-        outputDirectory.set(file("$buildDir/javadoc"))
-        dokkaSourceSets.configureEach {
-            reportUndocumented.set(false)
-            jdkVersion.set(8)
-            perPackageOption {
-                matchingRegex.set(".*\\.internal($|\\.).*")
-                suppress.set(true)
-            }
-        }
-    }
-    javadoc {
-        enabled = false
-    }
-    named<Jar>("javadocJar").configure {
-        from(dokkaJavadoc)
-    }
 }
 
 configurations {
@@ -238,7 +219,6 @@ configurations {
     archives {
         outgoing {
             artifact(tasks.named("sourcesJar"))
-            artifact(tasks.named("javadocJar"))
         }
     }
 }
