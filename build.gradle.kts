@@ -93,6 +93,7 @@ dependencies {
 }
 
 java {
+    withJavadocJar()
     withSourcesJar()
 }
 
