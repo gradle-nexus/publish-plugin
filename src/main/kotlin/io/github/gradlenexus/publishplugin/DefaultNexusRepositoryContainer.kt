@@ -39,5 +39,5 @@ internal class DefaultNexusRepositoryContainer(delegate: NamedDomainObjectContai
     }
 
     override fun configure(configureClosure: Closure<*>): NamedDomainObjectContainer<NexusRepository> =
-            ConfigureUtil.configureSelf(configureClosure, this, NamedDomainObjectContainerConfigureDelegate(configureClosure, this))
+        ConfigureUtil.configureSelf(configureClosure, this, NamedDomainObjectContainerConfigureDelegate(configureClosure, this))
 }

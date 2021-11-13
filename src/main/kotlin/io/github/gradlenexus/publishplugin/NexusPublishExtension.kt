@@ -50,9 +50,11 @@ open class NexusPublishExtension(project: Project) {
 
     fun transitionCheckOptions(action: Action<in TransitionCheckOptions>) = action.execute(transitionCheckOptions.get())
 
-    val repositories: NexusRepositoryContainer = DefaultNexusRepositoryContainer(project.container(NexusRepository::class) { name ->
-        project.objects.newInstance(NexusRepository::class, name, project)
-    })
+    val repositories: NexusRepositoryContainer = DefaultNexusRepositoryContainer(
+        project.container(NexusRepository::class) { name ->
+            project.objects.newInstance(NexusRepository::class, name, project)
+        }
+    )
 
     fun repositories(action: Action<in NexusRepositoryContainer>) = action.execute(repositories)
 }

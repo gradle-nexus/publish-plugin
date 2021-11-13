@@ -38,8 +38,8 @@ open class NexusClient(private val baseUrl: URI, username: String?, password: St
         val httpClientBuilder = OkHttpClient.Builder()
         if (timeout != null) {
             httpClientBuilder
-                    .readTimeout(timeout)
-                    .writeTimeout(timeout)
+                .readTimeout(timeout)
+                .writeTimeout(timeout)
         }
         if (connectTimeout != null) {
             httpClientBuilder.connectTimeout(connectTimeout)
@@ -47,23 +47,27 @@ open class NexusClient(private val baseUrl: URI, username: String?, password: St
         if (username != null || password != null) {
             val credentials = Credentials.basic(username ?: "", password ?: "")
             httpClientBuilder
-                    .addInterceptor { chain ->
-                        chain.proceed(chain.request().newBuilder()
-                                .header("Authorization", credentials)
-                                .build())
-                    }
+                .addInterceptor { chain ->
+                    chain.proceed(
+                        chain.request().newBuilder()
+                            .header("Authorization", credentials)
+                            .build()
+                    )
+                }
         }
         httpClientBuilder.addInterceptor { chain ->
             val version = javaClass.`package`.implementationVersion ?: "dev"
-            chain.proceed(chain.request().newBuilder()
+            chain.proceed(
+                chain.request().newBuilder()
                     .header("User-Agent", "gradle-nexus-publish-plugin/$version")
-                    .build())
+                    .build()
+            )
         }
         val retrofit = Retrofit.Builder()
-                .baseUrl(baseUrl.toString())
-                .client(httpClientBuilder.build())
-                .addConverterFactory(GsonConverterFactory.create())
-                .build()
+            .baseUrl(baseUrl.toString())
+            .client(httpClientBuilder.build())
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
         api = retrofit.create(NexusApi::class.java)
     }
 
@@ -73,16 +77,18 @@ open class NexusClient(private val baseUrl: URI, username: String?, password: St
             throw failure("load staging profiles", response)
         }
         return response.body()
-                ?.data
-                ?.filter { profile ->
-                    // profile.name either matches exactly
-                    // or it is a prefix of a packageGroup
-                    packageGroup.startsWith(profile.name) &&
-                            (packageGroup.length == profile.name.length ||
-                                    packageGroup[profile.name.length] == '.')
-                }
-                ?.maxBy { it.name.length }
-                ?.id
+            ?.data
+            ?.filter { profile ->
+                // profile.name either matches exactly
+                // or it is a prefix of a packageGroup
+                packageGroup.startsWith(profile.name) &&
+                    (
+                        packageGroup.length == profile.name.length ||
+                            packageGroup[profile.name.length] == '.'
+                        )
+            }
+            ?.maxBy { it.name.length }
+            ?.id
     }
 
     fun createStagingRepository(stagingProfileId: String, description: String): StagingRepositoryDescriptor {
@@ -121,8 +127,10 @@ open class NexusClient(private val baseUrl: URI, username: String?, password: St
             require(stagingRepositoryId == readStagingRepo.repositoryId) {
                 "Unexpected read repository id ($stagingRepositoryId != ${readStagingRepo.repositoryId})"
             }
-            return StagingRepository(readStagingRepo.repositoryId, StagingRepository.State.parseString(readStagingRepo.type),
-                    readStagingRepo.transitioning)
+            return StagingRepository(
+                readStagingRepo.repositoryId, StagingRepository.State.parseString(readStagingRepo.type),
+                readStagingRepo.transitioning
+            )
         } else {
             return StagingRepository.notFound(stagingRepositoryId) //Should not happen
         }
@@ -155,7 +163,7 @@ open class NexusClient(private val baseUrl: URI, username: String?, password: St
         @Headers("Content-Type: application/json")
         @POST("staging/profiles/{stagingProfileId}/start")
         fun startStagingRepo(@Path("stagingProfileId") stagingProfileId: String, @Body description: Dto<Description>):
-                Call<Dto<CreatedStagingRepository>>
+            Call<Dto<CreatedStagingRepository>>
 
         @Headers("Content-Type: application/json")
         @POST("staging/bulk/close")
