@@ -846,8 +846,8 @@ class NexusPublishPluginTests {
                     }
                 }
                 transitionCheckOptions {
-                    maxRetries.set(3)
-                    delayBetween.set(java.time.Duration.ofMillis(1))
+                    maxRetries = 3
+                    delayBetween = java.time.Duration.ofMillis(1)
                 }
             }
         """)

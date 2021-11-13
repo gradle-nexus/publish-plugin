@@ -46,7 +46,7 @@ open class NexusPublishExtension(project: Project) {
 
     val connectTimeout = project.objects.property<Duration>().value(Duration.ofMinutes(5))
 
-    val transitionCheckOptions = project.objects.property<TransitionCheckOptions>().value(TransitionCheckOptions(project.objects))
+    val transitionCheckOptions = project.objects.property<TransitionCheckOptions>().value(project.objects.newInstance(TransitionCheckOptions::class))
 
     fun transitionCheckOptions(action: Action<in TransitionCheckOptions>) = action.execute(transitionCheckOptions.get())
 
