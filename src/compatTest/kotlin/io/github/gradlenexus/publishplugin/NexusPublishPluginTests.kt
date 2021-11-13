@@ -42,7 +42,6 @@ import org.gradle.testkit.runner.TaskOutcome.FAILED
 import org.gradle.testkit.runner.TaskOutcome.SKIPPED
 import org.gradle.testkit.runner.TaskOutcome.SUCCESS
 import org.gradle.util.GradleVersion
-import org.gradle.util.VersionNumber
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
@@ -69,11 +68,11 @@ class NexusPublishPluginTests {
 
     private val gson = Gson()
 
-    private val gradleVersion = System.getProperty("compat.gradle.version") ?: GradleVersion.current().version
+    private val gradleVersion = System.getProperty("compat.gradle.version")?.let { GradleVersion.version(it) } ?: GradleVersion.current()
 
     private val gradleRunner = GradleRunner.create()
         .withPluginClasspath()
-        .withGradleVersion(gradleVersion)
+        .withGradleVersion(gradleVersion.version)
 
     private val pluginClasspathAsString: String
         get() = gradleRunner.pluginClasspath.joinToString(", ") { "'${it.absolutePath.replace('\\', '/')}'" }
@@ -375,7 +374,7 @@ class NexusPublishPluginTests {
             include 'gradle-plugin'
         """
         )
-        if (GradleVersion.version(gradleVersion) < GradleVersion.version("5.0")) {
+        if (gradleVersion < GradleVersion.version("5.0")) {
             projectDir.resolve("settings.gradle").append(
                 """
                 enableFeaturePreview("STABLE_PUBLISHING")
@@ -540,7 +539,7 @@ class NexusPublishPluginTests {
     @Disabled("Fails on my Fedora...")
     fun `uses configured connect timeout`() {
         assumeTrue(
-            VersionNumber.parse(gradleVersion) >= VersionNumber.parse("5.0"),
+            gradleVersion >= GradleVersion.version("5.0"),
             "Task timeouts were added in Gradle 5.0"
         )
 
@@ -953,7 +952,7 @@ class NexusPublishPluginTests {
         return gradleRunner
 //                .withDebug(true)
             .withProjectDir(projectDir.toFile())
-            .withArguments(*arguments, "--stacktrace")
+            .withArguments(*arguments, "--stacktrace", "--warning-mode=${if (gradleVersion >= GradleVersion.version("5.6")) "fail" else "all"}")
             .forwardOutput()
     }
 
