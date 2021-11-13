@@ -136,6 +136,37 @@ nexusPublishing {
 
 You can configure the `connectTimeout` and `clientTimeout` properties on the `nexusPublishing` extension to set the connect and read/write timeouts (both default to 5 minutes). Good luck!
 
+### Retries for state transitions
+
+When closing or releasing a staging repository the plugin first initiates the transition and then retries a configurable number of times with a configurable delay after each attempt.
+Both can be configured like this:
+
+#### Groovy DSL
+
+```gradle
+import java.time.Duration
+
+nexusPublishing {
+    transitionCheckOptions {
+        maxRetries = 100
+        delayBetween = Duration.ofSeconds(5)
+    }
+}
+```
+
+#### Kotlin DSL
+
+```gradle
+import java.time.Duration
+
+nexusPublishing {
+    transitionCheckOptions {
+        maxRetries.set(100)
+        delayBetween.set(Duration.ofSeconds(5))
+    }
+}
+```
+
 ---
 
 ## Behind the scenes
