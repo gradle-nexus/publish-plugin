@@ -4,6 +4,7 @@
 /buildSrc/build/
 
 # IDEA
+/local.properties
 /.idea/
 /buildSrc/out/
 /out/

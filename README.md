@@ -37,14 +37,13 @@ nexusPublishing {
 }
 ```
 
-**Important**. Users registered in Sonatype after [24 February 2021](https://central.sonatype.org/news/20210223_new-users-on-s01/) need to customize the following URLs:
+**Important**. Users registered in Sonatype after [24 February 2021](https://central.sonatype.org/news/20210223_new-users-on-s01/) need to the use the s01 host:
 
 ```gradle
 nexusPublishing {
     repositories {
-        sonatype {  //only for users registered in Sonatype after 24 Feb 2021
-            nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
-            snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
+        sonatype {
+            nexusHost = s01
         }
     }
 }
