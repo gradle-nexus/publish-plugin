@@ -6,7 +6,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     `kotlin-dsl`
     `maven-publish`
-    id("com.gradle.plugin-publish") version "0.15.0"
+    id("com.gradle.plugin-publish") version "0.17.0"
     id("com.diffplug.spotless") version "6.0.0"
     id("com.github.johnrengelman.shadow") version "6.1.0"
     id("org.jetbrains.gradle.plugin.idea-ext")
