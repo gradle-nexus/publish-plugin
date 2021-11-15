@@ -558,9 +558,7 @@ class NexusPublishPluginTests {
             }
             nexusPublishing {
                 repositories {
-                    sonatype {
-                        nexusHost = s01
-                    }
+                    sonatype(s01)
                 }
             }
         """)
@@ -589,9 +587,7 @@ class NexusPublishPluginTests {
             }
             nexusPublishing {
                 repositories {
-                    sonatype {
-                        nexusHost.set(s01)
-                    }
+                    sonatype(s01)
                 }
             }
         """)

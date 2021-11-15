@@ -27,22 +27,17 @@ import javax.inject.Inject
 @Suppress("UnstableApiUsage")
 open class NexusRepository @Inject constructor(@Input val name: String, project: Project) {
 
-    @Internal
-    val s01 = NexusHost.S01
-
-    @Input
-    val nexusHost = project.objects.property<NexusHost>().apply {
-        set(NexusHost.OSS)
-    }
+    @get:Internal
+    internal lateinit var nexusHost: NexusHost
 
     @Input
     val nexusUrl = project.objects.property<URI>().apply {
-        set(nexusHost.map { it.resolve("/service/local/") })
+        set(project.provider { nexusHost.resolve("/service/local/") })
     }
 
     @Input
     val snapshotRepositoryUrl = project.objects.property<URI>().apply {
-        set(nexusHost.map { it.resolve("/content/repositories/snapshots/") })
+        set(project.provider { nexusHost.resolve("/content/repositories/snapshots/") })
     }
 
     @Internal

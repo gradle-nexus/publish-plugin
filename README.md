@@ -42,9 +42,7 @@ nexusPublishing {
 ```gradle
 nexusPublishing {
     repositories {
-        sonatype {
-            nexusHost = s01
-        }
+        sonatype(s01)
     }
 }
 ```
