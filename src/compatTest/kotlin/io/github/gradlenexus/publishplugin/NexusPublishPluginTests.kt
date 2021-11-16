@@ -49,6 +49,8 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.io.TempDir
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import ru.lanwen.wiremock.ext.WiremockResolver.Wiremock
 import java.nio.file.Files
 import java.nio.file.Path
@@ -541,8 +543,9 @@ class NexusPublishPluginTests {
         assertThat(result.output).contains("SocketTimeoutException")
     }
 
-    @Test
-    fun `uses s01 default URLs for sonatype repos in Groovy DSL`() {
+    @ParameterizedTest
+    @ValueSource(strings = ["", "s01"])
+    fun `uses default URLs for sonatype repos in Groovy DSL`(nexusHost: String) {
         projectDir.resolve("settings.gradle").write("""
             rootProject.name = 'sample'
         """)
@@ -558,20 +561,26 @@ class NexusPublishPluginTests {
             }
             nexusPublishing {
                 repositories {
-                    sonatype(s01)
+                    sonatype($nexusHost)
                 }
             }
         """)
 
         val result = run("printSonatypeConfig")
 
+        val baseUrl = if (nexusHost.isEmpty()) {
+            "https://oss.sonatype.org"
+        } else {
+            "https://s01.oss.sonatype.org"
+        }
         assertThat(result.output)
-                .contains("nexusUrl = https://s01.oss.sonatype.org/service/local/")
-                .contains("snapshotRepositoryUrl = https://s01.oss.sonatype.org/content/repositories/snapshots/")
+                .contains("nexusUrl = $baseUrl/service/local/")
+                .contains("snapshotRepositoryUrl = $baseUrl/content/repositories/snapshots/")
     }
 
-    @Test
-    fun `uses s01 default URLs for sonatype repos in Kotlin DSL`() {
+    @ParameterizedTest
+    @ValueSource(strings = ["", "s01"])
+    fun `uses default URLs for sonatype repos in Kotlin DSL`(nexusHost: String) {
         projectDir.resolve("settings.gradle").write("""
             rootProject.name = 'sample'
         """)
@@ -587,74 +596,21 @@ class NexusPublishPluginTests {
             }
             nexusPublishing {
                 repositories {
-                    sonatype(s01)
+                    sonatype($nexusHost)
                 }
             }
         """)
 
         val result = run("printSonatypeConfig")
 
+        val baseUrl = if (nexusHost.isEmpty()) {
+            "https://oss.sonatype.org"
+        } else {
+            "https://s01.oss.sonatype.org"
+        }
         assertThat(result.output)
-                .contains("nexusUrl = https://s01.oss.sonatype.org/service/local/")
-                .contains("snapshotRepositoryUrl = https://s01.oss.sonatype.org/content/repositories/snapshots/")
-    }
-
-    @Test
-    fun `uses default URLs for sonatype repos in Groovy DSL`() {
-        projectDir.resolve("settings.gradle").write("""
-            rootProject.name = 'sample'
-        """)
-        projectDir.resolve("build.gradle").write("""
-            plugins {
-                id('io.github.gradle-nexus.publish-plugin')
-            }
-            task printSonatypeConfig {
-                doFirst {
-                    println "nexusUrl = ${"$"}{nexusPublishing.repositories['sonatype'].nexusUrl.orNull}"
-                    println "snapshotRepositoryUrl = ${"$"}{nexusPublishing.repositories['sonatype'].snapshotRepositoryUrl.orNull}"
-                }
-            }
-            nexusPublishing {
-                repositories {
-                    sonatype()
-                }
-            }
-        """)
-
-        val result = run("printSonatypeConfig")
-
-        assertThat(result.output)
-                .contains("nexusUrl = https://oss.sonatype.org/service/local/")
-                .contains("snapshotRepositoryUrl = https://oss.sonatype.org/content/repositories/snapshots/")
-    }
-
-    @Test
-    fun `uses default URLs for sonatype repos in Kotlin DSL`() {
-        projectDir.resolve("settings.gradle").write("""
-            rootProject.name = 'sample'
-        """)
-        projectDir.resolve("build.gradle.kts").write("""
-            plugins {
-                id("io.github.gradle-nexus.publish-plugin")
-            }
-            tasks.create("printSonatypeConfig") {
-                doFirst {
-                    println("nexusUrl = ${"$"}{nexusPublishing.repositories["sonatype"].nexusUrl.orNull}")
-                    println("snapshotRepositoryUrl = ${"$"}{nexusPublishing.repositories["sonatype"].snapshotRepositoryUrl.orNull}")
-                }
-            }
-            nexusPublishing {
-                repositories {
-                    sonatype()
-                }
-            }
-        """)
-
-        val result = run("printSonatypeConfig")
-
-        assertThat(result.output)
-                .contains("nexusUrl = https://oss.sonatype.org/service/local/")
-                .contains("snapshotRepositoryUrl = https://oss.sonatype.org/content/repositories/snapshots/")
+                .contains("nexusUrl = $baseUrl/service/local/")
+                .contains("snapshotRepositoryUrl = $baseUrl/content/repositories/snapshots/")
     }
 
     @Test
