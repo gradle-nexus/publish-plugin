@@ -42,7 +42,7 @@ class StagingRepositoryTransitioner(val nexusClient: NexusClient, val retrier: A
     }
 
     private fun waitUntilTransitionIsDoneOrTimeoutAndReturnLastRepositoryState(repoId: String) =
-            retrier.execute { getStagingRepositoryStateById(repoId) }
+        retrier.execute { getStagingRepositoryStateById(repoId) }
 
     private fun getStagingRepositoryStateById(repoId: String): StagingRepository {
         val readStagingRepository: StagingRepository = nexusClient.getStagingRepositoryStateById(repoId)
@@ -58,9 +58,11 @@ class StagingRepositoryTransitioner(val nexusClient: NexusClient, val retrier: A
 
     private fun assertRepositoryInDesiredState(repository: StagingRepository, vararg desiredStates: StagingRepository.State) {
         if (repository.state !in desiredStates) {
-            throw RepositoryTransitionException("Staging repository is not in desired state ${desiredStates.contentToString()}: $repository. It is unexpected. Please check " +
+            throw RepositoryTransitionException(
+                "Staging repository is not in desired state ${desiredStates.contentToString()}: $repository. It is unexpected. Please check " +
                     "Nexus logs using its web interface - it can be caused by validation rules violation. If not, please report it " +
-                    "to https://github.com/gradle-nexus/publish-plugin/issues/ with '--info' logs")
+                    "to https://github.com/gradle-nexus/publish-plugin/issues/ with '--info' logs"
+            )
         }
     }
 }

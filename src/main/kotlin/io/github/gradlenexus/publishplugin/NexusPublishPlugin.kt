@@ -58,8 +58,8 @@ class NexusPublishPlugin : Plugin<Project> {
     private fun createRegistry(rootProject: Project): Provider<StagingRepositoryDescriptorRegistry> {
         if (GradleVersion.current() >= GradleVersion.version("6.1")) {
             return rootProject.gradle.sharedServices
-                    .registerIfAbsent("stagingRepositoryUrlRegistry", StagingRepositoryDescriptorRegistryBuildService::class.java) {}
-                    .map { it.registry }
+                .registerIfAbsent("stagingRepositoryUrlRegistry", StagingRepositoryDescriptorRegistryBuildService::class.java) {}
+                .map { it.registry }
         }
         val registry = StagingRepositoryDescriptorRegistry()
         return rootProject.provider { registry }
@@ -70,13 +70,17 @@ class NexusPublishPlugin : Plugin<Project> {
             val repository = this
             val retrieveStagingProfileTask = rootProject.tasks.register<RetrieveStagingProfile>("retrieve${capitalizedName}StagingProfile", rootProject.objects, extension, repository)
             val initializeTask = rootProject.tasks.register<InitializeNexusStagingRepository>(
-                    "initialize${capitalizedName}StagingRepository", rootProject.objects, extension, repository, registry)
+                "initialize${capitalizedName}StagingRepository", rootProject.objects, extension, repository, registry
+            )
             val closeTask = rootProject.tasks.register<CloseNexusStagingRepository>(
-                    "close${capitalizedName}StagingRepository", rootProject.objects, extension, repository, registry)
+                "close${capitalizedName}StagingRepository", rootProject.objects, extension, repository, registry
+            )
             val releaseTask = rootProject.tasks.register<ReleaseNexusStagingRepository>(
-                    "release${capitalizedName}StagingRepository", rootProject.objects, extension, repository, registry)
+                "release${capitalizedName}StagingRepository", rootProject.objects, extension, repository, registry
+            )
             val closeAndReleaseTask = rootProject.tasks.register<Task>(
-                    "closeAndRelease${capitalizedName}StagingRepository")
+                "closeAndRelease${capitalizedName}StagingRepository"
+            )
             retrieveStagingProfileTask {
                 description = "Gets and displays a staging profile id for a given repository and package group. This is a diagnostic task to get the value and put it into the NexusRepository configuration closure as stagingProfileId."
             }
@@ -150,9 +154,11 @@ class NexusPublishPlugin : Plugin<Project> {
         return extension.repositories.associateWith { nexusRepo ->
             project.the<PublishingExtension>().repositories.maven {
                 name = nexusRepo.name
-                setUrl(project.provider {
-                    getRepoUrl(nexusRepo, extension, registry)
-                })
+                setUrl(
+                    project.provider {
+                        getRepoUrl(nexusRepo, extension, registry)
+                    }
+                )
                 val allowInsecureProtocol = nexusRepo.allowInsecureProtocol.orNull
                 if (allowInsecureProtocol != null) {
                     if (GradleVersion.current() >= GradleVersion.version("6.0")) {
@@ -181,7 +187,8 @@ class NexusPublishPlugin : Plugin<Project> {
         mavenPublications.configureEach {
             val publication = this
             val publishTask = project.tasks.named<PublishToMavenRepository>(
-                    "publish${publication.name.capitalize()}PublicationTo${mavenRepo.name.capitalize()}Repository")
+                "publish${publication.name.capitalize()}PublicationTo${mavenRepo.name.capitalize()}Repository"
+            )
             publishTask {
                 dependsOn(initializeTask)
                 doFirst { logger.info("Uploading to {}", repository.url) }

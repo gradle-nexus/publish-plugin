@@ -90,7 +90,7 @@ class TaskOrchestrationTest {
         val closeAndReleaseTask = getJustOneTaskByNameOrFail("closeAndReleaseSonatypeStagingRepository")
 
         assertThat(closeAndReleaseTask.taskDependencies.getDependencies(null).map { it.name })
-                .contains("closeSonatypeStagingRepository", "releaseSonatypeStagingRepository")
+            .contains("closeSonatypeStagingRepository", "releaseSonatypeStagingRepository")
     }
 
     @Test
@@ -116,9 +116,9 @@ class TaskOrchestrationTest {
         val closeAndReleaseTask = getJustOneTaskByNameOrFail(NexusPublishPlugin.SIMPLIFIED_CLOSE_AND_RELEASE_TASK_NAME)
 
         assertThat(closeAndReleaseTask.taskDependencies.getDependencies(null).map { it.name })
-                .hasSize(2)
-                .contains("closeAndReleaseSonatypeStagingRepository")
-                .contains("closeAndReleaseOtherNexusStagingRepository")
+            .hasSize(2)
+            .contains("closeAndReleaseSonatypeStagingRepository")
+            .contains("closeAndReleaseOtherNexusStagingRepository")
     }
 
     @Test
@@ -131,8 +131,8 @@ class TaskOrchestrationTest {
         val closeAndReleaseTask = getJustOneTaskByNameOrFail(NexusPublishPlugin.SIMPLIFIED_CLOSE_AND_RELEASE_TASK_NAME)
 
         assertThat(closeAndReleaseTask.description)
-                .contains("sonatype")
-                .contains("otherNexus")
+            .contains("sonatype")
+            .contains("otherNexus")
     }
 
     private fun initSingleProjectWithDefaultConfiguration() {

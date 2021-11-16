@@ -55,7 +55,7 @@ internal class StagingRepositoryTransitionerTest {
     @Test
     internal fun `request repository close and get its state after execution by retrier`() {
         given(nexusClient.getStagingRepositoryStateById(TEST_STAGING_REPO_ID))
-                .willReturn(StagingRepository(TEST_STAGING_REPO_ID, StagingRepository.State.CLOSED, false))
+            .willReturn(StagingRepository(TEST_STAGING_REPO_ID, StagingRepository.State.CLOSED, false))
         given(retrier.execute(anyOrNull())).willAnswer(executeFunctionPassedAsFirstArgument())
 
         transitioner.effectivelyClose(TEST_STAGING_REPO_ID, DESCRIPTION)
@@ -69,7 +69,7 @@ internal class StagingRepositoryTransitionerTest {
     @MethodSource("repositoryStatesForRelease")
     internal fun `request release repository and get its state after execution by retrier`(state: StagingRepository.State) {
         given(nexusClient.getStagingRepositoryStateById(TEST_STAGING_REPO_ID))
-                .willReturn(StagingRepository(TEST_STAGING_REPO_ID, state, false))
+            .willReturn(StagingRepository(TEST_STAGING_REPO_ID, state, false))
         given(retrier.execute(anyOrNull())).willAnswer(executeFunctionPassedAsFirstArgument())
 
         transitioner.effectivelyRelease(TEST_STAGING_REPO_ID, DESCRIPTION)
@@ -87,23 +87,23 @@ internal class StagingRepositoryTransitionerTest {
     @Test
     internal fun `throw meaningful exception on repository still in transition on released`() {
         given(nexusClient.getStagingRepositoryStateById(TEST_STAGING_REPO_ID))
-                .willReturn(StagingRepository(TEST_STAGING_REPO_ID, StagingRepository.State.RELEASED, true))
+            .willReturn(StagingRepository(TEST_STAGING_REPO_ID, StagingRepository.State.RELEASED, true))
         given(retrier.execute(anyOrNull())).willAnswer(executeFunctionPassedAsFirstArgument())
 
         assertThatExceptionOfType(RepositoryTransitionException::class.java)
-                .isThrownBy { transitioner.effectivelyClose(TEST_STAGING_REPO_ID, DESCRIPTION) }
-                .withMessageContainingAll(TEST_STAGING_REPO_ID, "transitioning=true")
+            .isThrownBy { transitioner.effectivelyClose(TEST_STAGING_REPO_ID, DESCRIPTION) }
+            .withMessageContainingAll(TEST_STAGING_REPO_ID, "transitioning=true")
     }
 
     @Test
     internal fun `throw meaningful exception on repository still in wrong state on release`() {
         given(nexusClient.getStagingRepositoryStateById(TEST_STAGING_REPO_ID))
-                .willReturn(StagingRepository(TEST_STAGING_REPO_ID, StagingRepository.State.OPEN, false))
+            .willReturn(StagingRepository(TEST_STAGING_REPO_ID, StagingRepository.State.OPEN, false))
         given(retrier.execute(anyOrNull())).willAnswer(executeFunctionPassedAsFirstArgument())
 
         assertThatExceptionOfType(RepositoryTransitionException::class.java)
-                .isThrownBy { transitioner.effectivelyRelease(TEST_STAGING_REPO_ID, DESCRIPTION) }
-                .withMessageContainingAll(TEST_STAGING_REPO_ID, StagingRepository.State.OPEN.toString(), StagingRepository.State.RELEASED.toString())
+            .isThrownBy { transitioner.effectivelyRelease(TEST_STAGING_REPO_ID, DESCRIPTION) }
+            .withMessageContainingAll(TEST_STAGING_REPO_ID, StagingRepository.State.OPEN.toString(), StagingRepository.State.RELEASED.toString())
     }
 
     private fun executeFunctionPassedAsFirstArgument(): (InvocationOnMock) -> StagingRepository {

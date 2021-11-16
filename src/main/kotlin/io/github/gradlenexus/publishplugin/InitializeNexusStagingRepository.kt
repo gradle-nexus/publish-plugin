@@ -61,7 +61,7 @@ open class InitializeNexusStagingRepository @Inject constructor(
             val packageGroup = packageGroup.get()
             logger.info("No stagingProfileId set, querying for packageGroup '{}'", packageGroup)
             stagingProfileId = client.findStagingProfileId(packageGroup)
-                    ?: throw GradleException("Failed to find staging profile for package group: $packageGroup")
+                ?: throw GradleException("Failed to find staging profile for package group: $packageGroup")
         }
         return stagingProfileId
     }

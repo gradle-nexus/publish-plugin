@@ -36,9 +36,9 @@ class NexusPublishE2ETests : BaseGradleTest() {
 
         //when
         val result = run(
-                "publishToSonatype",
-                "closeAndReleaseSonatypeStagingRepository",
-                "--info"
+            "publishToSonatype",
+            "closeAndReleaseSonatypeStagingRepository",
+            "--info"
         )
         //then
         result.apply {

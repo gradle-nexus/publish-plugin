@@ -27,7 +27,7 @@ import java.io.File
 abstract class BaseGradleTest {
 
     private val gradleRunner = GradleRunner.create()
-            .withPluginClasspath()
+        .withPluginClasspath()
 
     @TempDir
     protected lateinit var projectDir: File
@@ -39,9 +39,9 @@ abstract class BaseGradleTest {
     protected fun gradleRunner(vararg arguments: String): GradleRunner {
         return gradleRunner
 //                .withDebug(true)
-                .withProjectDir(projectDir)
-                .withArguments(*arguments, "--stacktrace")
-                .forwardOutput()
+            .withProjectDir(projectDir)
+            .withArguments(*arguments, "--stacktrace")
+            .forwardOutput()
     }
 
     protected fun BuildResult.assertSuccess(taskPath: String) {
