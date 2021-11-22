@@ -19,17 +19,16 @@ package io.github.gradlenexus.publishplugin
 import groovy.lang.Closure
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
-import org.gradle.internal.Actions
 
 interface NexusRepositoryContainer : NamedDomainObjectContainer<NexusRepository> {
     @Suppress("unused")
     val s01 get() = NexusHost.S01
 
-    fun sonatype() = sonatype(NexusHost.OSS, Actions.doNothing())
+    fun sonatype() = sonatype(NexusHost.OSS)
     fun sonatype(closure: Closure<*>) = sonatype(NexusHost.OSS, closure)
     fun sonatype(action: Action<in NexusRepository>) = sonatype(NexusHost.OSS, action)
 
-    fun sonatype(nexusHost: NexusHost) = sonatype(nexusHost, Actions.doNothing())
+    fun sonatype(nexusHost: NexusHost) = sonatype(nexusHost) {}
     fun sonatype(nexusHost: NexusHost, closure: Closure<*>): NexusRepository
     fun sonatype(nexusHost: NexusHost, action: Action<in NexusRepository>): NexusRepository
 }

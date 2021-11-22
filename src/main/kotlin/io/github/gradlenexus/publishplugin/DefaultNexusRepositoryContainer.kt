@@ -29,10 +29,10 @@ internal class DefaultNexusRepositoryContainer(delegate: NamedDomainObjectContai
         sonatype(nexusHost, ConfigureUtil.configureUsing(closure))
 
     override fun sonatype(nexusHost: NexusHost, action: Action<in NexusRepository>): NexusRepository = create("sonatype") {
-        action.execute(apply { this.nexusHost = nexusHost })
+        nexusUrl.set(nexusHost.resolve("/service/local/"))
+        snapshotRepositoryUrl.set(nexusHost.resolve("/content/repositories/snapshots/"))
+        action.execute(this)
     }
-
-    override fun sonatype(action: Action<in NexusRepository>): NexusRepository = create("sonatype", action::execute)
 
     override fun configure(configureClosure: Closure<*>): NamedDomainObjectContainer<NexusRepository> =
         ConfigureUtil.configureSelf(configureClosure, this, NamedDomainObjectContainerConfigureDelegate(configureClosure, this))
