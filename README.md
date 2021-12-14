@@ -167,6 +167,9 @@ nexusPublishing {
 }
 ```
 
+- `maxRetries` default value is 60.
+- `delayBetween` default value is 10 seconds.
+
 ---
 
 ## Behind the scenes
