@@ -595,8 +595,8 @@ class NexusPublishPluginTests {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = ["", "s01"])
-    fun `uses default URLs for sonatype repos in Groovy DSL`(nexusHost: String) {
+    @ValueSource(strings = ["", "oss", "oss.s01"])
+    fun `uses default URLs for sonatype repos in Groovy DSL`(ossHost: String) {
         projectDir.resolve("settings.gradle").write(
             """
             rootProject.name = 'sample'
@@ -615,7 +615,7 @@ class NexusPublishPluginTests {
             }
             nexusPublishing {
                 repositories {
-                    sonatype($nexusHost)
+                    sonatype($ossHost)
                 }
             }
             """
@@ -623,7 +623,7 @@ class NexusPublishPluginTests {
 
         val result = run("printSonatypeConfig")
 
-        val baseUrl = if (nexusHost.isEmpty()) {
+        val baseUrl = if (ossHost != "oss.s01") {
             "https://oss.sonatype.org"
         } else {
             "https://s01.oss.sonatype.org"
@@ -634,8 +634,8 @@ class NexusPublishPluginTests {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = ["", "s01"])
-    fun `uses default URLs for sonatype repos in Kotlin DSL`(nexusHost: String) {
+    @ValueSource(strings = ["", "oss", "oss.s01"])
+    fun `uses default URLs for sonatype repos in Kotlin DSL`(ossHost: String) {
         projectDir.resolve("settings.gradle").write(
             """
             rootProject.name = 'sample'
@@ -654,7 +654,7 @@ class NexusPublishPluginTests {
             }
             nexusPublishing {
                 repositories {
-                    sonatype($nexusHost)
+                    sonatype($ossHost)
                 }
             }
             """
@@ -662,7 +662,7 @@ class NexusPublishPluginTests {
 
         val result = run("printSonatypeConfig")
 
-        val baseUrl = if (nexusHost.isEmpty()) {
+        val baseUrl = if (ossHost != "oss.s01") {
             "https://oss.sonatype.org"
         } else {
             "https://s01.oss.sonatype.org"

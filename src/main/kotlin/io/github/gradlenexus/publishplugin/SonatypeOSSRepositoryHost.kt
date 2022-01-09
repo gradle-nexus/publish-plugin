@@ -18,9 +18,12 @@ package io.github.gradlenexus.publishplugin
 
 import java.net.URI
 
-enum class NexusHost(private val baseUrl: String) {
-    S01("https://s01.oss.sonatype.org"),
-    OSS("https://oss.sonatype.org");
+sealed class SonatypeOSSRepositoryHost(private val hostName: String) {
+    object S01 : SonatypeOSSRepositoryHost("s01.oss.sonatype.org")
+    object OSS : SonatypeOSSRepositoryHost("oss.sonatype.org") {
+        @[JvmField Suppress("unused")]
+        val s01 = S01
+    }
 
-    internal fun resolve(path: String): URI = URI.create("$baseUrl$path")
+    internal fun resolve(path: String): URI = URI.create("https://$hostName$path")
 }

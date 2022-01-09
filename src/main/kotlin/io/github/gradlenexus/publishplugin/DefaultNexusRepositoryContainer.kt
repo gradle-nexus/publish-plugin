@@ -25,12 +25,12 @@ import org.gradle.util.ConfigureUtil
 @Suppress("UnstableApiUsage")
 internal class DefaultNexusRepositoryContainer(delegate: NamedDomainObjectContainer<NexusRepository>) : NexusRepositoryContainer, NamedDomainObjectContainer<NexusRepository> by delegate {
 
-    override fun sonatype(nexusHost: NexusHost, closure: Closure<*>): NexusRepository =
-        sonatype(nexusHost, ConfigureUtil.configureUsing(closure))
+    override fun sonatype(ossHost: SonatypeOSSRepositoryHost, closure: Closure<*>): NexusRepository =
+        sonatype(ossHost, ConfigureUtil.configureUsing(closure))
 
-    override fun sonatype(nexusHost: NexusHost, action: Action<in NexusRepository>): NexusRepository = create("sonatype") {
-        nexusUrl.set(nexusHost.resolve("/service/local/"))
-        snapshotRepositoryUrl.set(nexusHost.resolve("/content/repositories/snapshots/"))
+    override fun sonatype(ossHost: SonatypeOSSRepositoryHost, action: Action<in NexusRepository>): NexusRepository = create("sonatype") {
+        nexusUrl.set(ossHost.resolve("/service/local/"))
+        snapshotRepositoryUrl.set(ossHost.resolve("/content/repositories/snapshots/"))
         action.execute(this)
     }
 
