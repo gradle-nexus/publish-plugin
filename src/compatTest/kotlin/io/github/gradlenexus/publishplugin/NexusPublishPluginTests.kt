@@ -889,6 +889,70 @@ class NexusPublishPluginTests {
         )
     }
 
+    @Test
+    fun `should find staging repository by description`() {
+        // given
+        writeDefaultSingleProjectConfiguration()
+        writeMockedSonatypeNexusPublishingConfiguration()
+        // and
+        val stagingRepository = StagingRepository(STAGED_REPOSITORY_ID, StagingRepository.State.OPEN, false)
+        val responseBody = getStagingReposWithOneStagingRepoWithGivenIdJsonResponseAsString(stagingRepository)
+        stubGetStagingReposForStagingProfileIdWithResponseStatusCodeAndResponseBody(STAGING_PROFILE_ID, 200, responseBody)
+
+        val result = run("findSonatypeStagingRepository")
+
+        assertSuccess(result, ":findSonatypeStagingRepository")
+        assertThat(result.output).containsPattern(Regex("Staging repository for .* '$STAGED_REPOSITORY_ID'").toPattern())
+        // and
+        assertGetStagingRepositoriesForStatingProfile(STAGING_PROFILE_ID)
+    }
+
+    @Test
+    fun `should not find staging repository by wrong description`() {
+        // given
+        writeDefaultSingleProjectConfiguration()
+        buildGradle.append("version='2.3.4-so staging repository is not found'")
+        writeMockedSonatypeNexusPublishingConfiguration()
+        // and
+        val stagingRepository = StagingRepository(STAGED_REPOSITORY_ID, StagingRepository.State.OPEN, false)
+        val responseBody = getStagingReposWithOneStagingRepoWithGivenIdJsonResponseAsString(stagingRepository)
+        stubGetStagingReposForStagingProfileIdWithResponseStatusCodeAndResponseBody(STAGING_PROFILE_ID, 200, responseBody)
+
+        val result = runAndFail("findSonatypeStagingRepository")
+
+        assertFailure(result, ":findSonatypeStagingRepository")
+        assertThat(result.output).contains("No staging repositories found for stagingProfileId: someProfileId, descriptionRegex: \\b\\Qorg.example:sample:2.3.4-so staging repository is not found\\E(\\s|\$). Here are all the repositories: [ReadStagingRepository(repositoryId=orgexample-42, type=open, transitioning=false, description=org.example:sample:0.0.1)]")
+    }
+
+    @Test
+    fun `should fail when multiple repositories exist`() {
+        // given
+        writeDefaultSingleProjectConfiguration()
+        writeMockedSonatypeNexusPublishingConfiguration()
+        // and
+        val stagingRepository = StagingRepository(STAGED_REPOSITORY_ID, StagingRepository.State.OPEN, false)
+        val stagingRepository2 = StagingRepository(OVERRIDDEN_STAGED_REPOSITORY_ID, StagingRepository.State.OPEN, false)
+        // Return two repositories with the same description, so the find call would get both, and it should fail
+        val responseBody = """
+            {
+                "data": [
+                    ${getOneStagingRepoWithGivenIdJsonResponseAsString(stagingRepository)},
+                    ${getOneStagingRepoWithGivenIdJsonResponseAsString(stagingRepository2)}
+                ]
+            }
+        """.trimIndent()
+        stubGetStagingReposForStagingProfileIdWithResponseStatusCodeAndResponseBody(
+            STAGING_PROFILE_ID,
+            200,
+            responseBody
+        )
+
+        val result = runAndFail("findSonatypeStagingRepository")
+
+        assertFailure(result, ":findSonatypeStagingRepository")
+        assertThat(result.output).contains("Too many repositories found for stagingProfileId: someProfileId, descriptionRegex: \\b\\Qorg.example:sample:0.0.1\\E(\\s|\$). If some of the repositories are not needed, consider deleting them manually. Here are the repositories matching the regular expression: [ReadStagingRepository(repositoryId=orgexample-42, type=open, transitioning=false, description=org.example:sample:0.0.1), ReadStagingRepository(repositoryId=orgexample-42o, type=open, transitioning=false, description=org.example:sample:0.0.1)]")
+    }
+
     // TODO: To be used also in other tests
     private fun writeDefaultSingleProjectConfiguration() {
         projectDir.resolve("settings.gradle").write(
@@ -1062,6 +1126,23 @@ class NexusPublishPluginTests {
         )
     }
 
+    private fun stubGetStagingReposForStagingProfileIdWithResponseStatusCodeAndResponseBody(
+        stagingProfileId: String,
+        statusCode: Int,
+        responseBody: String
+    ) {
+        server.stubFor(
+            get(urlEqualTo("/staging/profile_repositories/$stagingProfileId"))
+                .withHeader("Accept", containing("application/json"))
+                .willReturn(
+                    aResponse()
+                        .withStatus(statusCode)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(responseBody)
+                )
+        )
+    }
+
     private fun expectArtifactUploads(prefix: String, wireMockServer: WireMockServer = server) {
         wireMockServer.stubFor(
             put(urlMatching("$prefix/.+"))
@@ -1127,6 +1208,10 @@ class NexusPublishPluginTests {
         server.verify(count, getRequestedFor(urlMatching("/staging/repository/$stagingRepositoryId")))
     }
 
+    private fun assertGetStagingRepositoriesForStatingProfile(stagingProfileId: String = STAGING_PROFILE_ID, count: Int = 1) {
+        server.verify(count, getRequestedFor(urlMatching("/staging/profile_repositories/$stagingProfileId")))
+    }
+
     private fun getOneStagingProfileWithGivenIdShrunkJsonResponseAsString(stagingProfileId: String): String {
         return """
             {
@@ -1144,6 +1229,19 @@ class NexusPublishPluginTests {
                   "targetGroups": ["staging"]
                 }
               ]
+            }
+        """.trimIndent()
+    }
+
+    private fun getStagingReposWithOneStagingRepoWithGivenIdJsonResponseAsString(
+        stagingRepository: StagingRepository,
+        stagingProfileId: String = STAGING_PROFILE_ID
+    ): String {
+        return """
+            {
+                "data": [
+                    ${getOneStagingRepoWithGivenIdJsonResponseAsString(stagingRepository, stagingProfileId)}
+                ]
             }
         """.trimIndent()
     }
@@ -1170,7 +1268,7 @@ class NexusPublishPluginTests {
               "updated": "2020-01-28T10:23:49.616Z",
               "updatedDate": "Tue Jan 28 10:23:49 UTC 2020",
               "updatedTimestamp": 1580207029616,
-              "description": "Closed by io.github.gradle-nexus.publish-plugin Gradle plugin",
+              "description": "org.example:sample:0.0.1",
               "provider": "maven2",
               "releaseRepositoryId": "no-sync-releases",
               "releaseRepositoryName": "No Sync Releases",

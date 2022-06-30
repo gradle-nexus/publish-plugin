@@ -47,4 +47,40 @@ class NexusPublishE2ETests : BaseGradleTest() {
             assertSuccess(":releaseSonatypeStagingRepository")
         }
     }
+
+    @ParameterizedTest(name = "{0}")
+    @ValueSource(strings = ["nexus-publish-e2e-minimal", "nexus-publish-e2e-multi-project"])
+    fun `release project to real Sonatype Nexus in two executions`(projectName: String) {
+        File("src/e2eTest/resources/$projectName").copyRecursively(projectDir)
+
+        // when
+        val buildResult = run("build")
+        // then
+        buildResult.assertSuccess { it.path.substringAfterLast(':').matches("build".toRegex()) }
+
+        // when
+        // Publish artifacts to staging repository, close it == prepare artifacts for the review
+        val result = run(
+            "publishToSonatype",
+            "closeSonatypeStagingRepository",
+            "--info"
+        )
+
+        result.apply {
+            assertSuccess { it.path.substringAfterLast(':').matches("publish.+PublicationToSonatypeRepository".toRegex()) }
+            assertSuccess(":closeSonatypeStagingRepository")
+        }
+
+        // Release artifacts after the review
+        val closeResult = run(
+            "findSonatypeStagingRepository",
+            "releaseSonatypeStagingRepository"
+        )
+
+        // then
+        closeResult.apply {
+            assertSuccess(":findSonatypeStagingRepository")
+            assertSuccess(":releaseSonatypeStagingRepository")
+        }
+    }
 }

@@ -30,6 +30,7 @@ import retrofit2.http.Path
 import java.io.IOException
 import java.net.URI
 import java.time.Duration
+import java.util.NoSuchElementException
 
 open class NexusClient(private val baseUrl: URI, username: String?, password: String?, timeout: Duration?, connectTimeout: Duration?) {
     private val api: NexusApi
@@ -89,6 +90,32 @@ open class NexusClient(private val baseUrl: URI, username: String?, password: St
             }
             ?.maxBy { it.name.length }
             ?.id
+    }
+
+    fun findStagingRepository(stagingProfileId: String, descriptionRegex: Regex): StagingRepositoryDescriptor {
+        val response = api.getStagingRepositories(stagingProfileId).execute()
+        if (!response.isSuccessful) {
+            throw failure("find staging repository, stagingProfileId: $stagingProfileId", response)
+        }
+        val data = response.body()?.data
+        if (data.isNullOrEmpty()) {
+            throw NoSuchElementException("No staging repositories found for stagingProfileId: $stagingProfileId")
+        }
+        val matchingRepositories = data.filter { it.description?.contains(descriptionRegex) == true }
+        if (matchingRepositories.isEmpty()) {
+            throw NoSuchElementException(
+                "No staging repositories found for stagingProfileId: $stagingProfileId, descriptionRegex: $descriptionRegex. " +
+                    "Here are all the repositories: $data"
+            )
+        }
+        if (matchingRepositories.size > 1) {
+            throw IllegalStateException(
+                "Too many repositories found for stagingProfileId: $stagingProfileId, descriptionRegex: $descriptionRegex. " +
+                    "If some of the repositories are not needed, consider deleting them manually. " +
+                    "Here are the repositories matching the regular expression: $matchingRepositories"
+            )
+        }
+        return StagingRepositoryDescriptor(baseUrl, matchingRepositories.first().repositoryId)
     }
 
     fun createStagingRepository(stagingProfileId: String, description: String): StagingRepositoryDescriptor {
@@ -177,6 +204,10 @@ open class NexusClient(private val baseUrl: URI, username: String?, password: St
         @Headers("Accept: application/json")
         @GET("staging/repository/{stagingRepoId}")
         fun getStagingRepoById(@Path("stagingRepoId") stagingRepoId: String): Call<ReadStagingRepository>
+
+        @Headers("Accept: application/json")
+        @GET("staging/profile_repositories/{stagingProfileId}")
+        fun getStagingRepositories(@Path("stagingProfileId") stagingProfileId: String): Call<Dto<List<ReadStagingRepository>>>
     }
 
     data class Dto<T>(var data: T)
@@ -187,7 +218,7 @@ open class NexusClient(private val baseUrl: URI, username: String?, password: St
 
     data class CreatedStagingRepository(var stagedRepositoryId: String)
 
-    data class ReadStagingRepository(var repositoryId: String, var type: String, var transitioning: Boolean)
+    data class ReadStagingRepository(var repositoryId: String, var type: String, var transitioning: Boolean, var description: String?)
 
     data class StagingRepositoryToTransit(val stagedRepositoryIds: List<String>, val description: String, val autoDropAfterRelease: Boolean = true)
 }
