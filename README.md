@@ -66,7 +66,7 @@ nexusPublishing {
 }
 ```
 
-#### Configure Signing ####
+#### Configure [Signing](https://docs.gradle.org/current/userguide/signing_plugin.html#sec:signing_publications) ####
 
 Add the signing plugin:
 ```kotlin
