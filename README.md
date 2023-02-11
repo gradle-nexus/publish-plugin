@@ -16,7 +16,7 @@ The plugin must be applied to the root project and requires Gradle 5.0 or later.
 set the group and the version to the root project, so the plugin can detect if it is a snapshot
 version or not in order to select the correct repository where artifacts will be published.
 
-```gradle
+```groovy
 plugins {
     id("io.github.gradle-nexus.publish-plugin") version "«version»"
 }
@@ -29,7 +29,7 @@ version = "1.0.0"
 
 In order to publish to Maven Central (aka the Central Repository or just Central) via Sonatype's OSSRH Nexus, you simply need to add the `sonatype()` repository like in the example below. Its `nexusUrl` and `snapshotRepositoryUrl` values are pre-configured.
 
-```gradle
+```groovy
 nexusPublishing {
     repositories {
         sonatype()
@@ -39,7 +39,7 @@ nexusPublishing {
 
 **Important**. Users registered in Sonatype after [24 February 2021](https://central.sonatype.org/news/20210223_new-users-on-s01/) need to customize the following URLs:
 
-```gradle
+```groovy
 nexusPublishing {
     repositories {
         sonatype {  //only for users registered in Sonatype after 24 Feb 2021
@@ -55,12 +55,62 @@ In addition, for both groups of users, you need to set your Nexus credentials. T
 
 Alternatively, you can configure credentials in the `sonatype` block:
 
-```gradle
+```groovy
 nexusPublishing {
     repositories {
         sonatype {
             username = "your-user-token-username"
             password = "your-user-token-password"
+        }
+    }
+}
+```
+
+#### Configure [Signing](https://docs.gradle.org/current/userguide/signing_plugin.html#sec:signing_publications) ####
+
+Add the signing plugin:
+```kotlin
+plugins {
+    // ...
+    signing
+}
+```
+then configure:
+```kotlin
+signing {
+    sign(publishing.publications["mavenJava"])
+}
+```
+#### Add Metadata ####
+```kotlin
+publishing {
+    publications {
+        create<MavenPublication>("mavenJava") {
+            from(components["java"])
+
+            pom {
+                name.set("<<Component Name>>")
+                description.set("<<Component Description>>")
+                url.set("<<Component URL>>")
+                licenses {
+                    license {
+                        name.set("<<License Name>>")
+                        url.set("<<License URL>>")
+                    }
+                }
+                developers {
+                    developer {
+                        id.set("<<Developer ID>>")
+                        name.set("<<Developer Name>>")
+                        email.set("<<Developer Email>>")
+                    }
+                }
+                scm {
+                    connection.set("<<SCM Connection URL>>")
+                    developerConnection.set("<<SCM Dev Connection URL>>")
+                    url.set("<<Source URL>>")
+                }
+            }
         }
     }
 }
@@ -76,10 +126,11 @@ Please bear in mind that - especially on the initial project publishing to Maven
 
 #### Groovy DSL
 
-```gradle
+```groovy
 plugins {
     id "java-library"
     id "maven-publish"
+    id "signing"
     id "io.github.gradle-nexus.publish-plugin" version "«version»"
 }
 
@@ -87,6 +138,29 @@ publishing {
     publications {
         mavenJava(MavenPublication) {
             from(components.java)
+        }
+        pom {
+            name = "<<Component Name>>"
+            description = "<<Component Description>>"
+            url = "<<Component URL>>"
+            licenses {
+                license {
+                    name = "<<License Name>>"
+                    url = "<<License URL>>"
+                }
+            }
+            developers {
+                developer {
+                    id = "<<Developer ID>>"
+                    name = "<<Developer Name>>"
+                    email = "<<Developer Email>>"
+                }
+            }
+            scm {
+                connection = "<<SCM Connection URL>>"
+                developerConnection = "<<SCM Dev Connection URL>>"
+                url = "<<Source URL>>"
+            }
         }
     }
 }
@@ -101,6 +175,10 @@ nexusPublishing {
         }
     }
 }
+
+signing {
+    sign publishing.publications.mavenJava
+}
 ```
 
 #### Kotlin DSL
@@ -109,6 +187,7 @@ nexusPublishing {
 plugins {
     `java-library`
     `maven-publish`
+    signing
     id("io.github.gradle-nexus.publish-plugin") version "«version»"
 }
 
@@ -116,6 +195,29 @@ publishing {
     publications {
         create<MavenPublication>("mavenJava") {
             from(components["java"])
+        }
+        pom {
+            name.set("<<Component Name>>")
+            description.set("<<Component Description>>")
+            url.set("<<Component URL>>")
+            licenses {
+                license {
+                    name.set("<<License Name>>")
+                    url.set("<<License URL>>")
+                }
+            }
+            developers {
+                developer {
+                    id.set("<<Developer ID>>")
+                    name.set("<<Developer Name>>")
+                    email.set("<<Developer Email>>")
+                }
+            }
+            scm {
+                connection.set("<<SCM Connection URL>>")
+                developerConnection.set("<<SCM Dev Connection URL>>")
+                url.set("<<Source URL>>")
+            }
         }
     }
 }
@@ -129,6 +231,10 @@ nexusPublishing {
             password.set("your-password") // defaults to project.properties["myNexusPassword"]
         }
     }
+}
+
+signing {
+    sign(publishing.publications["mavenJava"])
 }
 ```
 
@@ -169,6 +275,12 @@ nexusPublishing {
 
 - `maxRetries` default value is 60.
 - `delayBetween` default value is 10 seconds.
+
+### Troubleshooting
+
+Log into your staging repository account. On the left side, expand "Build Promotion", then click "Staging Repositories".
+Here, you should see your newly created repositories. You can click on one of them, then select the "Activity" tab to
+see any errors that have occurred.
 
 ---
 
