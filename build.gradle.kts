@@ -45,7 +45,7 @@ repositories {
 val licenseHeaderFile = file("gradle/license-header.txt")
 spotless {
     kotlin {
-        targetExclude("**/*.gradle.kts")
+        targetExclude("**/*.gradle.kts", "**/build/generated-sources/**/*.kt")
         //"import-ordering" required here as it started to fail after spotless plugin upgrade to 0.35.0 - resolve in separate PR
         ktlint().userData(mapOf("disabled_rules" to "comment-spacing,import-ordering"))
         licenseHeaderFile(licenseHeaderFile)
