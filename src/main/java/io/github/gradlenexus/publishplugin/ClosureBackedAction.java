@@ -31,7 +31,7 @@ import java.util.Objects;
  *
  * This is needed because the class is not present in Gradle 5.
  */
-class ClosureBackedAction<T> implements Action<T> {
+public class ClosureBackedAction<T> implements Action<T> {
 
     private final Closure closure;
     private final int resolveStrategy;
