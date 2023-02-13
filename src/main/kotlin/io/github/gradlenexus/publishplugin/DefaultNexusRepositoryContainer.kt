@@ -16,18 +16,25 @@
 
 package io.github.gradlenexus.publishplugin
 
-import groovy.lang.Closure
 import org.gradle.api.Action
-import org.gradle.api.NamedDomainObjectContainer
-import org.gradle.api.internal.NamedDomainObjectContainerConfigureDelegate
-import org.gradle.util.ConfigureUtil
+import org.gradle.api.Project
+import org.gradle.api.internal.AbstractNamedDomainObjectContainer
+import org.gradle.api.internal.CollectionCallbackActionDecorator
+import org.gradle.internal.reflect.Instantiator
 import java.net.URI
 import javax.inject.Inject
 
 @Suppress("UnstableApiUsage")
 internal open class DefaultNexusRepositoryContainer @Inject constructor(
-    delegate: NamedDomainObjectContainer<NexusRepository>
-) : NexusRepositoryContainer, NamedDomainObjectContainer<NexusRepository> by delegate {
+    private val project: Project,
+    instantiator: Instantiator,
+    collectionCallbackActionDecorator: CollectionCallbackActionDecorator
+) : NexusRepositoryContainer,
+    AbstractNamedDomainObjectContainer<NexusRepository>(
+        NexusRepository::class.java,
+        instantiator,
+        collectionCallbackActionDecorator
+    ) {
 
     override fun sonatype(): NexusRepository = sonatype {}
 
@@ -37,6 +44,6 @@ internal open class DefaultNexusRepositoryContainer @Inject constructor(
         action.execute(this)
     }
 
-    override fun configure(configureClosure: Closure<*>): NamedDomainObjectContainer<NexusRepository> =
-        ConfigureUtil.configureSelf(configureClosure, this, NamedDomainObjectContainerConfigureDelegate(configureClosure, this))
+    override fun doCreate(name: String): NexusRepository =
+        instantiator.newInstance(NexusRepository::class.java, name, project)
 }

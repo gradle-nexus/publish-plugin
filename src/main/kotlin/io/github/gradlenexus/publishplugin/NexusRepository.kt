@@ -16,6 +16,7 @@
 
 package io.github.gradlenexus.publishplugin
 
+import org.gradle.api.Named
 import org.gradle.api.Project
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
@@ -24,8 +25,14 @@ import org.gradle.kotlin.dsl.property
 import java.net.URI
 import javax.inject.Inject
 
-@Suppress("UnstableApiUsage")
-open class NexusRepository @Inject constructor(@Input val name: String, project: Project) {
+@Suppress("UnstableApiUsage", "ABSTRACT_MEMBER_NOT_IMPLEMENTED")
+open class NexusRepository @Inject constructor(
+    // See https://youtrack.jetbrains.com/issue/KT-56625/
+    @Suppress("NOTHING_TO_OVERRIDE", "ACCIDENTAL_OVERRIDE")
+    @Input
+    override val name: String,
+    project: Project
+) : Named {
 
     @Input
     val nexusUrl = project.objects.property<URI>()
