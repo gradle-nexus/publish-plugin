@@ -28,11 +28,10 @@ import java.util.Objects;
 
  * - removed everything except the methods we are using
  * - removed deprecation warnings
- * - converted to Kotlin
  *
  * This is needed because the class is not present in Gradle 5.
  */
-public class ClosureBackedAction<T> implements Action<T> {
+class ClosureBackedAction<T> implements Action<T> {
 
     private final Closure closure;
     private final int resolveStrategy;
@@ -44,10 +43,6 @@ public class ClosureBackedAction<T> implements Action<T> {
 
     public ClosureBackedAction(Closure closure) {
         this(closure, Closure.DELEGATE_FIRST, true);
-    }
-
-    public ClosureBackedAction(Closure closure, int resolveStrategy) {
-        this(closure, resolveStrategy, false);
     }
 
     public ClosureBackedAction(Closure closure, int resolveStrategy, boolean configurableAware) {
@@ -86,10 +81,6 @@ public class ClosureBackedAction<T> implements Action<T> {
             // https://github.com/apache/groovy/commit/75c068207ba24648ea2d698c520601c6fcf0a45b
             throw new MissingMethodExecutionFailed(e.getMethod(), e.getType(), e.getArguments(), e.isStatic(), e);
         }
-    }
-
-    public Closure getClosure() {
-        return closure;
     }
 
     @Override
