@@ -87,7 +87,7 @@ open class NexusClient(private val baseUrl: URI, username: String?, password: St
                             packageGroup[profile.name.length] == '.'
                         )
             }
-            ?.maxByOrNull { it.name.length }
+            ?.maxBy { it.name.length }
             ?.id
     }
 
