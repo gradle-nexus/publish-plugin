@@ -24,7 +24,7 @@ import org.gradle.util.ConfigureUtil
 import java.net.URI
 
 @Suppress("UnstableApiUsage")
-internal class DefaultNexusRepositoryContainer(delegate: NamedDomainObjectContainer<NexusRepository>) : NexusRepositoryContainer, NamedDomainObjectContainer<NexusRepository> by delegate {
+internal open class DefaultNexusRepositoryContainer(delegate: NamedDomainObjectContainer<NexusRepository>) : NexusRepositoryContainer, NamedDomainObjectContainer<NexusRepository> by delegate {
 
     override fun sonatype(): NexusRepository = sonatype {}
 
