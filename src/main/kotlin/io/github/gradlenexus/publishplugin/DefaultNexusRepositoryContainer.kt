@@ -22,9 +22,10 @@ import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.internal.NamedDomainObjectContainerConfigureDelegate
 import org.gradle.util.ConfigureUtil
 import java.net.URI
+import javax.inject.Inject
 
 @Suppress("UnstableApiUsage")
-internal open class DefaultNexusRepositoryContainer(delegate: NamedDomainObjectContainer<NexusRepository>) : NexusRepositoryContainer, NamedDomainObjectContainer<NexusRepository> by delegate {
+internal open class DefaultNexusRepositoryContainer @Inject constructor(delegate: NamedDomainObjectContainer<NexusRepository>) : NexusRepositoryContainer, NamedDomainObjectContainer<NexusRepository> by delegate {
 
     override fun sonatype(): NexusRepository = sonatype {}
 
