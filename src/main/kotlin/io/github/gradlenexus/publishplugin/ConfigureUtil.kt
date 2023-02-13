@@ -21,7 +21,6 @@ import org.codehaus.groovy.runtime.GeneratedClosure
 import org.gradle.api.Action
 import org.gradle.internal.metaobject.ConfigureDelegate
 import org.gradle.util.Configurable
-import org.gradle.util.internal.ClosureBackedAction
 
 /**
  * Exact copy of [org.gradle.util.ConfigureUtil] from Gradle 7.6, except:
