@@ -16,12 +16,10 @@
 
 package io.github.gradlenexus.publishplugin
 
-import groovy.lang.Closure
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 
 interface NexusRepositoryContainer : NamedDomainObjectContainer<NexusRepository> {
     fun sonatype(): NexusRepository
-    fun sonatype(closure: Closure<*>): NexusRepository
     fun sonatype(action: Action<in NexusRepository>): NexusRepository
 }
