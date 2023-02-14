@@ -18,8 +18,21 @@ package io.github.gradlenexus.publishplugin
 
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
+import org.gradle.api.NamedDomainObjectProvider
 
 interface NexusRepositoryContainer : NamedDomainObjectContainer<NexusRepository> {
-    fun sonatype(): NexusRepository
-    fun sonatype(action: Action<in NexusRepository>): NexusRepository
+    val sonatype: NamedDomainObjectProvider<out NexusRepository>
+        get() =
+            // See https://github.com/gradle/gradle/issues/8057#issuecomment-826933995, Introduce TaskContainer.maybeNamed
+            if ("sonatype" in names) {
+                named("sonatype")
+            } else {
+                register("sonatype")
+            }
+
+    @Deprecated("Use sonatype property instead", ReplaceWith("sonatype"))
+    fun sonatype(): NexusRepository = sonatype.get()
+
+    fun sonatype(action: Action<in NexusRepository>): NexusRepository =
+        sonatype.get().apply { action.execute(this) }
 }

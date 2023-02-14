@@ -140,7 +140,7 @@ class TaskOrchestrationTest {
         project.apply(plugin = "maven-publish")
         project.apply<NexusPublishPlugin>()
         project.extensions.configure<NexusPublishExtension> {
-            repositories.sonatype()
+            repositories.sonatype
         }
         project.extensions.configure<PublishingExtension> {
             publications.create<MavenPublication>("mavenJava") {

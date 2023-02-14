@@ -16,7 +16,6 @@
 
 package io.github.gradlenexus.publishplugin
 
-import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 import java.net.URI
 import javax.inject.Inject
@@ -37,11 +36,5 @@ internal open class DefaultNexusRepositoryContainer @Inject constructor(
                 snapshotRepositoryUrl.set(URI.create("https://oss.sonatype.org/content/repositories/snapshots/"))
             }
         }
-    }
-
-    override fun sonatype(): NexusRepository = sonatype {}
-
-    override fun sonatype(action: Action<in NexusRepository>): NexusRepository = create("sonatype") {
-        action.execute(this)
     }
 }

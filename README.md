@@ -27,12 +27,12 @@ version = "1.0.0"
 
 ### Publishing to Maven Central via Sonatype OSSRH
 
-In order to publish to Maven Central (aka the Central Repository or just Central) via Sonatype's OSSRH Nexus, you simply need to add the `sonatype()` repository like in the example below. Its `nexusUrl` and `snapshotRepositoryUrl` values are pre-configured.
+In order to publish to Maven Central (aka the Central Repository or just Central) via Sonatype's OSSRH Nexus, you simply need to add the `sonatype` repository like in the example below. Its `nexusUrl` and `snapshotRepositoryUrl` values are pre-configured.
 
 ```groovy
 nexusPublishing {
     repositories {
-        sonatype()
+        sonatype
     }
 }
 ```

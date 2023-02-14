@@ -645,7 +645,41 @@ class NexusPublishPluginTests {
             }
             nexusPublishing {
                 repositories {
-                    sonatype()
+                    sonatype
+                }
+            }
+            """
+        )
+
+        val result = run("printSonatypeConfig")
+
+        assertThat(result.output)
+            .contains("nexusUrl = https://oss.sonatype.org/service/local/")
+            .contains("snapshotRepositoryUrl = https://oss.sonatype.org/content/repositories/snapshots/")
+    }
+
+    @Test
+    fun `uses default URLs for sonatype repos in Kotlin DSL with curly braces`() {
+        projectDir.resolve("settings.gradle").write(
+            """
+            rootProject.name = 'sample'
+            """
+        )
+        projectDir.resolve("build.gradle.kts").write(
+            """
+            plugins {
+                id("io.github.gradle-nexus.publish-plugin")
+            }
+            tasks.create("printSonatypeConfig") {
+                doFirst {
+                    println("nexusUrl = ${"$"}{nexusPublishing.repositories["sonatype"].nexusUrl.orNull}")
+                    println("snapshotRepositoryUrl = ${"$"}{nexusPublishing.repositories["sonatype"].snapshotRepositoryUrl.orNull}")
+                }
+            }
+            nexusPublishing {
+                repositories {
+                    sonatype {
+                    }
                 }
             }
             """
