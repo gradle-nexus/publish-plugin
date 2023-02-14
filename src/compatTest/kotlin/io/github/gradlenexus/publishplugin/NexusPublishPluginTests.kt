@@ -612,7 +612,7 @@ class NexusPublishPluginTests {
             }
             nexusPublishing {
                 repositories {
-                    sonatype()
+                    sonatype
                 }
             }
             """

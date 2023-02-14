@@ -16,27 +16,32 @@
 
 package io.github.gradlenexus.publishplugin
 
-import groovy.lang.Closure
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
-import org.gradle.api.internal.NamedDomainObjectContainerConfigureDelegate
-import org.gradle.util.ConfigureUtil
 import java.net.URI
 import javax.inject.Inject
 
-@Suppress("UnstableApiUsage")
 internal open class DefaultNexusRepositoryContainer @Inject constructor(
     delegate: NamedDomainObjectContainer<NexusRepository>
 ) : NexusRepositoryContainer, NamedDomainObjectContainer<NexusRepository> by delegate {
 
+    init {
+        // Note: repositories { sonatype {...} } in Groovy would call create("sonatype"), so it would not all extra
+        // methods we have in NexusRepositoryContainer.
+        // org.gradle.internal.metaobject.MethodMixIn, and org.gradle.internal.metaobject.PropertyMixIn
+        // might be relevant, however they are internal.
+        @Suppress("LeakingThis")
+        configureEach {
+            if (name == "sonatype") {
+                nexusUrl.set(URI.create("https://oss.sonatype.org/service/local/"))
+                snapshotRepositoryUrl.set(URI.create("https://oss.sonatype.org/content/repositories/snapshots/"))
+            }
+        }
+    }
+
     override fun sonatype(): NexusRepository = sonatype {}
 
     override fun sonatype(action: Action<in NexusRepository>): NexusRepository = create("sonatype") {
-        nexusUrl.set(URI.create("https://oss.sonatype.org/service/local/"))
-        snapshotRepositoryUrl.set(URI.create("https://oss.sonatype.org/content/repositories/snapshots/"))
         action.execute(this)
     }
-
-    override fun configure(configureClosure: Closure<*>): NamedDomainObjectContainer<NexusRepository> =
-        ConfigureUtil.configureSelf(configureClosure, this, NamedDomainObjectContainerConfigureDelegate(configureClosure, this))
 }
