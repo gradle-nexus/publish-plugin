@@ -27,7 +27,7 @@ open class CloseNexusStagingRepository @Inject constructor(
     objects: ObjectFactory,
     extension: NexusPublishExtension,
     repository: NexusRepository,
-    registry: Provider<StagingRepositoryDescriptorRegistry>
+    registry: Provider<StagingRepositoryDescriptorRegistry>,
 ) : AbstractTransitionNexusStagingRepositoryTask(objects, extension, repository, registry) {
 
     @Option(option = "staging-repository-id", description = "staging repository id to close")

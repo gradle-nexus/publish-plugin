@@ -30,7 +30,7 @@ import java.lang.IllegalArgumentException
  * manages its lifecycle in the scope of that [ExtensionContext]
  */
 class MethodScopeWiremockResolver(
-    private val inner: WiremockResolver = WiremockResolver()
+    private val inner: WiremockResolver = WiremockResolver(),
 ) : ParameterResolver by inner, AfterEachCallback {
 
     /**
@@ -65,7 +65,7 @@ class MethodScopeWiremockResolver(
      * Keys for storing and accessing [MethodScopeWiremockResolver]s
      */
     enum class Keys {
-        LOCAL_RESOLVER
+        LOCAL_RESOLVER,
     }
 
     /**

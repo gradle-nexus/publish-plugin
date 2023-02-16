@@ -34,7 +34,7 @@ abstract class AbstractTransitionNexusStagingRepositoryTask(
     objects: ObjectFactory,
     extension: NexusPublishExtension,
     repository: NexusRepository,
-    registry: Provider<StagingRepositoryDescriptorRegistry>
+    registry: Provider<StagingRepositoryDescriptorRegistry>,
 ) : AbstractNexusStagingRepositoryTask(objects, extension, repository) {
 
     @Input
@@ -42,7 +42,7 @@ abstract class AbstractTransitionNexusStagingRepositoryTask(
         set(
             registry.map {
                 it[repository.name].stagingRepositoryId
-            }
+            },
         )
     }
 
@@ -60,7 +60,7 @@ abstract class AbstractTransitionNexusStagingRepositoryTask(
             repository.get().username.orNull,
             repository.get().password.orNull,
             clientTimeout.orNull,
-            connectTimeout.orNull
+            connectTimeout.orNull,
         )
         val retrier = transitionCheckOptions.get().run {
             BasicActionRetrier(maxRetries.get(), delayBetween.get(), StagingRepository::transitioning)

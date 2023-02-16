@@ -51,7 +51,7 @@ open class NexusClient(private val baseUrl: URI, username: String?, password: St
                     chain.proceed(
                         chain.request().newBuilder()
                             .header("Authorization", credentials)
-                            .build()
+                            .build(),
                     )
                 }
         }
@@ -60,7 +60,7 @@ open class NexusClient(private val baseUrl: URI, username: String?, password: St
             chain.proceed(
                 chain.request().newBuilder()
                     .header("User-Agent", "gradle-nexus-publish-plugin/$version")
-                    .build()
+                    .build(),
             )
         }
         val retrofit = Retrofit.Builder()
@@ -128,11 +128,12 @@ open class NexusClient(private val baseUrl: URI, username: String?, password: St
                 "Unexpected read repository id ($stagingRepositoryId != ${readStagingRepo.repositoryId})"
             }
             return StagingRepository(
-                readStagingRepo.repositoryId, StagingRepository.State.parseString(readStagingRepo.type),
-                readStagingRepo.transitioning
+                readStagingRepo.repositoryId,
+                StagingRepository.State.parseString(readStagingRepo.type),
+                readStagingRepo.transitioning,
             )
         } else {
-            return StagingRepository.notFound(stagingRepositoryId) //Should not happen
+            return StagingRepository.notFound(stagingRepositoryId) // Should not happen
         }
     }
 

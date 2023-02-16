@@ -64,12 +64,12 @@ class TaskOrchestrationTest {
     @ParameterizedTest(name = "task: {0}")
     @MethodSource("transitioningTaskNamesForSonatype")
     internal fun `transitioning task should not run after non-related publish`(transitioningTaskName: String) {
-        //given
+        // given
         initSingleProjectWithDefaultConfiguration()
         project.extensions.configure<NexusPublishExtension> {
             repositories.add(NexusRepository("myNexus", project))
         }
-        //expect
+        // expect
         assertGivenTaskMustNotRunAfterAnother(transitioningTaskName, "publishToMyNexus")
     }
 

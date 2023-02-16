@@ -29,18 +29,18 @@ class NexusPublishE2ETests : BaseGradleTest() {
     fun `release project to real Sonatype Nexus`(projectName: String) {
         File("src/e2eTest/resources/$projectName").copyRecursively(projectDir)
 
-        //when
+        // when
         val buildResult = run("build")
-        //then
+        // then
         buildResult.assertSuccess { it.path.substringAfterLast(':').matches("build".toRegex()) }
 
-        //when
+        // when
         val result = run(
             "publishToSonatype",
             "closeAndReleaseSonatypeStagingRepository",
-            "--info"
+            "--info",
         )
-        //then
+        // then
         result.apply {
             assertSuccess { it.path.substringAfterLast(':').matches("publish.+PublicationToSonatypeRepository".toRegex()) }
             assertSuccess(":closeSonatypeStagingRepository")

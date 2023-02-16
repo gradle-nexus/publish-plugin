@@ -26,7 +26,7 @@ import javax.inject.Inject
 
 @Suppress("UnstableApiUsage")
 internal open class DefaultNexusRepositoryContainer @Inject constructor(
-    delegate: NamedDomainObjectContainer<NexusRepository>
+    delegate: NamedDomainObjectContainer<NexusRepository>,
 ) : NexusRepositoryContainer, NamedDomainObjectContainer<NexusRepository> by delegate {
 
     override fun sonatype(): NexusRepository = sonatype {}

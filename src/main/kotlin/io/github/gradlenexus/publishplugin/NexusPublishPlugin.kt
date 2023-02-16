@@ -40,7 +40,7 @@ import org.gradle.util.GradleVersion
 class NexusPublishPlugin : Plugin<Project> {
 
     companion object {
-        //visibility for testing
+        // visibility for testing
         const val SIMPLIFIED_CLOSE_AND_RELEASE_TASK_NAME = "closeAndReleaseStagingRepository"
     }
 
@@ -70,16 +70,28 @@ class NexusPublishPlugin : Plugin<Project> {
             val repository = this
             val retrieveStagingProfileTask = rootProject.tasks.register<RetrieveStagingProfile>("retrieve${capitalizedName}StagingProfile", rootProject.objects, extension, repository)
             val initializeTask = rootProject.tasks.register<InitializeNexusStagingRepository>(
-                "initialize${capitalizedName}StagingRepository", rootProject.objects, extension, repository, registry
+                "initialize${capitalizedName}StagingRepository",
+                rootProject.objects,
+                extension,
+                repository,
+                registry,
             )
             val closeTask = rootProject.tasks.register<CloseNexusStagingRepository>(
-                "close${capitalizedName}StagingRepository", rootProject.objects, extension, repository, registry
+                "close${capitalizedName}StagingRepository",
+                rootProject.objects,
+                extension,
+                repository,
+                registry,
             )
             val releaseTask = rootProject.tasks.register<ReleaseNexusStagingRepository>(
-                "release${capitalizedName}StagingRepository", rootProject.objects, extension, repository, registry
+                "release${capitalizedName}StagingRepository",
+                rootProject.objects,
+                extension,
+                repository,
+                registry,
             )
             val closeAndReleaseTask = rootProject.tasks.register<Task>(
-                "closeAndRelease${capitalizedName}StagingRepository"
+                "closeAndRelease${capitalizedName}StagingRepository",
             )
             retrieveStagingProfileTask {
                 description = "Gets and displays a staging profile id for a given repository and package group. This is a diagnostic task to get the value and put it into the NexusRepository configuration closure as stagingProfileId."
@@ -157,7 +169,7 @@ class NexusPublishPlugin : Plugin<Project> {
                 setUrl(
                     project.provider {
                         getRepoUrl(nexusRepo, extension, registry)
-                    }
+                    },
                 )
                 val allowInsecureProtocol = nexusRepo.allowInsecureProtocol.orNull
                 if (allowInsecureProtocol != null) {
@@ -181,13 +193,13 @@ class NexusPublishPlugin : Plugin<Project> {
         publishAllTask: TaskProvider<Task>,
         closeTask: TaskProvider<CloseNexusStagingRepository>,
         releaseTask: TaskProvider<ReleaseNexusStagingRepository>,
-        mavenRepo: MavenArtifactRepository
+        mavenRepo: MavenArtifactRepository,
     ) {
         val mavenPublications = project.the<PublishingExtension>().publications.withType<MavenPublication>()
         mavenPublications.configureEach {
             val publication = this
             val publishTask = project.tasks.named<PublishToMavenRepository>(
-                "publish${publication.name.capitalize()}PublicationTo${mavenRepo.name.capitalize()}Repository"
+                "publish${publication.name.capitalize()}PublicationTo${mavenRepo.name.capitalize()}Repository",
             )
             publishTask {
                 dependsOn(initializeTask)
