@@ -10,7 +10,7 @@ plugins {
     id("com.diffplug.spotless") version "6.0.0"
     id("com.github.johnrengelman.shadow") version "7.1.2"
     id("org.jetbrains.gradle.plugin.idea-ext")
-    id("com.github.ben-manes.versions") version "0.39.0"
+    id("com.github.ben-manes.versions") version "0.45.0"
     id("org.ajoberstar.stutter") version "0.6.0"
 }
 
