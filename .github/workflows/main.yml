@@ -22,6 +22,6 @@ jobs:
       with:
         java-version: 11
         distribution: 'zulu'
-    - uses: eskatos/gradle-command-action@v2
+    - uses: gradle/gradle-build-action@v2
       with:
         arguments: --scan --stacktrace build
