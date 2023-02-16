@@ -4,6 +4,7 @@ root = true
 indent_style = space
 insert_final_newline = true
 charset = utf-8
+end_of_line = lf
 
 [*.{kt,kts}]
 ij_kotlin_code_style_defaults = KOTLIN_OFFICIAL
@@ -14,3 +15,6 @@ trim_trailing_whitespace = true
 # This helps IDEA to format the code properly, see also spotless { } in build.gradle.kts.
 ij_kotlin_allow_trailing_comma = false # Only used for declaration site 
 ij_kotlin_allow_trailing_comma_on_call_site = false
+
+[*.bat]
+end_of_line = crlf
