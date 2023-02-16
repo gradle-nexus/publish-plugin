@@ -80,7 +80,6 @@ internal class StagingRepositoryTransitionerTest {
         inOrder.verify(nexusClient).getStagingRepositoryStateById(TEST_STAGING_REPO_ID)
     }
 
-    @Suppress("unused") // Idea doesn't noticed @MethodSource usage - https://youtrack.jetbrains.com/issue/KT-21429
     private fun repositoryStatesForRelease(): List<StagingRepository.State> {
         return listOf(StagingRepository.State.RELEASED, StagingRepository.State.NOT_FOUND)
     }
