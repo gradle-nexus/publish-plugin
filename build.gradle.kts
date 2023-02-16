@@ -93,6 +93,8 @@ dependencies {
 java {
     withJavadocJar()
     withSourcesJar()
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
 }
 
 stutter {
@@ -137,11 +139,6 @@ sourceSets {
         runtimeClasspath += sourceSets["test"].output
         runtimeClasspath += sourceSets["main"].output
     }
-}
-
-java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
 }
 
 tasks {
