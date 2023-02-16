@@ -211,25 +211,6 @@ tasks {
     }
 }
 
-configurations {
-    configureEach {
-        outgoing {
-            val removed = artifacts.removeIf { it.classifier.isNullOrEmpty() }
-            if (removed) {
-                artifact(tasks.shadowJar) {
-                    classifier = ""
-                }
-            }
-        }
-    }
-    // used by plugin-publish plugin
-    archives {
-        outgoing {
-            artifact(tasks.named("sourcesJar"))
-        }
-    }
-}
-
 publishing {
     publications {
         afterEvaluate {
