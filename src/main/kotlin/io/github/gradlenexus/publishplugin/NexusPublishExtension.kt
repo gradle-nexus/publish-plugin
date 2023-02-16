@@ -54,7 +54,7 @@ open class NexusPublishExtension(project: Project) {
         DefaultNexusRepositoryContainer::class,
         project.container(NexusRepository::class) { name ->
             project.objects.newInstance(NexusRepository::class, name, project)
-        },
+        }
     )
 
     fun repositories(action: Action<in NexusRepositoryContainer>) = action.execute(repositories)

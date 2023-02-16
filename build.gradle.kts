@@ -47,7 +47,14 @@ spotless {
     lineEndings = com.diffplug.spotless.LineEnding.UNIX
     kotlin {
         targetExclude("**/*.gradle.kts", "**/build/generated-sources/**/*.kt")
-        ktlint()
+        ktlint().editorConfigOverride(
+            mapOf(
+                // Trailing comma language feature requires Kotlin plugin 1.4+, at the moment the compilation is done with Kotlin 1.3.
+                // This helps spotlessKotlinCheck and spotlessApply to format the code properly, see also .editorconfig.
+                "ktlint_standard_trailing-comma-on-call-site" to "disabled",
+                "ktlint_standard_trailing-comma-on-declaration-site" to "disabled"
+            )
+        )
         licenseHeaderFile(licenseHeaderFile)
     }
 }

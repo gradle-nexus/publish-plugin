@@ -74,24 +74,24 @@ class NexusPublishPlugin : Plugin<Project> {
                 rootProject.objects,
                 extension,
                 repository,
-                registry,
+                registry
             )
             val closeTask = rootProject.tasks.register<CloseNexusStagingRepository>(
                 "close${capitalizedName}StagingRepository",
                 rootProject.objects,
                 extension,
                 repository,
-                registry,
+                registry
             )
             val releaseTask = rootProject.tasks.register<ReleaseNexusStagingRepository>(
                 "release${capitalizedName}StagingRepository",
                 rootProject.objects,
                 extension,
                 repository,
-                registry,
+                registry
             )
             val closeAndReleaseTask = rootProject.tasks.register<Task>(
-                "closeAndRelease${capitalizedName}StagingRepository",
+                "closeAndRelease${capitalizedName}StagingRepository"
             )
             retrieveStagingProfileTask {
                 description = "Gets and displays a staging profile id for a given repository and package group. This is a diagnostic task to get the value and put it into the NexusRepository configuration closure as stagingProfileId."
@@ -169,7 +169,7 @@ class NexusPublishPlugin : Plugin<Project> {
                 setUrl(
                     project.provider {
                         getRepoUrl(nexusRepo, extension, registry)
-                    },
+                    }
                 )
                 val allowInsecureProtocol = nexusRepo.allowInsecureProtocol.orNull
                 if (allowInsecureProtocol != null) {
@@ -193,13 +193,13 @@ class NexusPublishPlugin : Plugin<Project> {
         publishAllTask: TaskProvider<Task>,
         closeTask: TaskProvider<CloseNexusStagingRepository>,
         releaseTask: TaskProvider<ReleaseNexusStagingRepository>,
-        mavenRepo: MavenArtifactRepository,
+        mavenRepo: MavenArtifactRepository
     ) {
         val mavenPublications = project.the<PublishingExtension>().publications.withType<MavenPublication>()
         mavenPublications.configureEach {
             val publication = this
             val publishTask = project.tasks.named<PublishToMavenRepository>(
-                "publish${publication.name.capitalize()}PublicationTo${mavenRepo.name.capitalize()}Repository",
+                "publish${publication.name.capitalize()}PublicationTo${mavenRepo.name.capitalize()}Repository"
             )
             publishTask {
                 dependsOn(initializeTask)

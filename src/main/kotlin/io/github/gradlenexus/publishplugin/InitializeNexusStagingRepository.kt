@@ -33,7 +33,7 @@ open class InitializeNexusStagingRepository @Inject constructor(
     objects: ObjectFactory,
     extension: NexusPublishExtension,
     repository: NexusRepository,
-    private val registry: Provider<StagingRepositoryDescriptorRegistry>,
+    private val registry: Provider<StagingRepositoryDescriptorRegistry>
 ) : AbstractNexusStagingRepositoryTask(objects, extension, repository) {
 
     @Optional

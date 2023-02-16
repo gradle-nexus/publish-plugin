@@ -16,18 +16,13 @@
 
 package io.github.gradlenexus.publishplugin.internal
 
-data class StagingRepository constructor(
-    val id: String,
-    val state: State,
-    val transitioning: Boolean,
-) {
+data class StagingRepository constructor(val id: String, val state: State, val transitioning: Boolean) {
 
     enum class State {
         OPEN,
         CLOSED,
         RELEASED,
-        NOT_FOUND,
-        ;
+        NOT_FOUND;
 
         override fun toString(): String {
             return name.toLowerCase()

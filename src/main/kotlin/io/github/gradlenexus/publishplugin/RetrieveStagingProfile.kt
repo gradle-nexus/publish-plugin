@@ -32,7 +32,7 @@ import javax.inject.Inject
 open class RetrieveStagingProfile @Inject constructor(
     objects: ObjectFactory,
     extension: NexusPublishExtension,
-    repository: NexusRepository,
+    repository: NexusRepository
 ) : AbstractNexusStagingRepositoryTask(objects, extension, repository) {
 
     @Input
@@ -49,7 +49,7 @@ open class RetrieveStagingProfile @Inject constructor(
             repository.username.orNull,
             repository.password.orNull,
             clientTimeout.orNull,
-            connectTimeout.orNull,
+            connectTimeout.orNull
         )
 
         val packageGroup = packageGroup.get()

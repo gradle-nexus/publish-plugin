@@ -95,7 +95,7 @@ class NexusPublishPluginTests {
         projectDir.resolve("settings.gradle").append(
             """
             include('sub')
-            """,
+            """
         )
         buildGradle.append(
             """
@@ -105,7 +105,7 @@ class NexusPublishPluginTests {
             subprojects {
                 apply plugin: 'io.github.gradle-nexus.publish-plugin'
             }
-            """,
+            """
         )
 
         val result = gradleRunner("tasks").buildAndFail()
@@ -128,7 +128,7 @@ class NexusPublishPluginTests {
                     }
                 }
             }
-            """,
+            """
         )
         // and
         stubGetStagingProfilesForOneProfileIdGivenId(STAGING_PROFILE_ID)
@@ -146,7 +146,7 @@ class NexusPublishPluginTests {
         projectDir.resolve("settings.gradle").write(
             """
             rootProject.name = 'sample'
-            """,
+            """
         )
         projectDir.resolve("build.gradle").write(
             """
@@ -179,7 +179,7 @@ class NexusPublishPluginTests {
             }
             // use this instead of --dry-run to get the tasks in the result for verification
             tasks.all { enabled = false }
-            """,
+            """
         )
 
         val result = run("publishToMyNexus")
@@ -194,7 +194,7 @@ class NexusPublishPluginTests {
         projectDir.resolve("settings.gradle").write(
             """
             rootProject.name = 'sample'
-            """,
+            """
         )
         projectDir.resolve("build.gradle").write(
             """
@@ -227,7 +227,7 @@ class NexusPublishPluginTests {
                     }
                 }
             }
-            """,
+            """
         )
 
         stubStagingProfileRequest("/staging/profiles", mapOf("id" to STAGING_PROFILE_ID, "name" to "org.example"))
@@ -241,7 +241,7 @@ class NexusPublishPluginTests {
         assertNotConsidered(result, ":initializeSomeOtherNexusStagingRepository")
         server.verify(
             postRequestedFor(urlEqualTo("/staging/profiles/$STAGING_PROFILE_ID/start"))
-                .withRequestBody(matchingJsonPath("\$.data[?(@.description == 'org.example:sample:0.0.1')]")),
+                .withRequestBody(matchingJsonPath("\$.data[?(@.description == 'org.example:sample:0.0.1')]"))
         )
         assertUploadedToStagingRepo("/org/example/sample/0.0.1/sample-0.0.1.pom")
         assertUploadedToStagingRepo("/org/example/sample/0.0.1/sample-0.0.1.jar")
@@ -252,7 +252,7 @@ class NexusPublishPluginTests {
         projectDir.resolve("settings.gradle").write(
             """
             rootProject.name = 'sample'
-            """,
+            """
         )
         projectDir.resolve("build.gradle").write(
             """
@@ -281,7 +281,7 @@ class NexusPublishPluginTests {
                     }
                 }
             }
-            """,
+            """
         )
 
         stubMissingStagingProfileRequest("/staging/profiles")
@@ -296,12 +296,12 @@ class NexusPublishPluginTests {
     @Test
     fun `publishes to two Nexus repositories`(
         @MethodScopeWiremockResolver.MethodScopedWiremockServer @Wiremock
-        otherServer: WireMockServer,
+        otherServer: WireMockServer
     ) {
         projectDir.resolve("settings.gradle").write(
             """
             rootProject.name = 'sample'
-            """,
+            """
         )
         projectDir.resolve("build.gradle").write(
             """
@@ -337,7 +337,7 @@ class NexusPublishPluginTests {
                     }
                 }
             }
-            """,
+            """
         )
 
         val otherStagingProfileId = "otherStagingProfileId"
@@ -357,11 +357,11 @@ class NexusPublishPluginTests {
         assertThat(result.output).containsOnlyOnce("Created staging repository '$otherStagingRepositoryId' at ${otherServer.baseUrl()}/repositories/$otherStagingRepositoryId/content/")
         server.verify(
             postRequestedFor(urlEqualTo("/staging/profiles/$STAGING_PROFILE_ID/start"))
-                .withRequestBody(matchingJsonPath("\$.data[?(@.description == 'org.example:sample:0.0.1')]")),
+                .withRequestBody(matchingJsonPath("\$.data[?(@.description == 'org.example:sample:0.0.1')]"))
         )
         otherServer.verify(
             postRequestedFor(urlEqualTo("/staging/profiles/$otherStagingProfileId/start"))
-                .withRequestBody(matchingJsonPath("\$.data[?(@.description == 'org.example:sample:0.0.1')]")),
+                .withRequestBody(matchingJsonPath("\$.data[?(@.description == 'org.example:sample:0.0.1')]"))
         )
         assertUploadedToStagingRepo("/org/example/sample/0.0.1/sample-0.0.1.pom")
         assertUploadedToStagingRepo("/org/example/sample/0.0.1/sample-0.0.1.jar")
@@ -375,13 +375,13 @@ class NexusPublishPluginTests {
             """
             rootProject.name = 'sample'
             include 'gradle-plugin'
-        """,
+        """
         )
         if (gradleVersion < GradleVersion.version("5.0")) {
             projectDir.resolve("settings.gradle").append(
                 """
                 enableFeaturePreview("STABLE_PUBLISHING")
-                """,
+                """
             )
         }
 
@@ -401,7 +401,7 @@ class NexusPublishPluginTests {
                     }
                 }
             }
-            """,
+            """
         )
 
         val pluginDir = Files.createDirectories(projectDir.resolve("gradle-plugin"))
@@ -421,7 +421,7 @@ class NexusPublishPluginTests {
             }
             group = 'org.example'
             version = '0.0.1'
-            """,
+            """
         )
         val srcDir = Files.createDirectories(pluginDir.resolve("src/main/java/org/example/"))
         srcDir.resolve("FooPlugin.java").write(
@@ -430,7 +430,7 @@ class NexusPublishPluginTests {
             public class FooPlugin implements Plugin<Project> {
                 public void apply(Project p) {}
             }
-            """,
+            """
         )
 
         stubCreateStagingRepoRequest("/staging/profiles/$STAGING_PROFILE_ID/start", STAGED_REPOSITORY_ID)
@@ -448,7 +448,7 @@ class NexusPublishPluginTests {
         projectDir.resolve("settings.gradle").write(
             """
             rootProject.name = 'sample'
-        """,
+        """
         )
 
         projectDir.resolve("build.gradle").write(
@@ -478,7 +478,7 @@ class NexusPublishPluginTests {
                     }
                 }
             }
-            """,
+            """
         )
 
         expectArtifactUploads("/snapshots")
@@ -495,7 +495,7 @@ class NexusPublishPluginTests {
         projectDir.resolve("settings.gradle").write(
             """
             rootProject.name = 'sample'
-            """,
+            """
         )
         projectDir.resolve("build.gradle").write(
             """
@@ -526,7 +526,7 @@ class NexusPublishPluginTests {
                 }
                 clientTimeout = Duration.ofSeconds(1)
             }
-            """,
+            """
         )
 
         server.stubFor(get(anyUrl()).willReturn(aResponse().withFixedDelay(5_000)))
@@ -543,7 +543,7 @@ class NexusPublishPluginTests {
     fun `uses configured connect timeout`() {
         assumeTrue(
             gradleVersion >= GradleVersion.version("5.0"),
-            "Task timeouts were added in Gradle 5.0",
+            "Task timeouts were added in Gradle 5.0"
         )
 
         // Taken from https://stackoverflow.com/a/904609/5866817
@@ -552,7 +552,7 @@ class NexusPublishPluginTests {
         projectDir.resolve("settings.gradle").write(
             """
             rootProject.name = 'sample'
-            """,
+            """
         )
         projectDir.resolve("build.gradle").write(
             """
@@ -586,7 +586,7 @@ class NexusPublishPluginTests {
             initializeMyNexusStagingRepository {
                 timeout = Duration.ofSeconds(10)
             }
-            """,
+            """
         )
 
         val result = gradleRunner("initializeMyNexusStagingRepository").buildAndFail()
@@ -600,7 +600,7 @@ class NexusPublishPluginTests {
         projectDir.resolve("settings.gradle").write(
             """
             rootProject.name = 'sample'
-        """,
+        """
         )
         projectDir.resolve("build.gradle").write(
             """
@@ -618,7 +618,7 @@ class NexusPublishPluginTests {
                     sonatype()
                 }
             }
-            """,
+            """
         )
 
         val result = run("printSonatypeConfig")
@@ -633,7 +633,7 @@ class NexusPublishPluginTests {
         projectDir.resolve("settings.gradle").write(
             """
             rootProject.name = 'sample'
-            """,
+            """
         )
         projectDir.resolve("build.gradle.kts").write(
             """
@@ -651,7 +651,7 @@ class NexusPublishPluginTests {
                     sonatype()
                 }
             }
-            """,
+            """
         )
 
         val result = run("printSonatypeConfig")
@@ -686,27 +686,27 @@ class NexusPublishPluginTests {
 
     private fun stubTransitToDesiredStateStagingRepoRequestWithSubsequentQueryAboutItsState(
         operation: StagingRepoTransitionOperation,
-        stagingRepositoryId: String,
+        stagingRepositoryId: String
     ) {
         stubTransitToDesiredStateStagingRepoRequest(operation, stagingRepositoryId)
         stubGetStagingRepoWithIdAndStateRequest(
             StagingRepository(
                 stagingRepositoryId,
                 operation.desiredState,
-                false,
-            ),
+                false
+            )
         )
     }
 
     private fun stubTransitToDesiredStateStagingRepoRequest(
         operation: StagingRepoTransitionOperation,
-        stagingRepositoryId: String = STAGED_REPOSITORY_ID,
+        stagingRepositoryId: String = STAGED_REPOSITORY_ID
     ) {
         server.stubFor(
             post(urlEqualTo("/staging/bulk/${operation.urlSufix}"))
                 .withRequestBody(matchingJsonPath("\$.data[?(@.stagedRepositoryIds[0] == '$stagingRepositoryId')]"))
                 .withRequestBody(matchingJsonPath("\$.data[?(@.autoDropAfterRelease == true)]"))
-                .willReturn(aResponse().withHeader("Content-Type", "application/json").withBody("{}")),
+                .willReturn(aResponse().withHeader("Content-Type", "application/json").withBody("{}"))
         )
     }
 
@@ -778,7 +778,7 @@ class NexusPublishPluginTests {
                     }
                 }
             }
-            """,
+            """
         )
         // and
         stubGetStagingProfilesForOneProfileIdGivenId(STAGING_PROFILE_ID)
@@ -802,7 +802,7 @@ class NexusPublishPluginTests {
         stubTransitToDesiredStateStagingRepoRequest(StagingRepoTransitionOperation.CLOSE)
         stubGetGivenStagingRepositoryInFirstAndSecondCall(
             StagingRepository(STAGED_REPOSITORY_ID, StagingRepository.State.OPEN, true),
-            StagingRepository(STAGED_REPOSITORY_ID, StagingRepository.State.CLOSED, false),
+            StagingRepository(STAGED_REPOSITORY_ID, StagingRepository.State.CLOSED, false)
         )
 
         val result = run("closeSonatypeStagingRepository", "--staging-repository-id=$STAGED_REPOSITORY_ID")
@@ -820,7 +820,7 @@ class NexusPublishPluginTests {
         stubTransitToDesiredStateStagingRepoRequest(StagingRepoTransitionOperation.RELEASE)
         stubGetGivenStagingRepositoryInFirstAndSecondCall(
             StagingRepository(STAGED_REPOSITORY_ID, StagingRepository.State.CLOSED, true),
-            StagingRepository(STAGED_REPOSITORY_ID, StagingRepository.State.NOT_FOUND, false),
+            StagingRepository(STAGED_REPOSITORY_ID, StagingRepository.State.NOT_FOUND, false)
         )
 
         val result = run("releaseSonatypeStagingRepository", "--staging-repository-id=$STAGED_REPOSITORY_ID")
@@ -843,7 +843,7 @@ class NexusPublishPluginTests {
                     })
                 }
             }
-            """,
+            """
         )
 
         val result = run("initializeMyNexusStagingRepository")
@@ -860,7 +860,7 @@ class NexusPublishPluginTests {
             nexusPublishing {
                 repositoryDescription = "Some custom description"
             }
-            """,
+            """
         )
 
         stubStagingProfileRequest("/staging/profiles", mapOf("id" to STAGING_PROFILE_ID, "name" to "org.example"))
@@ -872,11 +872,11 @@ class NexusPublishPluginTests {
 
         server.verify(
             postRequestedFor(urlEqualTo("/staging/profiles/$STAGING_PROFILE_ID/start"))
-                .withRequestBody(matchingJsonPath("\$.data[?(@.description == 'Some custom description')]")),
+                .withRequestBody(matchingJsonPath("\$.data[?(@.description == 'Some custom description')]"))
         )
         server.verify(
             postRequestedFor(urlEqualTo("/staging/bulk/close"))
-                .withRequestBody(matchingJsonPath("\$.data[?(@.description == 'Some custom description')]")),
+                .withRequestBody(matchingJsonPath("\$.data[?(@.description == 'Some custom description')]"))
         )
 
         stubReleaseStagingRepoRequestWithSubsequentQueryAboutItsState(STAGED_REPOSITORY_ID)
@@ -885,7 +885,7 @@ class NexusPublishPluginTests {
 
         server.verify(
             postRequestedFor(urlEqualTo("/staging/bulk/promote"))
-                .withRequestBody(matchingJsonPath("\$.data[?(@.description == 'Some custom description')]")),
+                .withRequestBody(matchingJsonPath("\$.data[?(@.description == 'Some custom description')]"))
         )
     }
 
@@ -894,7 +894,7 @@ class NexusPublishPluginTests {
         projectDir.resolve("settings.gradle").write(
             """
             rootProject.name = 'sample'
-            """,
+            """
         )
         buildGradle.write(
             """
@@ -920,7 +920,7 @@ class NexusPublishPluginTests {
                     }
                 }
             }
-            """,
+            """
         )
     }
 
@@ -942,7 +942,7 @@ class NexusPublishPluginTests {
                     delayBetween = java.time.Duration.ofMillis(1)
                 }
             }
-            """,
+            """
         )
     }
 
@@ -964,12 +964,12 @@ class NexusPublishPluginTests {
     private fun stubStagingProfileRequest(
         url: String,
         vararg stagingProfiles: Map<String, String>,
-        wireMockServer: WireMockServer = server,
+        wireMockServer: WireMockServer = server
     ) {
         wireMockServer.stubFor(
             get(urlEqualTo(url))
                 .withHeader("User-Agent", matching("gradle-nexus-publish-plugin/.*"))
-                .willReturn(aResponse().withBody(gson.toJson(mapOf("data" to listOf(*stagingProfiles))))),
+                .willReturn(aResponse().withBody(gson.toJson(mapOf("data" to listOf(*stagingProfiles)))))
         )
     }
 
@@ -977,14 +977,14 @@ class NexusPublishPluginTests {
         wireMockServer.stubFor(
             get(urlEqualTo(url))
                 .withHeader("User-Agent", matching("gradle-nexus-publish-plugin/.*"))
-                .willReturn(notFound().withBody(gson.toJson(mapOf("failure" to "message")))),
+                .willReturn(notFound().withBody(gson.toJson(mapOf("failure" to "message"))))
         )
     }
 
     private fun stubCreateStagingRepoRequest(url: String, stagedRepositoryId: String, wireMockServer: WireMockServer = server) {
         wireMockServer.stubFor(
             post(urlEqualTo(url))
-                .willReturn(aResponse().withBody(gson.toJson(mapOf("data" to mapOf("stagedRepositoryId" to stagedRepositoryId))))),
+                .willReturn(aResponse().withBody(gson.toJson(mapOf("data" to mapOf("stagedRepositoryId" to stagedRepositoryId)))))
         )
     }
 
@@ -996,8 +996,8 @@ class NexusPublishPluginTests {
                     aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
-                        .withBody(getOneStagingProfileWithGivenIdShrunkJsonResponseAsString(stagingProfileId)),
-                ),
+                        .withBody(getOneStagingProfileWithGivenIdShrunkJsonResponseAsString(stagingProfileId))
+                )
         )
     }
 
@@ -1014,7 +1014,7 @@ class NexusPublishPluginTests {
     private fun stubGetStagingRepoWithIdAndResponseStatusCodeAndResponseBody(
         stagingRepositoryId: String,
         statusCode: Int,
-        responseBody: String,
+        responseBody: String
     ) {
         server.stubFor(
             get(urlEqualTo("/staging/repository/$stagingRepositoryId"))
@@ -1023,8 +1023,8 @@ class NexusPublishPluginTests {
                     aResponse()
                         .withStatus(statusCode)
                         .withHeader("Content-Type", "application/json")
-                        .withBody(responseBody),
-                ),
+                        .withBody(responseBody)
+                )
         )
     }
 
@@ -1038,9 +1038,9 @@ class NexusPublishPluginTests {
                     aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
-                        .withBody(getOneStagingRepoWithGivenIdJsonResponseAsString(stagingRepository1)),
+                        .withBody(getOneStagingRepoWithGivenIdJsonResponseAsString(stagingRepository1))
                 )
-                .willSetStateTo("CLOSED"),
+                .willSetStateTo("CLOSED")
         )
 
         server.stubFor(
@@ -1052,19 +1052,19 @@ class NexusPublishPluginTests {
                     aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
-                        .withBody(getOneStagingRepoWithGivenIdJsonResponseAsString(stagingRepository2)),
-                ),
+                        .withBody(getOneStagingRepoWithGivenIdJsonResponseAsString(stagingRepository2))
+                )
         )
     }
 
     private fun expectArtifactUploads(prefix: String, wireMockServer: WireMockServer = server) {
         wireMockServer.stubFor(
             put(urlMatching("$prefix/.+"))
-                .willReturn(aResponse().withStatus(201)),
+                .willReturn(aResponse().withStatus(201))
         )
         wireMockServer.stubFor(
             get(urlMatching("$prefix/.+/maven-metadata.xml"))
-                .willReturn(aResponse().withStatus(404)),
+                .willReturn(aResponse().withStatus(404))
         )
     }
 
@@ -1114,7 +1114,7 @@ class NexusPublishPluginTests {
     private fun assertGivenTransitionOperationOfStagingRepo(transitionOperation: String, stagingRepositoryId: String) {
         server.verify(
             postRequestedFor(urlMatching("/staging/bulk/$transitionOperation"))
-                .withRequestBody(matchingJsonPath("\$.data[?(@.stagedRepositoryIds[0] == '$stagingRepositoryId')]")),
+                .withRequestBody(matchingJsonPath("\$.data[?(@.stagedRepositoryIds[0] == '$stagingRepositoryId')]"))
         )
     }
 
@@ -1145,7 +1145,7 @@ class NexusPublishPluginTests {
 
     private fun getOneStagingRepoWithGivenIdJsonResponseAsString(
         stagingRepository: StagingRepository,
-        stagingProfileId: String = STAGING_PROFILE_ID,
+        stagingProfileId: String = STAGING_PROFILE_ID
     ): String {
         return """
             {
