@@ -5,8 +5,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     `kotlin-dsl`
-    `maven-publish`
-    id("com.gradle.plugin-publish") version "0.21.0"
+    id("com.gradle.plugin-publish") version "1.1.0"
     id("com.diffplug.spotless") version "6.0.0"
     id("com.github.johnrengelman.shadow") version "7.1.2"
     id("org.jetbrains.gradle.plugin.idea-ext")
@@ -21,19 +20,17 @@ val readableName = "Nexus Publish Plugin"
 description = "Gradle Plugin for publishing to Nexus that automates creating, closing, and releasing staging repositories"
 val repoUrl = "https://github.com/gradle-nexus/publish-plugin"
 
-pluginBundle {
-    description = project.description
-    website = repoUrl
-    vcsUrl = repoUrl
-    tags = listOf("publishing", "maven", "nexus")
-}
-
+@Suppress("UnstableApiUsage") // Using this DSL is the only way on Gradle 8.0, could still change slightly in the future.
 gradlePlugin {
+    website.set(repoUrl)
+    vcsUrl.set(repoUrl)
     plugins {
         create("nexusPublish") {
             id = "io.github.gradle-nexus.publish-plugin"
             displayName = readableName
             implementationClass = "io.github.gradlenexus.publishplugin.NexusPublishPlugin"
+            description = project.description
+            tags.addAll("publishing", "maven", "nexus")
         }
     }
 }
