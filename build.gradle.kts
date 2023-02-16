@@ -41,6 +41,7 @@ repositories {
 
 val licenseHeaderFile = file("gradle/license-header.txt")
 spotless {
+    lineEndings = com.diffplug.spotless.LineEnding.UNIX
     kotlin {
         targetExclude("**/*.gradle.kts", "**/build/generated-sources/**/*.kt")
         //"import-ordering" required here as it started to fail after spotless plugin upgrade to 0.35.0 - resolve in separate PR
