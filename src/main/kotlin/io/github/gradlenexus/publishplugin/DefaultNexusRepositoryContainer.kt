@@ -20,11 +20,9 @@ import groovy.lang.Closure
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.internal.NamedDomainObjectContainerConfigureDelegate
-import org.gradle.util.ConfigureUtil
 import java.net.URI
 import javax.inject.Inject
 
-@Suppress("UnstableApiUsage")
 internal open class DefaultNexusRepositoryContainer @Inject constructor(
     delegate: NamedDomainObjectContainer<NexusRepository>
 ) : NexusRepositoryContainer, NamedDomainObjectContainer<NexusRepository> by delegate {
@@ -38,5 +36,10 @@ internal open class DefaultNexusRepositoryContainer @Inject constructor(
     }
 
     override fun configure(configureClosure: Closure<*>): NamedDomainObjectContainer<NexusRepository> =
-        ConfigureUtil.configureSelf(configureClosure, this, NamedDomainObjectContainerConfigureDelegate(configureClosure, this))
+        @Suppress("DEPRECATION") // TODO https://github.com/gradle-nexus/publish-plugin/issues/152
+        org.gradle.util.ConfigureUtil.configureSelf(
+            configureClosure,
+            this,
+            NamedDomainObjectContainerConfigureDelegate(configureClosure, this)
+        )
 }
