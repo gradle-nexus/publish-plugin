@@ -24,8 +24,8 @@ import org.gradle.util.Configurable;
 import java.util.Objects;
 
 /**
- * Exact copy of [org.gradle.util.internal.ClosureBackedAction] from Gradle 7.6, except.
-
+ * Exact copy of [org.gradle.util.internal.ClosureBackedAction] from Gradle 7.6, except:
+ *
  * - removed everything except the methods we are using
  * - removed deprecation warnings
  *
