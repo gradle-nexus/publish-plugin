@@ -66,21 +66,16 @@ idea {
     }
 }
 
-val shadowed by configurations.creating
 configurations {
-    compileOnly {
-        extendsFrom(shadowed)
-    }
     testImplementation {
-        extendsFrom(shadowed)
         exclude(group = "junit", module = "junit")
     }
 }
 
 dependencies {
-    shadowed("com.squareup.retrofit2:retrofit:2.9.0")
-    shadowed("com.squareup.retrofit2:converter-gson:2.9.0")
-    shadowed("net.jodah:failsafe:2.4.3")
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("net.jodah:failsafe:2.4.3")
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.8.1")
     testImplementation("com.github.tomakehurst:wiremock:2.27.2")
@@ -167,7 +162,6 @@ tasks {
     }
     shadowJar {
         dependsOn(relocateShadowJar)
-        configurations = listOf(shadowed)
         exclude("META-INF/maven/**", "META-INF/proguard/**", "META-INF/*.kotlin_module")
         manifest {
             attributes["Implementation-Version"] = project.version
