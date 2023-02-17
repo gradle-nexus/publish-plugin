@@ -17,6 +17,7 @@
 package io.github.gradlenexus.publishplugin
 
 import org.gradle.api.Action
+import org.gradle.api.NamedDomainObjectFactory
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.container
 import org.gradle.kotlin.dsl.newInstance
@@ -53,9 +54,15 @@ open class NexusPublishExtension(project: Project) {
 
     val repositories: NexusRepositoryContainer = project.objects.newInstance(
         DefaultNexusRepositoryContainer::class,
-        project.container(NexusRepository::class) { name ->
-            project.objects.newInstance(NexusRepository::class, name, project)
-        }
+        // `project.container(NexusRepository::class) { name -> ... }`,
+        // but in Kotlin 1.3 "New Inference" is not implemented yet, so we have to be explicit.
+        // https://kotlinlang.org/docs/whatsnew14.html#new-more-powerful-type-inference-algorithm
+        project.container(
+            NexusRepository::class,
+            NamedDomainObjectFactory { name ->
+                project.objects.newInstance(NexusRepository::class, name, project)
+            }
+        )
     )
 
     fun repositories(action: Action<in NexusRepositoryContainer>) = action.execute(repositories)

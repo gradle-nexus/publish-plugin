@@ -5,14 +5,13 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     `kotlin-dsl`
-    `maven-publish`
-    id("com.gradle.plugin-publish") version "0.21.0"
+    id("com.gradle.plugin-publish") version "1.1.0"
     // From 6.14.0 onwards Spotless requires Gradle to be on Java 11,
     // but we still use Java 8 in .github/workflows/java-versions.yml.
     id("com.diffplug.spotless") version "6.13.0"
-    id("com.github.johnrengelman.shadow") version "6.1.0"
+    id("com.github.johnrengelman.shadow") version "7.1.2"
     id("org.jetbrains.gradle.plugin.idea-ext")
-    id("com.github.ben-manes.versions") version "0.39.0"
+    id("com.github.ben-manes.versions") version "0.45.0"
     id("org.ajoberstar.stutter") version "0.6.0"
 }
 
@@ -23,19 +22,17 @@ val readableName = "Nexus Publish Plugin"
 description = "Gradle Plugin for publishing to Nexus that automates creating, closing, and releasing staging repositories"
 val repoUrl = "https://github.com/gradle-nexus/publish-plugin"
 
-pluginBundle {
-    description = project.description
-    website = repoUrl
-    vcsUrl = repoUrl
-    tags = listOf("publishing", "maven", "nexus")
-}
-
+@Suppress("UnstableApiUsage") // Using this DSL is the only way on Gradle 8.0, could still change slightly in the future.
 gradlePlugin {
+    website.set(repoUrl)
+    vcsUrl.set(repoUrl)
     plugins {
         create("nexusPublish") {
             id = "io.github.gradle-nexus.publish-plugin"
             displayName = readableName
             implementationClass = "io.github.gradlenexus.publishplugin.NexusPublishPlugin"
+            description = project.description
+            tags.addAll("publishing", "maven", "nexus")
         }
     }
 }
@@ -77,33 +74,32 @@ idea {
     }
 }
 
-val shadowed by configurations.creating
 configurations {
-    compileOnly {
-        extendsFrom(shadowed)
-    }
     testImplementation {
-        extendsFrom(shadowed)
         exclude(group = "junit", module = "junit")
     }
+    // Workaround https://github.com/gradle/gradle/issues/23928
+    shadow.configure { afterEvaluate { this@configure.dependencies.remove(project.dependencies.gradleApi()) } }
 }
 
 dependencies {
-    shadowed("com.squareup.retrofit2:retrofit:2.9.0")
-    shadowed("com.squareup.retrofit2:converter-gson:2.9.0")
-    shadowed("net.jodah:failsafe:2.4.3")
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("net.jodah:failsafe:2.4.3")
 
-    testImplementation("org.junit.jupiter:junit-jupiter:5.8.1")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.9.2")
     testImplementation("com.github.tomakehurst:wiremock:2.27.2")
     testImplementation("ru.lanwen.wiremock:wiremock-junit5:1.3.1")
-    testImplementation("org.assertj:assertj-core:3.21.0")
-    testImplementation("org.mockito:mockito-junit-jupiter:4.0.0")
+    testImplementation("org.assertj:assertj-core:3.24.2")
+    // This cannot be updated to 5.x as it requires Java 11,
+    // but we are running CI on Java 8 in .github/workflows/java-versions.yml.
+    testImplementation("org.mockito:mockito-junit-jupiter:4.11.0")
     testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
 }
 
 java {
-    withJavadocJar()
-    withSourcesJar()
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
 }
 
 stutter {
@@ -150,13 +146,27 @@ sourceSets {
     }
 }
 
-kotlinDslPluginOptions {
-    experimentalWarning.set(false)
-}
-
 tasks {
-    withType<KotlinCompile>().configureEach {
-        kotlinOptions.jvmTarget = "1.8"
+    afterEvaluate {
+        // This needs to be in an afterEvaluate block,
+        // because otherwise KotlinDslCompilerPlugins would win, and override what we've set to Kotlin 1.8.
+        withType<KotlinCompile>().configureEach {
+            kotlinOptions.jvmTarget = JavaVersion.VERSION_1_8.toString()
+            // Supporting Gradle 5.0+ needs to use Kotlin 1.3.
+            // See https://docs.gradle.org/current/userguide/compatibility.html
+            kotlinOptions.apiVersion = "1.3"
+            // Theoretically we could use newer language version here,
+            // but sadly the @kotlin.Metadata created on the classes would be incompatible with Kotlin 1.3 consumers.
+            kotlinOptions.languageVersion = "1.3"
+            doFirst {
+                if (kotlinOptions.apiVersion == "1.3") {
+                    // Suppress "Language version 1.3 is deprecated and its support will be removed in a future version of Kotlin".
+                    kotlinOptions.freeCompilerArgs += "-Xsuppress-version-warnings"
+                } else {
+                    TODO("Remove -Xsuppress-version-warnings suppression, or change the condition to ${kotlinOptions.languageVersion}")
+                }
+            }
+        }
     }
     val relocateShadowJar by registering(ConfigureShadowRelocation::class) {
         target = shadowJar.get()
@@ -164,7 +174,6 @@ tasks {
     }
     shadowJar {
         dependsOn(relocateShadowJar)
-        configurations = listOf(shadowed)
         exclude("META-INF/maven/**", "META-INF/proguard/**", "META-INF/*.kotlin_module")
         manifest {
             attributes["Implementation-Version"] = project.version
@@ -211,25 +220,6 @@ tasks {
     }
     withType<Test>().matching { it.name.startsWith("compatTest") }.configureEach {
         systemProperty("plugin.version", project.version)
-    }
-}
-
-configurations {
-    configureEach {
-        outgoing {
-            val removed = artifacts.removeIf { it.classifier.isNullOrEmpty() }
-            if (removed) {
-                artifact(tasks.shadowJar) {
-                    classifier = ""
-                }
-            }
-        }
-    }
-    // used by plugin-publish plugin
-    archives {
-        outgoing {
-            artifact(tasks.named("sourcesJar"))
-        }
     }
 }
 
