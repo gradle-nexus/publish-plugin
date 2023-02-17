@@ -25,3 +25,8 @@ jobs:
     - uses: gradle/gradle-build-action@v2
       with:
         arguments: --scan --stacktrace build
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: ${{ matrix.os }} build folder
+        path: ${{ github.workspace }}/build/libs/
