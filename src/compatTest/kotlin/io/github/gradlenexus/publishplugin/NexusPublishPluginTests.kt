@@ -949,10 +949,19 @@ class NexusPublishPluginTests {
         gradleRunner(*arguments).buildAndFail()
 
     private fun gradleRunner(vararg arguments: String): GradleRunner {
+        val warnings = when {
+            // There's a deprecation in Gradle 7.6 that doesn't allow for passing builds.
+            // See https://github.com/gradle-nexus/publish-plugin/issues/152 for more details.
+            // This conditional branch of when should be removed once that issue is fixed.
+            gradleVersion >= GradleVersion.version("7.6") -> "all"
+            // Failing only became an option at Gradle 5.6.
+            gradleVersion >= GradleVersion.version("5.6") -> "fail"
+            else -> "all"
+        }
         return gradleRunner
 //                .withDebug(true)
             .withProjectDir(projectDir.toFile())
-            .withArguments(*arguments, "--stacktrace", "--warning-mode=${if (gradleVersion >= GradleVersion.version("5.6")) "fail" else "all"}")
+            .withArguments(*arguments, "--stacktrace", "--warning-mode=$warnings")
             .forwardOutput()
     }
 
