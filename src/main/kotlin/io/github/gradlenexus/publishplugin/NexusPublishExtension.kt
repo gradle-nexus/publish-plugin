@@ -53,6 +53,9 @@ open class NexusPublishExtension(project: Project) {
 
     val repositories: NexusRepositoryContainer = project.objects.newInstance(
         DefaultNexusRepositoryContainer::class,
+        // `project.container(NexusRepository::class) { name -> ... }`,
+        // but in Kotlin 1.3 "New Inference" is not implemented yet, so we have to be explicit.
+        // https://kotlinlang.org/docs/whatsnew14.html#new-more-powerful-type-inference-algorithm
         project.container(
             NexusRepository::class,
             NamedDomainObjectFactory { name ->
