@@ -167,6 +167,5 @@ class TaskOrchestrationTest {
         return tasks.first()
     }
 
-    @Suppress("unused")
     private fun transitioningTaskNamesForSonatype(): List<String> = listOf("closeSonatypeStagingRepository", "releaseSonatypeStagingRepository")
 }
