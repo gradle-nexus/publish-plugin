@@ -20,16 +20,17 @@ import groovy.lang.Closure
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.internal.NamedDomainObjectContainerConfigureDelegate
-import org.gradle.util.ConfigureUtil
 import java.net.URI
 import javax.inject.Inject
 
-@Suppress("UnstableApiUsage")
 internal open class DefaultNexusRepositoryContainer @Inject constructor(
     delegate: NamedDomainObjectContainer<NexusRepository>
 ) : NexusRepositoryContainer, NamedDomainObjectContainer<NexusRepository> by delegate {
 
-    override fun sonatype(): NexusRepository = sonatype {}
+    override fun sonatype(): NexusRepository =
+        // `sonatype { }`, but in Kotlin 1.3 "New Inference" is not implemented yet, so we have to be explicit.
+        // https://kotlinlang.org/docs/whatsnew14.html#new-more-powerful-type-inference-algorithm
+        sonatype(Action {})
 
     override fun sonatype(action: Action<in NexusRepository>): NexusRepository = create("sonatype") {
         nexusUrl.set(URI.create("https://oss.sonatype.org/service/local/"))
@@ -38,5 +39,10 @@ internal open class DefaultNexusRepositoryContainer @Inject constructor(
     }
 
     override fun configure(configureClosure: Closure<*>): NamedDomainObjectContainer<NexusRepository> =
-        ConfigureUtil.configureSelf(configureClosure, this, NamedDomainObjectContainerConfigureDelegate(configureClosure, this))
+        @Suppress("DEPRECATION") // TODO https://github.com/gradle-nexus/publish-plugin/issues/152
+        org.gradle.util.ConfigureUtil.configureSelf(
+            configureClosure,
+            this,
+            NamedDomainObjectContainerConfigureDelegate(configureClosure, this)
+        )
 }
