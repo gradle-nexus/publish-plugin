@@ -69,6 +69,8 @@ configurations {
     testImplementation {
         exclude(group = "junit", module = "junit")
     }
+    // Workaround https://github.com/gradle/gradle/issues/23928
+    shadow.configure { afterEvaluate { this@configure.dependencies.remove(project.dependencies.gradleApi()) } }
 }
 
 dependencies {
