@@ -26,7 +26,7 @@ jobs:
             echo "Fetching and setting Gradle version for '$gv'"
             wget -O- -q https://services.gradle.org/versions/$gv | jq -r '.version | select( . != null )' >> .stutter/java11.lock
           done
-          echo "Configured Gradle versions for compatibility tests:"
+          echo "Gradle versions configured for compatibility tests:"
           cat .stutter/java11.lock
       - name: Run compatTest
         run: ./gradlew --continue test compatTest
