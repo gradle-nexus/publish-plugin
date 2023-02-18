@@ -11,7 +11,7 @@ on:
 
 jobs:
   gradle-compatTest:
-    name: "Compatibility tests for latest Gradle versions"
+    name: "Compatibility tests with latest Gradle versions"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -23,7 +23,7 @@ jobs:
         run: |
           echo -n "" > .stutter/java11.lock
           for gv in current release-candidate nightly release-nightly; do
-            echo "Fetching and setting Gradle version for $gv"
+            echo "Fetching and setting Gradle version for '$gv'"
             wget -O- -q https://services.gradle.org/versions/$gv | jq -r '.version | select( . != null )' >> .stutter/java11.lock
           done
           echo "Configured Gradle versions for compatibility tests:"
