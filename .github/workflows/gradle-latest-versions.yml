@@ -1,0 +1,32 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: Gradle latest versions tests
+
+on:
+  schedule:
+    - cron: "0 7 * * MON"
+  push:
+    branches:
+      - "gradleLatestVersionsTestManualTrigger"
+      - "szpak/gradleLatestVersionsGHActions"
+
+jobs:
+  gradle-compatTest:
+    name: "Compatibility tests for latest Gradle versions"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-java@v3
+        with:
+          java-version: 11
+          distribution: 'zulu'
+      - name: Fetch and set latest Gradle versions to test with
+        run: |
+          echo -n "" > .stutter/java11.lock
+          for gv in current release-candidate nightly release-nightly; do
+            echo "Fetching and setting Gradle version for $gv"
+            wget -O- -q https://services.gradle.org/versions/$gv | jq -r '.version | select( . != null )' >> .stutter/java11.lock
+          done
+          echo "Configured Gradle versions for compatibility tests:"
+          cat .stutter/java11.lock
+      - name: Run compatTest
+        run: ./gradlew --continue test compatTest
