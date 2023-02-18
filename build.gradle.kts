@@ -6,7 +6,9 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     `kotlin-dsl`
     id("com.gradle.plugin-publish") version "1.1.0"
-    id("com.diffplug.spotless") version "6.0.0"
+    // From 6.14.0 onwards Spotless requires Gradle to be on Java 11,
+    // but we still use Java 8 in .github/workflows/java-versions.yml.
+    id("com.diffplug.spotless") version "6.13.0"
     id("com.github.johnrengelman.shadow") version "7.1.2"
     id("org.jetbrains.gradle.plugin.idea-ext")
     id("com.github.ben-manes.versions") version "0.45.0"
@@ -41,10 +43,17 @@ repositories {
 
 val licenseHeaderFile = file("gradle/license-header.txt")
 spotless {
+    lineEndings = com.diffplug.spotless.LineEnding.UNIX
     kotlin {
         targetExclude("**/*.gradle.kts", "**/build/generated-sources/**/*.kt")
-        //"import-ordering" required here as it started to fail after spotless plugin upgrade to 0.35.0 - resolve in separate PR
-        ktlint().userData(mapOf("disabled_rules" to "comment-spacing,import-ordering"))
+        ktlint().editorConfigOverride(
+            mapOf(
+                // Trailing comma language feature requires Kotlin plugin 1.4+, at the moment the compilation is done with Kotlin 1.3.
+                // This helps spotlessKotlinCheck and spotlessApply to format the code properly, see also .editorconfig.
+                "ktlint_standard_trailing-comma-on-call-site" to "disabled",
+                "ktlint_standard_trailing-comma-on-declaration-site" to "disabled"
+            )
+        )
         licenseHeaderFile(licenseHeaderFile)
     }
 }

@@ -40,7 +40,7 @@ import org.gradle.util.GradleVersion
 class NexusPublishPlugin : Plugin<Project> {
 
     companion object {
-        //visibility for testing
+        // visibility for testing
         const val SIMPLIFIED_CLOSE_AND_RELEASE_TASK_NAME = "closeAndReleaseStagingRepository"
     }
 
@@ -70,13 +70,25 @@ class NexusPublishPlugin : Plugin<Project> {
             val repository = this
             val retrieveStagingProfileTask = rootProject.tasks.register<RetrieveStagingProfile>("retrieve${capitalizedName}StagingProfile", rootProject.objects, extension, repository)
             val initializeTask = rootProject.tasks.register<InitializeNexusStagingRepository>(
-                "initialize${capitalizedName}StagingRepository", rootProject.objects, extension, repository, registry
+                "initialize${capitalizedName}StagingRepository",
+                rootProject.objects,
+                extension,
+                repository,
+                registry
             )
             val closeTask = rootProject.tasks.register<CloseNexusStagingRepository>(
-                "close${capitalizedName}StagingRepository", rootProject.objects, extension, repository, registry
+                "close${capitalizedName}StagingRepository",
+                rootProject.objects,
+                extension,
+                repository,
+                registry
             )
             val releaseTask = rootProject.tasks.register<ReleaseNexusStagingRepository>(
-                "release${capitalizedName}StagingRepository", rootProject.objects, extension, repository, registry
+                "release${capitalizedName}StagingRepository",
+                rootProject.objects,
+                extension,
+                repository,
+                registry
             )
             val closeAndReleaseTask = rootProject.tasks.register<Task>(
                 "closeAndRelease${capitalizedName}StagingRepository"

@@ -128,11 +128,12 @@ open class NexusClient(private val baseUrl: URI, username: String?, password: St
                 "Unexpected read repository id ($stagingRepositoryId != ${readStagingRepo.repositoryId})"
             }
             return StagingRepository(
-                readStagingRepo.repositoryId, StagingRepository.State.parseString(readStagingRepo.type),
+                readStagingRepo.repositoryId,
+                StagingRepository.State.parseString(readStagingRepo.type),
                 readStagingRepo.transitioning
             )
         } else {
-            return StagingRepository.notFound(stagingRepositoryId) //Should not happen
+            return StagingRepository.notFound(stagingRepositoryId) // Should not happen
         }
     }
 

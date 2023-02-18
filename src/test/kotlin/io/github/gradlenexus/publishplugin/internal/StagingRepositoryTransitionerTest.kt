@@ -42,6 +42,7 @@ internal class StagingRepositoryTransitionerTest {
 
     @Mock
     private lateinit var nexusClient: NexusClient
+
     @Mock
     private lateinit var retrier: ActionRetrier<StagingRepository>
 

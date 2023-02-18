@@ -116,7 +116,7 @@ class NexusPublishPluginTests {
     @Test
     fun `can get StagingProfileId from Nexus`() {
         writeDefaultSingleProjectConfiguration()
-        //and
+        // and
         buildGradle.append(
             """
             nexusPublishing {
@@ -130,7 +130,7 @@ class NexusPublishPluginTests {
             }
             """
         )
-        //and
+        // and
         stubGetStagingProfilesForOneProfileIdGivenId(STAGING_PROFILE_ID)
 
         val result = run("retrieveSonatypeStagingProfile")
@@ -294,7 +294,10 @@ class NexusPublishPluginTests {
     }
 
     @Test
-    fun `publishes to two Nexus repositories`(@MethodScopeWiremockResolver.MethodScopedWiremockServer @Wiremock otherServer: WireMockServer) {
+    fun `publishes to two Nexus repositories`(
+        @MethodScopeWiremockResolver.MethodScopedWiremockServer @Wiremock
+        otherServer: WireMockServer
+    ) {
         projectDir.resolve("settings.gradle").write(
             """
             rootProject.name = 'sample'
@@ -689,7 +692,8 @@ class NexusPublishPluginTests {
         stubGetStagingRepoWithIdAndStateRequest(
             StagingRepository(
                 stagingRepositoryId,
-                operation.desiredState, false
+                operation.desiredState,
+                false
             )
         )
     }
@@ -721,13 +725,13 @@ class NexusPublishPluginTests {
         assertReleaseOfStagingRepo()
     }
 
-    //TODO: Move to separate subclass with command line tests for @Option
-    //TODO: Consider switching to parameterized tests for close and release
+    // TODO: Move to separate subclass with command line tests for @Option
+    // TODO: Consider switching to parameterized tests for close and release
     @Test
     fun `should allow to take staging repo id to close from command line without its initialization`() {
         writeDefaultSingleProjectConfiguration()
         writeMockedSonatypeNexusPublishingConfiguration()
-        //and
+        // and
         stubCloseStagingRepoRequestWithSubsequentQueryAboutItsState(OVERRIDDEN_STAGED_REPOSITORY_ID)
 
         val result = run("closeSonatypeStagingRepository", "--staging-repository-id=$OVERRIDDEN_STAGED_REPOSITORY_ID")
@@ -740,7 +744,7 @@ class NexusPublishPluginTests {
     fun `should allow to take staging repo id to release from command line without its initialization`() {
         writeDefaultSingleProjectConfiguration()
         writeMockedSonatypeNexusPublishingConfiguration()
-        //and
+        // and
         stubReleaseStagingRepoRequestWithSubsequentQueryAboutItsState(OVERRIDDEN_STAGED_REPOSITORY_ID)
 
         val result = run("releaseSonatypeStagingRepository", "--staging-repository-id=$OVERRIDDEN_STAGED_REPOSITORY_ID")
@@ -762,7 +766,7 @@ class NexusPublishPluginTests {
     @Test
     internal fun `initialize task should resolve stagingProfileId if not provided and keep it for close task`() {
         writeDefaultSingleProjectConfiguration()
-        //and
+        // and
         buildGradle.append(
             """
             nexusPublishing {
@@ -776,7 +780,7 @@ class NexusPublishPluginTests {
             }
             """
         )
-        //and
+        // and
         stubGetStagingProfilesForOneProfileIdGivenId(STAGING_PROFILE_ID)
         stubCreateStagingRepoRequest("/staging/profiles/$STAGING_PROFILE_ID/start", STAGED_REPOSITORY_ID)
         stubCloseStagingRepoRequestWithSubsequentQueryAboutItsState()
@@ -785,16 +789,16 @@ class NexusPublishPluginTests {
 
         assertSuccess(result, ":initializeSonatypeStagingRepository")
         assertSuccess(result, ":closeSonatypeStagingRepository")
-        //and
+        // and
         assertGetStagingProfile(1)
     }
 
-    //TODO: Parameterize them
+    // TODO: Parameterize them
     @Test
     internal fun `close task should retry getting repository state on transitioning`() {
         writeDefaultSingleProjectConfiguration()
         writeMockedSonatypeNexusPublishingConfiguration()
-        //and
+        // and
         stubTransitToDesiredStateStagingRepoRequest(StagingRepoTransitionOperation.CLOSE)
         stubGetGivenStagingRepositoryInFirstAndSecondCall(
             StagingRepository(STAGED_REPOSITORY_ID, StagingRepository.State.OPEN, true),
@@ -804,7 +808,7 @@ class NexusPublishPluginTests {
         val result = run("closeSonatypeStagingRepository", "--staging-repository-id=$STAGED_REPOSITORY_ID")
 
         assertSuccess(result, ":closeSonatypeStagingRepository")
-        //and
+        // and
         assertGetStagingRepository(STAGED_REPOSITORY_ID, 2)
     }
 
@@ -812,7 +816,7 @@ class NexusPublishPluginTests {
     internal fun `release task should retry getting repository state on transitioning`() {
         writeDefaultSingleProjectConfiguration()
         writeMockedSonatypeNexusPublishingConfiguration()
-        //and
+        // and
         stubTransitToDesiredStateStagingRepoRequest(StagingRepoTransitionOperation.RELEASE)
         stubGetGivenStagingRepositoryInFirstAndSecondCall(
             StagingRepository(STAGED_REPOSITORY_ID, StagingRepository.State.CLOSED, true),
@@ -822,7 +826,7 @@ class NexusPublishPluginTests {
         val result = run("releaseSonatypeStagingRepository", "--staging-repository-id=$STAGED_REPOSITORY_ID")
 
         assertSuccess(result, ":releaseSonatypeStagingRepository")
-        //and
+        // and
         assertGetStagingRepository(STAGED_REPOSITORY_ID, 2)
     }
 

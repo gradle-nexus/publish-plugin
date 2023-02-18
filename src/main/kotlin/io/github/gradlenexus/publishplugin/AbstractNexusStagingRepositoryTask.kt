@@ -39,7 +39,7 @@ constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository
         set(extension.connectTimeout)
     }
 
-    //TODO: Expose externally as interface with getters only
+    // TODO: Expose externally as interface with getters only
     @Nested
     val repository = objects.property<NexusRepository>().apply {
         set(repository)

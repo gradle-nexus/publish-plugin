@@ -27,7 +27,7 @@ open class BasicActionRetrier<R>(maxRetries: Int, delayBetween: Duration, stopFu
     private val maxAttempts: Int = maxRetries + 1
 
     private val retrier: RetryPolicy<R> = RetryPolicy<R>()
-        //TODO: Some exceptions could be handled separately
+        // TODO: Some exceptions could be handled separately
         .handleResultIf(stopFunction)
         .onFailedAttempt { event ->
             log.info("Attempt ${event.attemptCount}/$maxAttempts failed with result: ${event.lastResult}")
