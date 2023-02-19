@@ -3,9 +3,6 @@ name: Gradle latest versions tests
 on:
   schedule:
     - cron: "0 7 * * MON"
-  push:
-    branches:
-      - "szpak/gradleLatestVersionsGHActions"
   workflow_dispatch:
 
 jobs:
