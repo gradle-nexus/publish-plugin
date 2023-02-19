@@ -19,14 +19,27 @@ jobs:
         with:
           java-version: 11
           distribution: 'zulu'
-      - name: Fetch and set latest Gradle versions to test with
+
+      - name: Fetch latest available Gradle versions
         run: |
-          echo -n "" > .stutter/java11.lock
-          for gv in current release-candidate nightly release-nightly; do
-            echo "Fetching and setting Gradle version for '$gv'"
-            wget -O- -q https://services.gradle.org/versions/$gv | jq -r '.version | select( . != null )' >> .stutter/java11.lock
+          GRADLE_VERSIONS_TYPES_TO_FETCH="current release-candidate nightly release-nightly"
+          GRADLE_VERSIONS_OUTPUT_FILE=latest-gradle-versions.txt
+
+          for gv in $GRADLE_VERSIONS_TYPES_TO_FETCH; do
+            echo "Fetching latest Gradle version for '$gv'"
+            curl --silent --show-error "https://services.gradle.org/versions/$gv" | jq -r '.version | select( . != null )' >> latest-gradle-versions.txt
           done
+
+          echo -e "\nGradle versions configured for compatibility tests (in $GRADLE_VERSIONS_OUTPUT_FILE):"
+          cat $GRADLE_VERSIONS_OUTPUT_FILE
+
+          echo "GRADLE_VERSIONS_OUTPUT_FILE=$GRADLE_VERSIONS_OUTPUT_FILE" >> $GITHUB_ENV
+
+      - name: Set latest Gradle versions to test with
+        run: |
+          cp "${{ env.GRADLE_VERSIONS_OUTPUT_FILE }}" .stutter/java11.lock
           echo "Gradle versions configured for compatibility tests:"
           cat .stutter/java11.lock
+
       - name: Run compatTest
         run: ./gradlew --continue test compatTest
