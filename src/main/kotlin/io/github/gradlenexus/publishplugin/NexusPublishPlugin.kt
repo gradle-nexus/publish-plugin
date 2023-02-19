@@ -139,6 +139,7 @@ class NexusPublishPlugin : Plugin<Project> {
             allprojects {
                 val publishingProject = this
                 plugins.withId("maven-publish") {
+                    val projectExtension = publishingProject.extensions.create<ProjectNexusPublishingExtension>(ProjectNexusPublishingExtension.NAME, project)
                     val nexusRepositories = addMavenRepositories(publishingProject, extension, registry)
                     nexusRepositories.forEach { (nexusRepo, mavenRepo) ->
                         val initializeTask = rootProject.tasks.named<InitializeNexusStagingRepository>("initialize${nexusRepo.capitalizedName}StagingRepository")
@@ -154,7 +155,7 @@ class NexusPublishPlugin : Plugin<Project> {
                         releaseTask {
                             mustRunAfter(publishAllTask)
                         }
-                        configureTaskDependencies(publishingProject, initializeTask, publishAllTask, closeTask, releaseTask, mavenRepo)
+                        configureTaskDependencies(publishingProject, initializeTask, publishAllTask, closeTask, releaseTask, mavenRepo, projectExtension)
                     }
                 }
             }
@@ -193,7 +194,8 @@ class NexusPublishPlugin : Plugin<Project> {
         publishAllTask: TaskProvider<Task>,
         closeTask: TaskProvider<CloseNexusStagingRepository>,
         releaseTask: TaskProvider<ReleaseNexusStagingRepository>,
-        mavenRepo: MavenArtifactRepository
+        mavenRepo: MavenArtifactRepository,
+        projectExtension: ProjectNexusPublishingExtension
     ) {
         val mavenPublications = project.the<PublishingExtension>().publications.withType<MavenPublication>()
         mavenPublications.configureEach {
@@ -202,6 +204,7 @@ class NexusPublishPlugin : Plugin<Project> {
                 "publish${publication.name.capitalize()}PublicationTo${mavenRepo.name.capitalize()}Repository"
             )
             publishTask {
+                onlyIf { projectExtension.enabled.getOrElse(true) }
                 dependsOn(initializeTask)
                 doFirst { logger.info("Uploading to {}", repository.url) }
             }
