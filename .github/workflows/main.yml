@@ -9,6 +9,7 @@ on:
   pull_request:
     branches:
       - '*'
+  merge_group:
 
 jobs:
   gradle:
