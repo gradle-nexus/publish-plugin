@@ -76,7 +76,7 @@ class NexusPublishPlugin : Plugin<Project> {
                 repository,
                 registry
             )
-            val findStagingRepository = rootProject.tasks.register<FindStagingRepository>(
+            val findStagingRepository = rootProject.tasks.register<InitializeNexusStagingRepository>(
                 "find${capitalizedName}StagingRepository",
                 rootProject.objects,
                 extension,
@@ -85,6 +85,10 @@ class NexusPublishPlugin : Plugin<Project> {
             )
             findStagingRepository {
                 description = "Finds the staging repository for ${repository.name}"
+                repositorySearchMode.set(RepositorySearchMode.FIND_OR_FAIL)
+                // initializeTask defaults to FIND_OR_CREATE, so we'll pick up the created repository
+                // if we execute after initializeTask
+                mustRunAfter(initializeTask)
             }
             val closeTask = rootProject.tasks.register<CloseNexusStagingRepository>(
                 "close${capitalizedName}StagingRepository",
@@ -157,7 +161,7 @@ class NexusPublishPlugin : Plugin<Project> {
                     val nexusRepositories = addMavenRepositories(publishingProject, extension, registry)
                     nexusRepositories.forEach { (nexusRepo, mavenRepo) ->
                         val initializeTask = rootProject.tasks.named<InitializeNexusStagingRepository>("initialize${nexusRepo.capitalizedName}StagingRepository")
-                        val findStagingRepositoryTask = rootProject.tasks.named<FindStagingRepository>("find${nexusRepo.capitalizedName}StagingRepository")
+                        val findStagingRepositoryTask = rootProject.tasks.named<InitializeNexusStagingRepository>("find${nexusRepo.capitalizedName}StagingRepository")
                         val closeTask = rootProject.tasks.named<CloseNexusStagingRepository>("close${nexusRepo.capitalizedName}StagingRepository")
                         val releaseTask = rootProject.tasks.named<ReleaseNexusStagingRepository>("release${nexusRepo.capitalizedName}StagingRepository")
                         val publishAllTask = publishingProject.tasks.register("publishTo${nexusRepo.capitalizedName}") {
@@ -206,7 +210,7 @@ class NexusPublishPlugin : Plugin<Project> {
     private fun configureTaskDependencies(
         project: Project,
         initializeTask: TaskProvider<InitializeNexusStagingRepository>,
-        findStagingRepositoryTask: TaskProvider<FindStagingRepository>,
+        findStagingRepositoryTask: TaskProvider<InitializeNexusStagingRepository>,
         publishAllTask: TaskProvider<Task>,
         closeTask: TaskProvider<CloseNexusStagingRepository>,
         releaseTask: TaskProvider<ReleaseNexusStagingRepository>,
@@ -220,16 +224,35 @@ class NexusPublishPlugin : Plugin<Project> {
             )
             publishTask {
                 dependsOn(initializeTask)
-                mustRunAfter(findStagingRepositoryTask)
                 doFirst { logger.info("Uploading to {}", repository.url) }
             }
             publishAllTask {
                 dependsOn(publishTask)
             }
+            // Skip dependency on findStagingRepositoryTask if stagingRepositoryId is explicitly set
+            val dummyDetachedConfiguration = project.configurations.detachedConfiguration().apply {
+                description = "This is a dummy configuration that is used as a dependency when no dependency really needed"
+            }
             closeTask {
+                dependsOn(
+                    project.provider {
+                        when {
+                            stagingRepositoryId.isPresent -> dummyDetachedConfiguration
+                            else -> findStagingRepositoryTask
+                        }
+                    }
+                )
                 mustRunAfter(publishTask)
             }
             releaseTask {
+                dependsOn(
+                    project.provider {
+                        when {
+                            stagingRepositoryId.isPresent -> dummyDetachedConfiguration
+                            else -> findStagingRepositoryTask
+                        }
+                    }
+                )
                 mustRunAfter(publishTask)
             }
         }

@@ -73,13 +73,11 @@ class NexusPublishE2ETests : BaseGradleTest() {
 
         // Release artifacts after the review
         val closeResult = run(
-            "findSonatypeStagingRepository",
             "releaseSonatypeStagingRepository"
         )
 
         // then
         closeResult.apply {
-            assertSuccess(":findSonatypeStagingRepository")
             assertSuccess(":releaseSonatypeStagingRepository")
         }
     }

@@ -16,8 +16,12 @@
 
 package io.github.gradlenexus.publishplugin.internal
 
-data class StagingRepository constructor(val id: String, val state: State, val transitioning: Boolean) {
-
+data class StagingRepository constructor(
+    val id: String,
+    val state: State,
+    val transitioning: Boolean,
+    val description: String = DEFAULT_DESCRIPTION
+) {
     enum class State {
         OPEN,
         CLOSED,
@@ -40,6 +44,7 @@ data class StagingRepository constructor(val id: String, val state: State, val t
     }
 
     companion object {
+        val DEFAULT_DESCRIPTION = "org.example:sample:0.0.1"
         fun notFound(id: String): StagingRepository {
             return StagingRepository(id, State.NOT_FOUND, false)
         }

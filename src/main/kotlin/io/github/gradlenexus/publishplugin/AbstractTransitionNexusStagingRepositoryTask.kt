@@ -40,8 +40,8 @@ abstract class AbstractTransitionNexusStagingRepositoryTask(
     @Input
     val stagingRepositoryId = objects.property<String>().apply {
         set(
-            registry.map {
-                it[repository.name].stagingRepositoryId
+            project.provider {
+                registry.get().getOrNull(repository.name)?.stagingRepositoryId
             }
         )
     }

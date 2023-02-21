@@ -127,19 +127,27 @@ and close and release from your local machine.
 An alternative use case is to publish and close the repository and let others review and preview the publication before
 the release.
 
-The use case is possible by using `find${repository.name.capitalize()}StagingRepository` (e.g. `findSonatypeStagingRepository`) task.
-By default, `initialize${repository.name.capitalize()}StagingRepository` task adds a description to the repository which defaults to
-`$group:$module:$version` of the root project, so the repository can be found later using the same description.
+The use case should work automatically most of the time since `InitializeNexusStagingRepository`
+attempts to find an existing staging repository before creating a new one.
+
+However, when running `closeSonatypeStagingRepository`, it is expected that the task fails
+if no matching repository is missing, so `closeSonatypeStagingRepository` depends on
+`find${repository.name.capitalize()}StagingRepository` task to find the repository or fail.
 
 The description can be customized via:
 * `io.github.gradlenexus.publishplugin.NexusPublishExtension.getRepositoryDescription` property (default: `$group:$module:$version` of the root project)
 * `io.github.gradlenexus.publishplugin.InitializeNexusStagingRepository.repositoryDescription` property
-* `io.github.gradlenexus.publishplugin.FindStagingRepository.getDescriptionRegex` property (regex, default: `"\\b" + Regex.escape(repositoryDescription) + "(\\s|$)"`)
+
+The search regular expression can be customized with
+* `io.github.gradlenexus.publishplugin.InitializeNexusStagingRepository.repositorySearchRegex` property (regex, default: `"\\b" + Regex.escape(repositoryDescription) + "(\\s|$)"`)
 
 So the steps to publish and release in different Gradle invocations are:
 1. Publish the artifacts to the staging repository: `./gradlew publishToSonatype`
-2. Close the staging repository: `./gradlew findSonatypeStagingRepository closeSonatypeStagingRepository`
-3. Release the staging repository: `./gradlew findSonatypeStagingRepository releaseSonatypeStagingRepository`
+2. Close the staging repository: `./gradlew closeSonatypeStagingRepository`
+3. Release the staging repository: `./gradlew releaseSonatypeStagingRepository`
+
+Note: `closeSonatypeStagingRepository` and `releaseSonatypeStagingRepository` will automatically find
+the staging repository id unless, however, you can optionally override it with `--staging-repository-id repo-42` argument.
 
 ### Full example
 
@@ -309,7 +317,8 @@ The plugin does the following:
 
 - configure a Maven artifact repository for each repository defined in the `nexusPublishing { repositories { ... } }` block in each subproject that applies the `maven-publish` plugin
 - creates a `retrieve{repository.name.capitalize()}StagingProfile` task that retrieves the staging profile id from the remote Nexus repository. This is a diagnostic task to enable setting the configuration property `stagingProfileId` in  `nexusPublishing { repositories { myRepository { ... } } }`. Specifying the configuration property rather than relying on the API call is considered a performance optimization.  
-- create a `initialize${repository.name.capitalize()}StagingRepository` task that starts a new staging repository in case the project's version does not end with `-SNAPSHOT` (customizable via the `useStaging` property) and sets the URL of the corresponding Maven artifact repository accordingly. In case of a multi-project build, all subprojects with the same `nexusUrl` will use the same staging repository.
+- create a `initialize${repository.name.capitalize()}StagingRepository` task that reuses an existing or creates a new starts a new staging repository in case the project's version does not end with `-SNAPSHOT` (customizable via the `useStaging` property) and sets the URL of the corresponding Maven artifact repository accordingly. In case of a multi-project build, all subprojects with the same `nexusUrl` will use the same staging repository.
+- create a `find${repository.name.capitalize()}StagingRepository` task that searches an existing staging repository (e.g. in case `close...` or `release...` tasks executed in an isolated Gradle invocation).
 - make all publishing tasks for each configured repository depend on the `initialize${repository.name.capitalize()}StagingRepository` task
 - create a `publishTo${repository.name.capitalize()}` lifecycle task that depends on all publishing tasks for the corresponding Maven artifact repository
 - create `close${repository.name.capitalize()}StagingRepository` and `release${repository.name.capitalize()}StagingRepository` tasks that must run after the all publishing tasks

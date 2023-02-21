@@ -14,21 +14,26 @@
  * limitations under the License.
  */
 
-package io.github.gradlenexus.publishplugin.internal
+package io.github.gradlenexus.publishplugin
 
-import java.util.concurrent.ConcurrentHashMap
+enum class RepositorySearchMode {
+    /**
+     * Create a new repository.
+     */
+    CREATE,
 
-class StagingRepositoryDescriptorRegistry {
+    /**
+     * Reuse an existing staging repository if present, or create a new one if the existing is not found.
+     */
+    FIND_OR_CREATE,
 
-    private val mapping = ConcurrentHashMap<String, StagingRepositoryDescriptor>()
+    /**
+     * Search for an existing repository, or fail in case no matching repository found.
+     */
+    FIND_OR_FAIL,
 
-    operator fun set(name: String, descriptor: StagingRepositoryDescriptor) {
-        mapping[name] = descriptor
-    }
-
-    operator fun get(name: String) = mapping[name] ?: throw IllegalStateException("No staging repository with name $name created")
-
-    fun getOrNull(name: String) = mapping[name]
-
-    override fun toString() = mapping.toString()
+    /**
+     * Search for an existing repository, or return `null` in case no matching repository found.
+     */
+    FIND_OR_NULL
 }
