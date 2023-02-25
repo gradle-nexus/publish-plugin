@@ -93,7 +93,7 @@ dependencies {
     testImplementation("org.assertj:assertj-core:3.24.2")
     // This cannot be updated to 5.x as it requires Java 11,
     // but we are running CI on Java 8 in .github/workflows/java-versions.yml.
-    testImplementation("org.mockito:mockito-junit-jupiter:4.11.0")
+    testImplementation("org.mockito:mockito-junit-jupiter:5.1.1")
     testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
 }
 
