@@ -85,7 +85,7 @@ configurations {
 dependencies {
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
-    implementation("net.jodah:failsafe:2.4.3")
+    implementation("net.jodah:failsafe:2.4.4")
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.9.2")
     testImplementation("com.github.tomakehurst:wiremock:2.27.2")
