@@ -141,6 +141,8 @@ So the steps to publish and release in different Gradle invocations are:
 2. Close the staging repository: `./gradlew findSonatypeStagingRepository closeSonatypeStagingRepository`
 3. Release the staging repository: `./gradlew findSonatypeStagingRepository releaseSonatypeStagingRepository`
 
+(in the above example, steps 1 and 2 could be also combined into `./gradlew publishToSonatype closeSonatypeStagingRepository`, to make only the releasing done in a separate step)
+
 ### Full example
 
 #### Groovy DSL
