@@ -19,6 +19,7 @@ package io.github.gradlenexus.publishplugin
 import io.github.gradlenexus.publishplugin.internal.NexusClient
 import io.github.gradlenexus.publishplugin.internal.StagingRepositoryDescriptorRegistry
 import org.gradle.api.GradleException
+import org.gradle.api.Incubating
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
@@ -28,6 +29,7 @@ import org.gradle.api.tasks.TaskAction
 import org.gradle.kotlin.dsl.property
 import javax.inject.Inject
 
+@Incubating
 open class FindStagingRepository @Inject constructor(
     objects: ObjectFactory,
     extension: NexusPublishExtension,
