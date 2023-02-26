@@ -11,12 +11,12 @@ plugins {
     id("com.diffplug.spotless") version "6.13.0"
     id("com.github.johnrengelman.shadow") version "7.1.2"
     id("org.jetbrains.gradle.plugin.idea-ext")
-    id("com.github.ben-manes.versions") version "0.45.0"
+    id("com.github.ben-manes.versions") version "0.46.0"
     id("org.ajoberstar.stutter") version "0.6.0"
 }
 
 group = "io.github.gradle-nexus"
-version = "1.1.1-SNAPSHOT"
+version = "1.2.1-SNAPSHOT"
 
 val readableName = "Nexus Publish Plugin"
 description = "Gradle Plugin for publishing to Nexus that automates creating, closing, and releasing staging repositories"
@@ -85,7 +85,7 @@ configurations {
 dependencies {
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
-    implementation("net.jodah:failsafe:2.4.3")
+    implementation("net.jodah:failsafe:2.4.4")
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.9.2")
     testImplementation("com.github.tomakehurst:wiremock:2.27.2")
