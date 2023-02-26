@@ -20,6 +20,8 @@ import io.github.gradlenexus.publishplugin.BaseGradleTest
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.*
 
 @Suppress("FunctionName")
 class NexusPublishE2ETests : BaseGradleTest() {
@@ -49,12 +51,19 @@ class NexusPublishE2ETests : BaseGradleTest() {
     }
 
     @ParameterizedTest(name = "{0}")
-    @ValueSource(strings = ["nexus-publish-e2e-minimal", "nexus-publish-e2e-multi-project"])
+    // nexus-publish-e2e-multi-project disabled due to: https://github.com/gradle-nexus/publish-plugin/issues/200
+    @ValueSource(strings = ["nexus-publish-e2e-minimal"/*, "nexus-publish-e2e-multi-project"*/])
     fun `release project to real Sonatype Nexus in two executions`(projectName: String) {
         File("src/e2eTest/resources/$projectName").copyRecursively(projectDir)
+        // Even though published e2e package is effectively dropped, Sonatype Nexus rules requires unique versions - https://issues.sonatype.org/browse/OSSRH-86532
+        // On the other hand, findSonatypeStagingRepository mechanism assumes constant project version across calls to find proper repository
+        val uniqueVersion = "0.0.2-unique-${SimpleDateFormat("yyyyMMdd-HHmmss").format(Date())}"
 
         // when
-        val buildResult = run("build")
+        val buildResult = run(
+            "build",
+            "-PoverriddenVersion=$uniqueVersion"
+        )
         // then
         buildResult.assertSuccess { it.path.substringAfterLast(':').matches("build".toRegex()) }
 
@@ -63,7 +72,8 @@ class NexusPublishE2ETests : BaseGradleTest() {
         val result = run(
             "publishToSonatype",
             "closeSonatypeStagingRepository",
-            "--info"
+            "--info",
+            "-PoverriddenVersion=$uniqueVersion"
         )
 
         result.apply {
@@ -74,7 +84,9 @@ class NexusPublishE2ETests : BaseGradleTest() {
         // Release artifacts after the review
         val closeResult = run(
             "findSonatypeStagingRepository",
-            "releaseSonatypeStagingRepository"
+            "releaseSonatypeStagingRepository",
+            "--info",
+            "-PoverriddenVersion=$uniqueVersion"
         )
 
         // then
