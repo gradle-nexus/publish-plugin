@@ -76,6 +76,16 @@ class NexusPublishPlugin : Plugin<Project> {
                 repository,
                 registry
             )
+            val findStagingRepository = rootProject.tasks.register<FindStagingRepository>(
+                "find${capitalizedName}StagingRepository",
+                rootProject.objects,
+                extension,
+                repository,
+                registry
+            )
+            findStagingRepository {
+                description = "Finds the staging repository for ${repository.name}"
+            }
             val closeTask = rootProject.tasks.register<CloseNexusStagingRepository>(
                 "close${capitalizedName}StagingRepository",
                 rootProject.objects,
@@ -100,11 +110,13 @@ class NexusPublishPlugin : Plugin<Project> {
                 description = "Closes open staging repository in '${repository.name}' Nexus instance."
                 group = PublishingPlugin.PUBLISH_TASK_GROUP
                 mustRunAfter(initializeTask)
+                mustRunAfter(findStagingRepository)
             }
             releaseTask {
                 description = "Releases closed staging repository in '${repository.name}' Nexus instance."
                 group = PublishingPlugin.PUBLISH_TASK_GROUP
                 mustRunAfter(initializeTask)
+                mustRunAfter(findStagingRepository)
                 mustRunAfter(closeTask)
             }
             closeAndReleaseTask {
@@ -115,6 +127,9 @@ class NexusPublishPlugin : Plugin<Project> {
         }
         extension.repositories.whenObjectRemoved {
             rootProject.tasks.named("initialize${capitalizedName}StagingRepository").configure {
+                enabled = false
+            }
+            rootProject.tasks.named("find${capitalizedName}StagingRepository").configure {
                 enabled = false
             }
             rootProject.tasks.named("close${capitalizedName}StagingRepository").configure {
@@ -142,6 +157,7 @@ class NexusPublishPlugin : Plugin<Project> {
                     val nexusRepositories = addMavenRepositories(publishingProject, extension, registry)
                     nexusRepositories.forEach { (nexusRepo, mavenRepo) ->
                         val initializeTask = rootProject.tasks.named<InitializeNexusStagingRepository>("initialize${nexusRepo.capitalizedName}StagingRepository")
+                        val findStagingRepositoryTask = rootProject.tasks.named<FindStagingRepository>("find${nexusRepo.capitalizedName}StagingRepository")
                         val closeTask = rootProject.tasks.named<CloseNexusStagingRepository>("close${nexusRepo.capitalizedName}StagingRepository")
                         val releaseTask = rootProject.tasks.named<ReleaseNexusStagingRepository>("release${nexusRepo.capitalizedName}StagingRepository")
                         val publishAllTask = publishingProject.tasks.register("publishTo${nexusRepo.capitalizedName}") {
@@ -154,7 +170,7 @@ class NexusPublishPlugin : Plugin<Project> {
                         releaseTask {
                             mustRunAfter(publishAllTask)
                         }
-                        configureTaskDependencies(publishingProject, initializeTask, publishAllTask, closeTask, releaseTask, mavenRepo)
+                        configureTaskDependencies(publishingProject, initializeTask, findStagingRepositoryTask, publishAllTask, closeTask, releaseTask, mavenRepo)
                     }
                 }
             }
@@ -190,6 +206,7 @@ class NexusPublishPlugin : Plugin<Project> {
     private fun configureTaskDependencies(
         project: Project,
         initializeTask: TaskProvider<InitializeNexusStagingRepository>,
+        findStagingRepositoryTask: TaskProvider<FindStagingRepository>,
         publishAllTask: TaskProvider<Task>,
         closeTask: TaskProvider<CloseNexusStagingRepository>,
         releaseTask: TaskProvider<ReleaseNexusStagingRepository>,
@@ -203,6 +220,7 @@ class NexusPublishPlugin : Plugin<Project> {
             )
             publishTask {
                 dependsOn(initializeTask)
+                mustRunAfter(findStagingRepositoryTask)
                 doFirst { logger.info("Uploading to {}", repository.url) }
             }
             publishAllTask {

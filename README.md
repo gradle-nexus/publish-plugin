@@ -118,9 +118,30 @@ publishing {
 
 Finally, call `publishToSonatype closeAndReleaseSonatypeStagingRepository` to publish all publications to Sonatype's OSSRH Nexus and subsequently close and release the corresponding staging repository, effectively making the artifacts available in Maven Central (usually after a few minutes).
 
-Note that until [#19](https://github.com/gradle-nexus/publish-plugin/issues/19) is done, the `publishToSonatype closeAndReleaseSonatypeStagingRepository` tasks have to be executed in the same Gradle invocation because `closeAndRelease` relies on information that is not persisted between calls to Gradle. Failing to do so will result in an error like `No staging repository with name sonatype created`.
-
 Please bear in mind that - especially on the initial project publishing to Maven Central - it might be wise to call just `publishToSonatype closeSonatypeStagingRepository` and manually verify that the artifacts placed in the closed staging repository in Nexus looks ok. After that, the staging repository might be dropped (if needed) or manually released from the Nexus UI.  
+
+#### Publishing and closing in different Gradle invocations
+
+You might want to publish and close in different Gradle invocations. For example, you might want to publish from CI
+and close and release from your local machine.
+An alternative use case is to publish and close the repository and let others review and preview the publication before
+the release.
+
+The use case is possible by using `find${repository.name.capitalize()}StagingRepository` (e.g. `findSonatypeStagingRepository`) task.
+By default, `initialize${repository.name.capitalize()}StagingRepository` task adds a description to the repository which defaults to
+`$group:$module:$version` of the root project, so the repository can be found later using the same description.
+
+The description can be customized via:
+* `io.github.gradlenexus.publishplugin.NexusPublishExtension.getRepositoryDescription` property (default: `$group:$module:$version` of the root project)
+* `io.github.gradlenexus.publishplugin.InitializeNexusStagingRepository.repositoryDescription` property
+* `io.github.gradlenexus.publishplugin.FindStagingRepository.getDescriptionRegex` property (regex, default: `"\\b" + Regex.escape(repositoryDescription) + "(\\s|$)"`)
+
+So the steps to publish and release in different Gradle invocations are:
+1. Publish the artifacts to the staging repository: `./gradlew publishToSonatype`
+2. Close the staging repository: `./gradlew findSonatypeStagingRepository closeSonatypeStagingRepository`
+3. Release the staging repository: `./gradlew findSonatypeStagingRepository releaseSonatypeStagingRepository`
+
+(in the above example, steps 1 and 2 could be also combined into `./gradlew publishToSonatype closeSonatypeStagingRepository`, to make only the releasing done in a separate step)
 
 ### Full example
 
