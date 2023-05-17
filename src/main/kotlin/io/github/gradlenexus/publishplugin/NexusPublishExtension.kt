@@ -17,12 +17,20 @@
 package io.github.gradlenexus.publishplugin
 
 import org.gradle.api.Action
+import org.gradle.api.DefaultTask
 import org.gradle.api.NamedDomainObjectFactory
 import org.gradle.api.Project
+import org.gradle.api.publish.Publication
+import org.gradle.api.publish.ivy.IvyPublication
+import org.gradle.api.publish.ivy.tasks.PublishToIvyRepository
+import org.gradle.api.publish.maven.MavenPublication
+import org.gradle.api.publish.maven.tasks.PublishToMavenRepository
 import org.gradle.kotlin.dsl.container
 import org.gradle.kotlin.dsl.newInstance
 import org.gradle.kotlin.dsl.property
+import org.gradle.kotlin.dsl.setProperty
 import java.time.Duration
+import kotlin.reflect.KClass
 
 @Suppress("UnstableApiUsage")
 open class NexusPublishExtension(project: Project) {
@@ -65,5 +73,12 @@ open class NexusPublishExtension(project: Project) {
         )
     )
 
+    val publicationTypes = project.objects.setProperty<PublicationType>().convention(setOf(PublicationType.MAVEN))
+
     fun repositories(action: Action<in NexusRepositoryContainer>) = action.execute(repositories)
+
+    enum class PublicationType(internal val gradleType: KClass<out Publication>, internal val publishTaskType: KClass<out DefaultTask>) {
+        MAVEN(MavenPublication::class, PublishToMavenRepository::class),
+        IVY(IvyPublication::class, PublishToIvyRepository::class)
+    }
 }
