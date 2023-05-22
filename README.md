@@ -81,6 +81,27 @@ signing {
     sign(publishing.publications["mavenJava"])
 }
 ```
+
+#### Publishing with ivy ####
+
+Instead of the `maven-publish` plugin, the `ivy-publish` plugin can be used as well to publish to the nexus repository
+
+In this case the different plugin must be applied and the `nexusPublishing` extension's publishingType property must be configured.
+
+The default `publicationType` is `MAVEN`
+
+```groovy
+nexusPublishing {
+    publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.IVY
+}
+```
+
+```kotlin
+nexusPublishing {
+    publicationType.set(io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.IVY)
+}
+```
+
 #### Add Metadata ####
 ```kotlin
 publishing {
@@ -309,7 +330,7 @@ see any errors that have occurred.
 
 The plugin does the following:
 
-- configure a Maven artifact repository for each repository defined in the `nexusPublishing { repositories { ... } }` block in each subproject that applies the `maven-publish` plugin
+- configure a Maven artifact repository for each repository defined in the `nexusPublishing { repositories { ... } }` block in each subproject that applies the `maven-publish` or the `ivy-publish` plugin
 - creates a `retrieve{repository.name.capitalize()}StagingProfile` task that retrieves the staging profile id from the remote Nexus repository. This is a diagnostic task to enable setting the configuration property `stagingProfileId` in  `nexusPublishing { repositories { myRepository { ... } } }`. Specifying the configuration property rather than relying on the API call is considered a performance optimization.  
 - create a `initialize${repository.name.capitalize()}StagingRepository` task that starts a new staging repository in case the project's version does not end with `-SNAPSHOT` (customizable via the `useStaging` property) and sets the URL of the corresponding Maven artifact repository accordingly. In case of a multi-project build, all subprojects with the same `nexusUrl` will use the same staging repository.
 - make all publishing tasks for each configured repository depend on the `initialize${repository.name.capitalize()}StagingRepository` task
