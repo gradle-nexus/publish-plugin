@@ -176,6 +176,7 @@ class NexusPublishPlugin : Plugin<Project> {
 
         PublicationType.IVY -> project.the<PublishingExtension>().repositories.ivy {
             configureArtifactRepo(nexusRepo, project, extension, registry, true)
+            layout(extension.ivyRepositoryLayout.get())
         }
     }
 

@@ -20,6 +20,7 @@ import org.gradle.api.Action
 import org.gradle.api.DefaultTask
 import org.gradle.api.NamedDomainObjectFactory
 import org.gradle.api.Project
+import org.gradle.api.artifacts.repositories.IvyArtifactRepository
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.SetProperty
 import org.gradle.api.publish.Publication
@@ -76,6 +77,8 @@ open class NexusPublishExtension(project: Project) {
     )
 
     val publicationType: Property<PublicationType> = project.objects.property<PublicationType>().convention(PublicationType.MAVEN)
+
+    val ivyRepositoryLayout: Property<String> = project.objects.property<String>().convention("maven")
 
     fun repositories(action: Action<in NexusRepositoryContainer>) = action.execute(repositories)
 
