@@ -20,9 +20,8 @@ import org.gradle.api.Action
 import org.gradle.api.DefaultTask
 import org.gradle.api.NamedDomainObjectFactory
 import org.gradle.api.Project
-import org.gradle.api.artifacts.repositories.IvyArtifactRepository
+import org.gradle.api.artifacts.repositories.IvyPatternRepositoryLayout
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.SetProperty
 import org.gradle.api.publish.Publication
 import org.gradle.api.publish.ivy.IvyPublication
 import org.gradle.api.publish.ivy.tasks.PublishToIvyRepository
@@ -31,7 +30,6 @@ import org.gradle.api.publish.maven.tasks.PublishToMavenRepository
 import org.gradle.kotlin.dsl.container
 import org.gradle.kotlin.dsl.newInstance
 import org.gradle.kotlin.dsl.property
-import org.gradle.kotlin.dsl.setProperty
 import java.time.Duration
 import kotlin.reflect.KClass
 
@@ -78,7 +76,10 @@ open class NexusPublishExtension(project: Project) {
 
     val publicationType: Property<PublicationType> = project.objects.property<PublicationType>().convention(PublicationType.MAVEN)
 
-    val ivyRepositoryLayout: Property<String> = project.objects.property<String>().convention("maven")
+    val ivyPatternLayout: Property<Action<IvyPatternRepositoryLayout>> = project.objects.property<Action<IvyPatternRepositoryLayout>>()
+    fun ivyPatternLayout(action: Action<IvyPatternRepositoryLayout>) {
+        ivyPatternLayout.set(action)
+    }
 
     fun repositories(action: Action<in NexusRepositoryContainer>) = action.execute(repositories)
 
