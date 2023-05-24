@@ -29,7 +29,12 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.plugins.PublishingPlugin
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.kotlin.dsl.*
+import org.gradle.kotlin.dsl.create
+import org.gradle.kotlin.dsl.invoke
+import org.gradle.kotlin.dsl.named
+import org.gradle.kotlin.dsl.register
+import org.gradle.kotlin.dsl.the
+import org.gradle.kotlin.dsl.withType
 import org.gradle.util.GradleVersion
 
 @Suppress("UnstableApiUsage")
@@ -178,13 +183,19 @@ class NexusPublishPlugin : Plugin<Project> {
     }
 
     private fun addPublicationRepositories(
-        project: Project, extension: NexusPublishExtension, registry: Provider<StagingRepositoryDescriptorRegistry>
+        project: Project,
+        extension: NexusPublishExtension,
+        registry: Provider<StagingRepositoryDescriptorRegistry>
     ): Map<NexusRepository, ArtifactRepository> = extension.repositories.associateWith { nexusRepo ->
         createArtifactRepository(extension.publicationType.get(), project, nexusRepo, extension, registry)
     }
 
     private fun createArtifactRepository(
-        publicationType: PublicationType?, project: Project, nexusRepo: NexusRepository, extension: NexusPublishExtension, registry: Provider<StagingRepositoryDescriptorRegistry>
+        publicationType: PublicationType?,
+        project: Project,
+        nexusRepo: NexusRepository,
+        extension: NexusPublishExtension,
+        registry: Provider<StagingRepositoryDescriptorRegistry>
     ): ArtifactRepository = when (publicationType!!) {
         PublicationType.MAVEN -> project.the<PublishingExtension>().repositories.maven {
             configureArtifactRepo(nexusRepo, project, extension, registry, false)
@@ -201,12 +212,18 @@ class NexusPublishPlugin : Plugin<Project> {
     }
 
     private fun <T> T.configureArtifactRepo(
-        nexusRepo: NexusRepository, project: Project, extension: NexusPublishExtension, registry: Provider<StagingRepositoryDescriptorRegistry>, provideFallback: Boolean
+        nexusRepo: NexusRepository,
+        project: Project,
+        extension: NexusPublishExtension,
+        registry: Provider<StagingRepositoryDescriptorRegistry>,
+        provideFallback: Boolean
     ) where T : UrlArtifactRepository, T : ArtifactRepository, T : AuthenticationSupported {
         name = nexusRepo.name
-        setUrl(project.provider {
-            getRepoUrl(nexusRepo, extension, registry, provideFallback)
-        })
+        setUrl(
+            project.provider {
+                getRepoUrl(nexusRepo, extension, registry, provideFallback)
+            }
+        )
         val allowInsecureProtocol = nexusRepo.allowInsecureProtocol.orNull
         if (allowInsecureProtocol != null) {
             if (GradleVersion.current() >= GradleVersion.version("6.0")) {
@@ -235,7 +252,8 @@ class NexusPublishPlugin : Plugin<Project> {
         publications.configureEach {
             val publication = this
             val publishTask = project.tasks.named(
-                "publish${publication.name.capitalize()}PublicationTo${artifactRepo.name.capitalize()}Repository", publicationType.publishTaskType
+                "publish${publication.name.capitalize()}PublicationTo${artifactRepo.name.capitalize()}Repository",
+                publicationType.publishTaskType
             )
             publishTask {
                 dependsOn(initializeTask)
@@ -259,7 +277,10 @@ class NexusPublishPlugin : Plugin<Project> {
     }
 
     private fun getRepoUrl(
-        nexusRepo: NexusRepository, extension: NexusPublishExtension, registry: Provider<StagingRepositoryDescriptorRegistry>, provideFallback: Boolean
+        nexusRepo: NexusRepository,
+        extension: NexusPublishExtension,
+        registry: Provider<StagingRepositoryDescriptorRegistry>,
+        provideFallback: Boolean
     ) = if (extension.useStaging.get()) {
         val descriptorRegistry = registry.get()
         if (provideFallback) {

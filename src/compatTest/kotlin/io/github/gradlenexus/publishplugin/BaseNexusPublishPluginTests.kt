@@ -33,7 +33,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.io.TempDir
 import ru.lanwen.wiremock.ext.WiremockResolver
-import java.nio.file.Files
 import java.nio.file.Path
 
 @Suppress("FunctionName") // TODO: How to suppress "kotlin:S100" from SonarLint?
@@ -111,7 +110,7 @@ abstract class BaseNexusPublishPluginTests {
         buildGradle.append(
             """
             nexusPublishing {
-                publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.${publicationTypeName}
+                publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName
                 repositories {
                     sonatype {
                         nexusUrl = uri('${server.baseUrl()}')
@@ -145,7 +144,7 @@ abstract class BaseNexusPublishPluginTests {
             """
             plugins {
                 id('java-library')
-                id('${publishPluginId}')
+                id('$publishPluginId')
                 id('io.github.gradle-nexus.publish-plugin')
             }
             group = 'org.example'
@@ -162,7 +161,7 @@ abstract class BaseNexusPublishPluginTests {
                 }
             }
             nexusPublishing {
-                publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.${publicationTypeName}
+                publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName
                 repositories {
                     myNexus {
                         nexusUrl = uri('https://example.com')
@@ -181,7 +180,6 @@ abstract class BaseNexusPublishPluginTests {
         assertNotConsidered(result, ":${publishGoalPrefix}PublicationToSomeOtherRepoRepository")
     }
 
-
     @Test
     fun `displays the error response to the user when a request fails`() {
         projectDir.resolve("settings.gradle").write(
@@ -193,7 +191,7 @@ abstract class BaseNexusPublishPluginTests {
             """
             plugins {
                 id('java-library')
-                id('${publishPluginId}')
+                id('$publishPluginId')
                 id('io.github.gradle-nexus.publish-plugin')
             }
             group = 'org.example'
@@ -206,7 +204,7 @@ abstract class BaseNexusPublishPluginTests {
             }
 
             nexusPublishing {
-                publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.${publicationTypeName}
+                publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName
                 repositories {
                     myNexus {
                         nexusUrl = uri('${server.baseUrl()}')
@@ -229,7 +227,6 @@ abstract class BaseNexusPublishPluginTests {
         Assertions.assertThat(result.output).contains("""{"failure":"message"}""")
     }
 
-
     @Test
     fun `uses configured timeout`() {
         projectDir.resolve("settings.gradle").write(
@@ -243,7 +240,7 @@ abstract class BaseNexusPublishPluginTests {
 
             plugins {
                 id('java-library')
-                id('${publishPluginId}')
+                id('$publishPluginId')
                 id('io.github.gradle-nexus.publish-plugin')
             }
             group = 'org.example'
@@ -255,7 +252,7 @@ abstract class BaseNexusPublishPluginTests {
                 }
             }
             nexusPublishing {
-                publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.${publicationTypeName}
+                publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName
                 repositories {
                     myNexus {
                         nexusUrl = uri('${server.baseUrl()}')
@@ -300,7 +297,7 @@ abstract class BaseNexusPublishPluginTests {
 
             plugins {
                 id('java-library')
-                id('${publishPluginId}')
+                id('$publishPluginId')
                 id('io.github.gradle-nexus.publish-plugin')
             }
             group = 'org.example'
@@ -312,7 +309,7 @@ abstract class BaseNexusPublishPluginTests {
                 }
             }
             nexusPublishing {
-                publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.${publicationTypeName}
+                publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName
                 repositories {
                     myNexus {
                         nexusUrl = uri('http://$nonRoutableAddress/')
@@ -354,7 +351,7 @@ abstract class BaseNexusPublishPluginTests {
                 }
             }
             nexusPublishing {
-                publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.${publicationTypeName}
+                publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName
                 repositories {
                     sonatype()
                 }
@@ -388,7 +385,7 @@ abstract class BaseNexusPublishPluginTests {
                 }
             }
             nexusPublishing {
-                publicationType.set(io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.${publicationTypeName})
+                publicationType.set(io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName)
                 repositories {
                     sonatype()
                 }
@@ -518,7 +515,7 @@ abstract class BaseNexusPublishPluginTests {
         buildGradle.append(
             """
             nexusPublishing {
-                publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.${publicationTypeName}
+                publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName
                 repositories {
                     sonatype {
                         nexusUrl = uri('${server.baseUrl()}')
@@ -585,7 +582,7 @@ abstract class BaseNexusPublishPluginTests {
         projectDir.resolve("build.gradle").append(
             """
             nexusPublishing {
-                publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.${publicationTypeName}
+                publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName
                 repositories {
                     remove(create("myNexus") {
                         nexusUrl = uri('${server.baseUrl()}/b/')
@@ -733,7 +730,7 @@ abstract class BaseNexusPublishPluginTests {
             }
             plugins {
                 id('java-library')
-                id('${publishPluginId}')
+                id('$publishPluginId')
             }
             apply plugin: 'io.github.gradle-nexus.publish-plugin'
             group = 'org.example'
@@ -752,7 +749,7 @@ abstract class BaseNexusPublishPluginTests {
         buildGradle.append(
             """
             nexusPublishing {
-                publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.${publicationTypeName}
+                publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName
                 repositories {
                     sonatype {
                         nexusUrl = uri('${server.baseUrl()}')

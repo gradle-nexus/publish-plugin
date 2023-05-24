@@ -34,7 +34,6 @@ class MavenNexusPublishPluginTests : BaseNexusPublishPluginTests() {
         publicationTypeName = "MAVEN"
     }
 
-
     @Test
     fun `publishes snapshots`() {
         projectDir.resolve("settings.gradle").write(
@@ -47,7 +46,7 @@ class MavenNexusPublishPluginTests : BaseNexusPublishPluginTests() {
             """
             plugins {
                 id('java-library')
-                id('${publishPluginId}')
+                id('$publishPluginId')
                 id('io.github.gradle-nexus.publish-plugin')
             }
             group = 'org.example'
@@ -58,7 +57,7 @@ class MavenNexusPublishPluginTests : BaseNexusPublishPluginTests() {
                 }
             }
             nexusPublishing {
-                publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.${publicationTypeName}
+                publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName
                 repositories {
                     myNexus {
                         nexusUrl = uri('${server.baseUrl()}/shouldNotBeUsed')
@@ -81,7 +80,6 @@ class MavenNexusPublishPluginTests : BaseNexusPublishPluginTests() {
         assertUploaded("/snapshots/org/example/sample/0.0.1-SNAPSHOT/sample-0.0.1-.*.jar")
     }
 
-
     @Test
     fun `publishes to two Nexus repositories`(
         @MethodScopeWiremockResolver.MethodScopedWiremockServer @WiremockResolver.Wiremock
@@ -96,7 +94,7 @@ class MavenNexusPublishPluginTests : BaseNexusPublishPluginTests() {
             """
             plugins {
                 id('java-library')
-                id('${publishPluginId}')
+                id('$publishPluginId')
                 id('io.github.gradle-nexus.publish-plugin')
             }
             group = 'org.example'
@@ -108,7 +106,7 @@ class MavenNexusPublishPluginTests : BaseNexusPublishPluginTests() {
                 }
             }
             nexusPublishing {
-                publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.${publicationTypeName}
+                publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName
                 repositories {
                     myNexus {
                         nexusUrl = uri('${server.baseUrl()}')
@@ -176,7 +174,6 @@ class MavenNexusPublishPluginTests : BaseNexusPublishPluginTests() {
         )
     }
 
-
     @Test
     fun `publishes to Nexus`() {
         projectDir.resolve("settings.gradle").write(
@@ -188,7 +185,7 @@ class MavenNexusPublishPluginTests : BaseNexusPublishPluginTests() {
             """
             plugins {
                 id('java-library')
-                id('${publishPluginId}')
+                id('$publishPluginId')
                 id('io.github.gradle-nexus.publish-plugin')
             }
             group = 'org.example'
@@ -199,7 +196,7 @@ class MavenNexusPublishPluginTests : BaseNexusPublishPluginTests() {
                 }
             }
             nexusPublishing {
-                publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.${publicationTypeName}
+                publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName
                 repositories {
                     myNexus {
                         nexusUrl = uri('${server.baseUrl()}')
@@ -257,7 +254,7 @@ class MavenNexusPublishPluginTests : BaseNexusPublishPluginTests() {
                 id('io.github.gradle-nexus.publish-plugin')
             }
             nexusPublishing {
-                publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.${publicationTypeName}
+                publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName
                 repositories {
                     sonatype {
                         nexusUrl = uri('${server.baseUrl()}')
@@ -275,7 +272,7 @@ class MavenNexusPublishPluginTests : BaseNexusPublishPluginTests() {
         pluginDir.resolve("build.gradle").write(
             """
             plugins {
-                id('${publishPluginId}')
+                id('$publishPluginId')
                 id('java-gradle-plugin')
             }
             gradlePlugin {
@@ -309,7 +306,4 @@ class MavenNexusPublishPluginTests : BaseNexusPublishPluginTests() {
         assertUploadedToStagingRepo("/org/example/gradle-plugin/0.0.1/gradle-plugin-0.0.1.pom")
         assertUploadedToStagingRepo("/org/example/foo/org.example.foo.gradle.plugin/0.0.1/org.example.foo.gradle.plugin-0.0.1.pom")
     }
-
-
-
 }

@@ -52,7 +52,7 @@ class NexusPublishE2ETests : BaseGradleTest() {
 
     @ParameterizedTest(name = "{0}")
     // nexus-publish-e2e-multi-project disabled due to: https://github.com/gradle-nexus/publish-plugin/issues/200
-    @ValueSource(strings = ["nexus-publish-e2e-minimal", "nexus-publish-e2e-minimal-ivy", "nexus-publish-e2e-minimal-ivy-sbt"  /*, "nexus-publish-e2e-multi-project"*/])
+    @ValueSource(strings = ["nexus-publish-e2e-minimal", "nexus-publish-e2e-minimal-ivy", "nexus-publish-e2e-minimal-ivy-sbt" /*, "nexus-publish-e2e-multi-project"*/])
     fun `release project to real Sonatype Nexus in two executions`(projectName: String) {
         File("src/e2eTest/resources/$projectName").copyRecursively(projectDir)
         // Even though published e2e package is effectively dropped, Sonatype Nexus rules requires unique versions - https://issues.sonatype.org/browse/OSSRH-86532

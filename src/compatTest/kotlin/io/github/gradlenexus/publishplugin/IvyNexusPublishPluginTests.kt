@@ -46,7 +46,7 @@ class IvyNexusPublishPluginTests : BaseNexusPublishPluginTests() {
             """
             plugins {
                 id('java-library')
-                id('${publishPluginId}')
+                id('$publishPluginId')
                 id('io.github.gradle-nexus.publish-plugin')
             }
             group = 'org.example'
@@ -57,7 +57,7 @@ class IvyNexusPublishPluginTests : BaseNexusPublishPluginTests() {
                 }
             }
             nexusPublishing {
-                publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.${publicationTypeName}
+                publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName
                 repositories {
                     myNexus {
                         nexusUrl = uri('${server.baseUrl()}/shouldNotBeUsed')
@@ -93,7 +93,7 @@ class IvyNexusPublishPluginTests : BaseNexusPublishPluginTests() {
             """
             plugins {
                 id('java-library')
-                id('${publishPluginId}')
+                id('$publishPluginId')
                 id('io.github.gradle-nexus.publish-plugin')
             }
             group = 'org.example'
@@ -108,7 +108,7 @@ class IvyNexusPublishPluginTests : BaseNexusPublishPluginTests() {
                     artifact "[organisation]/[module]_foo/[revision]/[artifact]-[revision](-[classifier])(.[ext])"
                     m2compatible = true
                 }
-                publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.${publicationTypeName}
+                publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName
                 repositories {
                     myNexus {
                         nexusUrl = uri('${server.baseUrl()}/shouldNotBeUsed')
@@ -131,7 +131,6 @@ class IvyNexusPublishPluginTests : BaseNexusPublishPluginTests() {
         assertUploaded("/snapshots/org/example/sample_foo/0.0.1-SNAPSHOT/ivy-0.0.1-.*.xml")
     }
 
-
     @Test
     fun `publishes to two Nexus repositories`(
         @MethodScopeWiremockResolver.MethodScopedWiremockServer @WiremockResolver.Wiremock
@@ -146,7 +145,7 @@ class IvyNexusPublishPluginTests : BaseNexusPublishPluginTests() {
             """
             plugins {
                 id('java-library')
-                id('${publishPluginId}')
+                id('$publishPluginId')
                 id('io.github.gradle-nexus.publish-plugin')
             }
             group = 'org.example'
@@ -158,7 +157,7 @@ class IvyNexusPublishPluginTests : BaseNexusPublishPluginTests() {
                 }
             }
             nexusPublishing {
-                publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.${publicationTypeName}
+                publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName
                 repositories {
                     myNexus {
                         nexusUrl = uri('${server.baseUrl()}')
@@ -244,7 +243,7 @@ class IvyNexusPublishPluginTests : BaseNexusPublishPluginTests() {
             """
             plugins {
                 id('java-library')
-                id('${publishPluginId}')
+                id('$publishPluginId')
                 id('io.github.gradle-nexus.publish-plugin')
             }
             group = 'org.example'
@@ -255,7 +254,7 @@ class IvyNexusPublishPluginTests : BaseNexusPublishPluginTests() {
                 }
             }
             nexusPublishing {
-                publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.${publicationTypeName}
+                publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName
                 repositories {
                     myNexus {
                         nexusUrl = uri('${server.baseUrl()}')
@@ -292,7 +291,6 @@ class IvyNexusPublishPluginTests : BaseNexusPublishPluginTests() {
         assertUploadedToStagingRepo("/org/example/sample/0.0.1/sample-0.0.1.jar")
     }
 
-
     @Test
     fun `can be used with lazily applied Gradle Plugin Development Plugin`() {
         projectDir.resolve("settings.gradle").write(
@@ -315,7 +313,7 @@ class IvyNexusPublishPluginTests : BaseNexusPublishPluginTests() {
                 id('io.github.gradle-nexus.publish-plugin')
             }
             nexusPublishing {
-                publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.${publicationTypeName}
+                publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName
                 repositories {
                     sonatype {
                         nexusUrl = uri('${server.baseUrl()}')
@@ -333,7 +331,7 @@ class IvyNexusPublishPluginTests : BaseNexusPublishPluginTests() {
         pluginDir.resolve("build.gradle").write(
             """
             plugins {
-                id('${publishPluginId}')
+                id('$publishPluginId')
                 id('java-gradle-plugin')
             }
             gradlePlugin {
@@ -369,6 +367,4 @@ class IvyNexusPublishPluginTests : BaseNexusPublishPluginTests() {
         assertUploadedToStagingRepo("/org/example/gradle-plugin/0.0.1/ivy-0.0.1.xml")
         assertUploadedToStagingRepo("/org.example.foo/org.example.foo.gradle.plugin/0.0.1/ivy-0.0.1.xml")
     }
-
-
 }
