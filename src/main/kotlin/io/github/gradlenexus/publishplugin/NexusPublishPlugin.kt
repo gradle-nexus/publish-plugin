@@ -176,7 +176,11 @@ class NexusPublishPlugin : Plugin<Project> {
 
         PublicationType.IVY -> project.the<PublishingExtension>().repositories.ivy {
             configureArtifactRepo(nexusRepo, project, extension, registry, true)
-            extension.ivyPatternLayout.orNull?.let { this.patternLayout(it) }
+            if (extension.ivyPatternLayout.isPresent) {
+                extension.ivyPatternLayout.get().let { this.patternLayout(it) }
+            } else {
+                this.layout("maven")
+            }
         }
     }
 

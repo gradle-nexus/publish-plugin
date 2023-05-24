@@ -90,6 +90,8 @@ In this case the different plugin must be applied and the `nexusPublishing` exte
 
 The default `publicationType` is `MAVEN`
 
+In case of Ivy publishing, because of compatibility with Sonatype the nexus repository layout will be used by default
+
 ```groovy
 nexusPublishing {
     publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.IVY

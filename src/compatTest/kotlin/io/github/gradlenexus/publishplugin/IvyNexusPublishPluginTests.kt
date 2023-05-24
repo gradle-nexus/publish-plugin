@@ -76,9 +76,9 @@ class IvyNexusPublishPluginTests : BaseNexusPublishPluginTests() {
         val result = run("publishToMyNexus")
 
         assertSkipped(result, ":initializeMyNexusStagingRepository")
-        assertUploaded("/snapshots/org.example/sample/0.0.1-SNAPSHOT/sample-0.0.1-.*.jar")
-        assertUploaded("/snapshots/org.example/sample/0.0.1-SNAPSHOT/ivy-0.0.1-.*.xml")
-        assertUploaded("/snapshots/org.example/sample/0.0.1-SNAPSHOT/sample-0.0.1-.*.module")
+        assertUploaded("/snapshots/org/example/sample/0.0.1-SNAPSHOT/sample-0.0.1-.*.jar")
+        assertUploaded("/snapshots/org/example/sample/0.0.1-SNAPSHOT/ivy-0.0.1-.*.xml")
+        assertUploaded("/snapshots/org/example/sample/0.0.1-SNAPSHOT/sample-0.0.1-.*.module")
     }
 
     @Test
@@ -213,21 +213,21 @@ class IvyNexusPublishPluginTests : BaseNexusPublishPluginTests() {
                 .withRequestBody(WireMock.matchingJsonPath("\$.data[?(@.description == 'org.example:sample:0.0.1')]"))
         )
 
-        assertUploadedToStagingRepo("/org.example/sample/0.0.1/sample-0.0.1.jar")
-        assertUploadedToStagingRepo("/org.example/sample/0.0.1/ivy-0.0.1.xml")
-        assertUploadedToStagingRepo("/org.example/sample/0.0.1/sample-0.0.1.module")
+        assertUploadedToStagingRepo("/org/example/sample/0.0.1/sample-0.0.1.jar")
+        assertUploadedToStagingRepo("/org/example/sample/0.0.1/ivy-0.0.1.xml")
+        assertUploadedToStagingRepo("/org/example/sample/0.0.1/sample-0.0.1.module")
         assertUploadedToStagingRepo(
-            "/org.example/sample/0.0.1/sample-0.0.1.jar",
+            "/org/example/sample/0.0.1/sample-0.0.1.jar",
             stagingRepositoryId = otherStagingRepositoryId,
             wireMockServer = otherServer
         )
         assertUploadedToStagingRepo(
-            "/org.example/sample/0.0.1/ivy-0.0.1.xml",
+            "/org/example/sample/0.0.1/ivy-0.0.1.xml",
             stagingRepositoryId = otherStagingRepositoryId,
             wireMockServer = otherServer
         )
         assertUploadedToStagingRepo(
-            "/org.example/sample/0.0.1/sample-0.0.1.module",
+            "/org/example/sample/0.0.1/sample-0.0.1.module",
             stagingRepositoryId = otherStagingRepositoryId,
             wireMockServer = otherServer
         )
@@ -287,9 +287,9 @@ class IvyNexusPublishPluginTests : BaseNexusPublishPluginTests() {
             WireMock.postRequestedFor(WireMock.urlEqualTo("/staging/profiles/$STAGING_PROFILE_ID/start"))
                 .withRequestBody(WireMock.matchingJsonPath("\$.data[?(@.description == 'org.example:sample:0.0.1')]"))
         )
-        assertUploadedToStagingRepo("/org.example/sample/0.0.1/sample-0.0.1.module")
-        assertUploadedToStagingRepo("/org.example/sample/0.0.1/ivy-0.0.1.xml")
-        assertUploadedToStagingRepo("/org.example/sample/0.0.1/sample-0.0.1.jar")
+        assertUploadedToStagingRepo("/org/example/sample/0.0.1/sample-0.0.1.module")
+        assertUploadedToStagingRepo("/org/example/sample/0.0.1/ivy-0.0.1.xml")
+        assertUploadedToStagingRepo("/org/example/sample/0.0.1/sample-0.0.1.jar")
     }
 
 
@@ -364,9 +364,9 @@ class IvyNexusPublishPluginTests : BaseNexusPublishPluginTests() {
         val result = run("publishToSonatype", "-s")
 
         assertSuccess(result, ":initializeSonatypeStagingRepository")
-        assertUploadedToStagingRepo("/org.example/gradle-plugin/0.0.1/gradle-plugin-0.0.1.jar")
-        assertUploadedToStagingRepo("/org.example/gradle-plugin/0.0.1/gradle-plugin-0.0.1.module")
-        assertUploadedToStagingRepo("/org.example/gradle-plugin/0.0.1/ivy-0.0.1.xml")
+        assertUploadedToStagingRepo("/org/example/gradle-plugin/0.0.1/gradle-plugin-0.0.1.jar")
+        assertUploadedToStagingRepo("/org/example/gradle-plugin/0.0.1/gradle-plugin-0.0.1.module")
+        assertUploadedToStagingRepo("/org/example/gradle-plugin/0.0.1/ivy-0.0.1.xml")
         assertUploadedToStagingRepo("/org.example.foo/org.example.foo.gradle.plugin/0.0.1/ivy-0.0.1.xml")
     }
 
