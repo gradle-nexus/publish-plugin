@@ -82,13 +82,12 @@ signing {
 }
 ```
 
-#### Publishing with ivy ####
+#### Publishing with Ivy ####
 
-Instead of the `maven-publish` plugin, the `ivy-publish` plugin can be used as well to publish to the nexus repository
+There are cases where it may be necessary to use the `ivy-publish` plugin instead of `maven-publish`.
+For example, when publishing Sbt plugins the directory structure needs to be customized which is only possible with Gradle's `IvyArtifactRepository`.
 
-In this case the different plugin must be applied and the `nexusPublishing` extension's publishingType property must be configured.
-
-The default `publicationType` is `MAVEN`
+In such cases, you need to apply the `ivy-publish` plugin and configure the `nexusPublishing` extension's `publicationType` to `IVY` (default is `MAVEN`).
 
 In case of Ivy publishing, because of compatibility with Sonatype the nexus repository layout will be used by default
 
