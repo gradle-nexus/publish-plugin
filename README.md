@@ -98,9 +98,33 @@ nexusPublishing {
 }
 ```
 
+Or use the kotlin DSL:
+
 ```kotlin
 nexusPublishing {
     publicationType.set(io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.IVY)
+}
+```
+
+##### Using Ivy repositories with different artifact patterns ####
+
+In case of ivy it's possible to override the default artifact pattern that is used, which is the Maven pattern due to compatibility reasons with sonatype
+
+To change the pattern of artifacts and ivy files use
+
+```groovy
+ivyPatternLayout {
+    artifact "[organisation]/[module]_foo/[revision]/[artifact]-[revision](-[classifier])(.[ext])"
+    m2compatible = true
+}
+```
+
+Or use the kotlin DSL:
+
+```kotlin
+ivyPatternLayout {
+    artifact("[organisation]/[module]_foo/[revision]/[artifact]-[revision](-[classifier])(.[ext])")
+    m2compatible = true
 }
 ```
 
