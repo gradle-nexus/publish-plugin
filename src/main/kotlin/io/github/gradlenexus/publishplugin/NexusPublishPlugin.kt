@@ -64,19 +64,35 @@ class NexusPublishPlugin : Plugin<Project> {
             val repository = this
             val retrieveStagingProfileTask = rootProject.tasks.register<RetrieveStagingProfile>("retrieve${capitalizedName}StagingProfile", rootProject.objects, extension, repository)
             val initializeTask = rootProject.tasks.register<InitializeNexusStagingRepository>(
-                "initialize${capitalizedName}StagingRepository", rootProject.objects, extension, repository, registry
+                "initialize${capitalizedName}StagingRepository",
+                rootProject.objects,
+                extension,
+                repository,
+                registry
             )
             val findStagingRepository = rootProject.tasks.register<FindStagingRepository>(
-                "find${capitalizedName}StagingRepository", rootProject.objects, extension, repository, registry
+                "find${capitalizedName}StagingRepository",
+                rootProject.objects,
+                extension,
+                repository,
+                registry
             )
             findStagingRepository {
                 description = "Finds the staging repository for ${repository.name}"
             }
             val closeTask = rootProject.tasks.register<CloseNexusStagingRepository>(
-                "close${capitalizedName}StagingRepository", rootProject.objects, extension, repository, registry
+                "close${capitalizedName}StagingRepository",
+                rootProject.objects,
+                extension,
+                repository,
+                registry
             )
             val releaseTask = rootProject.tasks.register<ReleaseNexusStagingRepository>(
-                "release${capitalizedName}StagingRepository", rootProject.objects, extension, repository, registry
+                "release${capitalizedName}StagingRepository",
+                rootProject.objects,
+                extension,
+                repository,
+                registry
             )
             val closeAndReleaseTask = rootProject.tasks.register<Task>(
                 "closeAndRelease${capitalizedName}StagingRepository"
@@ -260,11 +276,7 @@ class NexusPublishPlugin : Plugin<Project> {
             val closeAndReleaseSimplifiedTask = rootProject.tasks.named(SIMPLIFIED_CLOSE_AND_RELEASE_TASK_NAME)
             closeAndReleaseSimplifiedTask.configure {
                 val repositoryNamesAsString = extension.repositories.joinToString(", ") { "'${it.name}'" }
-                val instanceCardinalityAwareString = if (extension.repositories.size > 1) {
-                    "instances"
-                } else {
-                    "instance"
-                }
+                val instanceCardinalityAwareString = if (extension.repositories.size > 1) { "instances" } else { "instance" }
                 description = "Closes and releases open staging repositories in the following Nexus $instanceCardinalityAwareString: $repositoryNamesAsString"
                 enabled = true
             }
