@@ -16,7 +16,10 @@
 
 package io.github.gradlenexus.publishplugin
 
+import org.gradle.api.Action
 import org.gradle.api.Project
+import org.gradle.api.artifacts.repositories.IvyPatternRepositoryLayout
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
@@ -32,6 +35,9 @@ open class NexusRepository @Inject constructor(@Input val name: String, project:
 
     @Input
     val snapshotRepositoryUrl = project.objects.property<URI>()
+
+    @Input
+    val publicationType: Property<NexusPublishExtension.PublicationType> = project.objects.property<NexusPublishExtension.PublicationType>().value(NexusPublishExtension.PublicationType.MAVEN)
 
     @Internal
     val username = project.objects.property<String>().apply {
@@ -52,4 +58,11 @@ open class NexusRepository @Inject constructor(@Input val name: String, project:
 
     @get:Internal
     internal val capitalizedName by lazy { name.capitalize() }
+
+    @Optional
+    @Input
+    val ivyPatternLayout: Property<Action<IvyPatternRepositoryLayout>> = project.objects.property<Action<IvyPatternRepositoryLayout>>()
+    fun ivyPatternLayout(action: Action<IvyPatternRepositoryLayout>) {
+        ivyPatternLayout.set(action)
+    }
 }

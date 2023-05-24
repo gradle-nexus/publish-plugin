@@ -154,29 +154,31 @@ class NexusPublishPlugin : Plugin<Project> {
         rootProject.afterEvaluate {
             allprojects {
                 val publishingProject = this
-                val publicationType = extension.publicationType.get()
-                val id = when (publicationType) {
-                    PublicationType.IVY -> "ivy-publish"
-                    PublicationType.MAVEN -> "maven-publish"
-                }
-                plugins.withId(id) {
+                plugins.withType<PublishingPlugin> {
                     val nexusRepositories = addPublicationRepositories(publishingProject, extension, registry)
                     nexusRepositories.forEach { (nexusRepo, publicationRepo) ->
-                        val initializeTask = rootProject.tasks.named<InitializeNexusStagingRepository>("initialize${nexusRepo.capitalizedName}StagingRepository")
-                        val findStagingRepositoryTask = rootProject.tasks.named<FindStagingRepository>("find${nexusRepo.capitalizedName}StagingRepository")
-                        val closeTask = rootProject.tasks.named<CloseNexusStagingRepository>("close${nexusRepo.capitalizedName}StagingRepository")
-                        val releaseTask = rootProject.tasks.named<ReleaseNexusStagingRepository>("release${nexusRepo.capitalizedName}StagingRepository")
-                        val publishAllTask = publishingProject.tasks.register("publishTo${nexusRepo.capitalizedName}") {
-                            description = "Publishes all Maven/Ivy publications produced by this project to the '${nexusRepo.name}' Nexus repository."
-                            group = PublishingPlugin.PUBLISH_TASK_GROUP
+                        val publicationType = nexusRepo.publicationType.get()
+                        val id = when (publicationType) {
+                            PublicationType.IVY -> "ivy-publish"
+                            PublicationType.MAVEN -> "maven-publish"
                         }
-                        closeTask {
-                            mustRunAfter(publishAllTask)
+                        plugins.withId(id) {
+                            val initializeTask = rootProject.tasks.named<InitializeNexusStagingRepository>("initialize${nexusRepo.capitalizedName}StagingRepository")
+                            val findStagingRepositoryTask = rootProject.tasks.named<FindStagingRepository>("find${nexusRepo.capitalizedName}StagingRepository")
+                            val closeTask = rootProject.tasks.named<CloseNexusStagingRepository>("close${nexusRepo.capitalizedName}StagingRepository")
+                            val releaseTask = rootProject.tasks.named<ReleaseNexusStagingRepository>("release${nexusRepo.capitalizedName}StagingRepository")
+                            val publishAllTask = publishingProject.tasks.register("publishTo${nexusRepo.capitalizedName}") {
+                                description = "Publishes all Maven/Ivy publications produced by this project to the '${nexusRepo.name}' Nexus repository."
+                                group = PublishingPlugin.PUBLISH_TASK_GROUP
+                            }
+                            closeTask {
+                                mustRunAfter(publishAllTask)
+                            }
+                            releaseTask {
+                                mustRunAfter(publishAllTask)
+                            }
+                            configureTaskDependencies(publishingProject, initializeTask, findStagingRepositoryTask, publishAllTask, closeTask, releaseTask, publicationRepo, publicationType)
                         }
-                        releaseTask {
-                            mustRunAfter(publishAllTask)
-                        }
-                        configureTaskDependencies(publishingProject, initializeTask, findStagingRepositoryTask, publishAllTask, closeTask, releaseTask, publicationRepo, publicationType)
                     }
                 }
             }
@@ -189,7 +191,7 @@ class NexusPublishPlugin : Plugin<Project> {
         extension: NexusPublishExtension,
         registry: Provider<StagingRepositoryDescriptorRegistry>
     ): Map<NexusRepository, ArtifactRepository> = extension.repositories.associateWith { nexusRepo ->
-        createArtifactRepository(extension.publicationType.get(), project, nexusRepo, extension, registry)
+        createArtifactRepository(nexusRepo.publicationType.get(), project, nexusRepo, extension, registry)
     }
 
     private fun createArtifactRepository(
@@ -205,8 +207,8 @@ class NexusPublishPlugin : Plugin<Project> {
 
         PublicationType.IVY -> project.the<PublishingExtension>().repositories.ivy {
             configureArtifactRepo(nexusRepo, project, extension, registry, true)
-            if (extension.ivyPatternLayout.isPresent) {
-                extension.ivyPatternLayout.get().let { this.patternLayout(it) }
+            if (nexusRepo.ivyPatternLayout.isPresent) {
+                nexusRepo.ivyPatternLayout.get().let { this.patternLayout(it) }
             } else {
                 this.layout("maven")
             }
@@ -297,7 +299,11 @@ class NexusPublishPlugin : Plugin<Project> {
             val closeAndReleaseSimplifiedTask = rootProject.tasks.named(SIMPLIFIED_CLOSE_AND_RELEASE_TASK_NAME)
             closeAndReleaseSimplifiedTask.configure {
                 val repositoryNamesAsString = extension.repositories.joinToString(", ") { "'${it.name}'" }
-                val instanceCardinalityAwareString = if (extension.repositories.size > 1) { "instances" } else { "instance" }
+                val instanceCardinalityAwareString = if (extension.repositories.size > 1) {
+                    "instances"
+                } else {
+                    "instance"
+                }
                 description = "Closes and releases open staging repositories in the following Nexus $instanceCardinalityAwareString: $repositoryNamesAsString"
                 enabled = true
             }
