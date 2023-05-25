@@ -30,7 +30,6 @@ import javax.inject.Inject
 
 @Incubating
 abstract class FindStagingRepository @Inject constructor(
-    extension: NexusPublishExtension,
     repository: NexusRepository,
     private val registry: Provider<InvalidatingStagingRepositoryDescriptorRegistry>
 ) : AbstractNexusStagingRepositoryTask(repository) {
@@ -46,8 +45,6 @@ abstract class FindStagingRepository @Inject constructor(
     abstract val stagingRepositoryId: Property<String>
 
     init {
-        this.packageGroup.set(extension.packageGroup)
-        this.descriptionRegex.set(extension.repositoryDescription.map { "\\b" + Regex.escape(it) + "(\\s|$)" })
         outputs.cacheIf("the task requests data from the external repository, so we don't want to cache it") {
             false
         }

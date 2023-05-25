@@ -29,16 +29,11 @@ import javax.inject.Inject
  */
 @Incubating
 abstract class RetrieveStagingProfile @Inject constructor(
-    extension: NexusPublishExtension,
     repository: NexusRepository
 ) : AbstractNexusStagingRepositoryTask(repository) {
 
     @get:Input
     abstract val packageGroup: Property<String>
-
-    init {
-        this.packageGroup.set(extension.packageGroup)
-    }
 
     @TaskAction
     fun retrieveStagingProfile() {

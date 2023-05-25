@@ -107,7 +107,6 @@ class NexusPublishPlugin : Plugin<Project> {
 
             val retrieveStagingProfileTask = rootProject.tasks.register<RetrieveStagingProfile>(
                 "retrieve${capitalizedName}StagingProfile",
-                extension,
                 repository
             )
             retrieveStagingProfileTask {
@@ -115,26 +114,28 @@ class NexusPublishPlugin : Plugin<Project> {
                 this.description = "Gets and displays a staging profile id for a given repository and package group. " +
                     "This is a diagnostic task to get the value and " +
                     "put it into the NexusRepository configuration closure as stagingProfileId."
+                this.packageGroup.convention(extension.packageGroup)
             }
             val initializeTask = rootProject.tasks.register<InitializeNexusStagingRepository>(
                 "initialize${capitalizedName}StagingRepository",
-                extension,
                 repository,
                 registry
             )
             initializeTask {
                 this.group = PublishingPlugin.PUBLISH_TASK_GROUP
                 this.description = "Initializes the staging repository in '${repository.name}' Nexus instance."
+                this.packageGroup.convention(extension.packageGroup)
             }
             val findStagingRepository = rootProject.tasks.register<FindStagingRepository>(
                 "find${capitalizedName}StagingRepository",
-                extension,
                 repository,
                 registry
             )
             findStagingRepository {
                 this.group = PublishingPlugin.PUBLISH_TASK_GROUP
                 this.description = "Finds the staging repository for ${repository.name}"
+                this.packageGroup.convention(extension.packageGroup)
+                this.descriptionRegex.convention(extension.repositoryDescription.map { "\\b" + Regex.escape(it) + "(\\s|$)" })
             }
             val closeTask = rootProject.tasks.register<CloseNexusStagingRepository>(
                 "close${capitalizedName}StagingRepository",

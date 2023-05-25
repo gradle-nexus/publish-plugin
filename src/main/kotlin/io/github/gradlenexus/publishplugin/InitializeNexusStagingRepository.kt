@@ -28,7 +28,6 @@ import org.gradle.api.tasks.TaskAction
 import javax.inject.Inject
 
 abstract class InitializeNexusStagingRepository @Inject constructor(
-    extension: NexusPublishExtension,
     repository: NexusRepository,
     private val registry: Provider<InvalidatingStagingRepositoryDescriptorRegistry>
 ) : AbstractNexusStagingRepositoryTask(repository) {
@@ -36,10 +35,6 @@ abstract class InitializeNexusStagingRepository @Inject constructor(
     @get:Optional
     @get:Input
     abstract val packageGroup: Property<String>
-
-    init {
-        this.packageGroup.set(extension.packageGroup)
-    }
 
     @TaskAction
     fun createStagingRepo() {
