@@ -110,9 +110,9 @@ abstract class BaseNexusPublishPluginTests {
         buildGradle.append(
             """
             nexusPublishing {
-                publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName
                 repositories {
                     sonatype {
+                        publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName
                         nexusUrl = uri('${server.baseUrl()}')
                         allowInsecureProtocol = true
                         //No staging profile defined
@@ -161,9 +161,9 @@ abstract class BaseNexusPublishPluginTests {
                 }
             }
             nexusPublishing {
-                publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName
                 repositories {
                     myNexus {
+                        publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName
                         nexusUrl = uri('https://example.com')
                     }
                 }
@@ -204,9 +204,9 @@ abstract class BaseNexusPublishPluginTests {
             }
 
             nexusPublishing {
-                publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName
                 repositories {
                     myNexus {
+                        publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName
                         nexusUrl = uri('${server.baseUrl()}')
                         snapshotRepositoryUrl = uri('${server.baseUrl()}/snapshots/')
                         allowInsecureProtocol = true
@@ -252,9 +252,9 @@ abstract class BaseNexusPublishPluginTests {
                 }
             }
             nexusPublishing {
-                publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName
                 repositories {
                     myNexus {
+                        publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName
                         nexusUrl = uri('${server.baseUrl()}')
                         snapshotRepositoryUrl = uri('${server.baseUrl()}/snapshots/')
                         username = 'username'
@@ -309,9 +309,9 @@ abstract class BaseNexusPublishPluginTests {
                 }
             }
             nexusPublishing {
-                publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName
                 repositories {
                     myNexus {
+                        publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName
                         nexusUrl = uri('http://$nonRoutableAddress/')
                         snapshotRepositoryUrl = uri('$nonRoutableAddress/snapshots/')
                         username = 'username'
@@ -351,9 +351,10 @@ abstract class BaseNexusPublishPluginTests {
                 }
             }
             nexusPublishing {
-                publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName
                 repositories {
-                    sonatype()
+                    sonatype {
+                        publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName
+                    }
                 }
             }
             """
@@ -385,9 +386,10 @@ abstract class BaseNexusPublishPluginTests {
                 }
             }
             nexusPublishing {
-                publicationType.set(io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName)
                 repositories {
-                    sonatype()
+                    sonatype {
+                        publicationType.set(io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName)
+                    }
                 }
             }
             """
@@ -515,9 +517,9 @@ abstract class BaseNexusPublishPluginTests {
         buildGradle.append(
             """
             nexusPublishing {
-                publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName
                 repositories {
                     sonatype {
+                        publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName
                         nexusUrl = uri('${server.baseUrl()}')
                         allowInsecureProtocol = true
                         //No staging profile defined
@@ -582,9 +584,9 @@ abstract class BaseNexusPublishPluginTests {
         projectDir.resolve("build.gradle").append(
             """
             nexusPublishing {
-                publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName
                 repositories {
                     remove(create("myNexus") {
+                        publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName
                         nexusUrl = uri('${server.baseUrl()}/b/')
                         snapshotRepositoryUrl = uri('${server.baseUrl()}/b/snapshots/')
                     })
@@ -749,9 +751,9 @@ abstract class BaseNexusPublishPluginTests {
         buildGradle.append(
             """
             nexusPublishing {
-                publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName
                 repositories {
                     sonatype {
+                        publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName
                         nexusUrl = uri('${server.baseUrl()}')
                         allowInsecureProtocol = true
                         username = 'username'

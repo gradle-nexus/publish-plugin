@@ -57,9 +57,9 @@ class MavenNexusPublishPluginTests : BaseNexusPublishPluginTests() {
                 }
             }
             nexusPublishing {
-                publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName
                 repositories {
                     myNexus {
+                        publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName
                         nexusUrl = uri('${server.baseUrl()}/shouldNotBeUsed')
                         snapshotRepositoryUrl = uri('${server.baseUrl()}/snapshots')
                         allowInsecureProtocol = true
@@ -106,9 +106,9 @@ class MavenNexusPublishPluginTests : BaseNexusPublishPluginTests() {
                 }
             }
             nexusPublishing {
-                publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName
                 repositories {
                     myNexus {
+                        publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName
                         nexusUrl = uri('${server.baseUrl()}')
                         snapshotRepositoryUrl = uri('${server.baseUrl()}/snapshots/')
                         allowInsecureProtocol = true
@@ -196,9 +196,9 @@ class MavenNexusPublishPluginTests : BaseNexusPublishPluginTests() {
                 }
             }
             nexusPublishing {
-                publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName
                 repositories {
                     myNexus {
+                        publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName
                         nexusUrl = uri('${server.baseUrl()}')
                         snapshotRepositoryUrl = uri('${server.baseUrl()}/snapshots/')
                         allowInsecureProtocol = true
@@ -254,9 +254,9 @@ class MavenNexusPublishPluginTests : BaseNexusPublishPluginTests() {
                 id('io.github.gradle-nexus.publish-plugin')
             }
             nexusPublishing {
-                publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName
                 repositories {
                     sonatype {
+                        publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName
                         nexusUrl = uri('${server.baseUrl()}')
                         stagingProfileId = '$STAGING_PROFILE_ID'
                         allowInsecureProtocol = true
