@@ -50,7 +50,12 @@ constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository
         set(extension.repositoryDescription)
     }
 
+    @Internal
+    private val useStaging = objects.property<Boolean>().apply {
+        set(extension.useStaging)
+    }
+
     init {
-        this.onlyIf { extension.useStaging.getOrElse(false) }
+        this.onlyIf { useStaging.getOrElse(false) }
     }
 }
