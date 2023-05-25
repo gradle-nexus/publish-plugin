@@ -111,7 +111,7 @@ class IvyNexusPublishPluginTests : BaseNexusPublishPluginTests() {
                         username = 'username'
                         password = 'password'
 
-                         ivyPatternLayout {
+                        ivyPatternLayout {
                             artifact "[organisation]/[module]_foo/[revision]/[artifact]-[revision](-[classifier])(.[ext])"
                             m2compatible = true
                         }
