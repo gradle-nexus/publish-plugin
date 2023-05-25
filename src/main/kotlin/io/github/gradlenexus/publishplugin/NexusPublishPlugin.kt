@@ -66,6 +66,7 @@ class NexusPublishPlugin : Plugin<Project> {
             useStaging.convention(project.provider { !project.version.toString().endsWith("-SNAPSHOT") })
             packageGroup.convention(project.provider { project.group.toString() })
             repositoryDescription.convention(project.provider { project.run { "$group:$name:$version" } })
+            // Staging repository initialization can take a few minutes on Sonatype Nexus.
             clientTimeout.convention(Duration.ofMinutes(5))
             connectTimeout.convention(Duration.ofMinutes(5))
             transitionCheckOptions.maxRetries.convention(60)

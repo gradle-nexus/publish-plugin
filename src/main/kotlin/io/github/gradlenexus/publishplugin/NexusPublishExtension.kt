@@ -38,7 +38,6 @@ abstract class NexusPublishExtension @Inject constructor(objects: ObjectFactory)
 
     abstract val repositoryDescription: Property<String>
 
-    // staging repository initialization can take a few minutes on Sonatype Nexus
     abstract val clientTimeout: Property<Duration>
 
     abstract val connectTimeout: Property<Duration>
