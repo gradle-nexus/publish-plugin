@@ -22,6 +22,7 @@ import com.github.tomakehurst.wiremock.stubbing.Scenario
 import com.google.gson.Gson
 import io.github.gradlenexus.publishplugin.internal.StagingRepository
 import org.assertj.core.api.Assertions
+import org.assertj.core.api.Assertions.*
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
@@ -99,7 +100,7 @@ abstract class BaseNexusPublishPluginTests {
 
         val result = gradleRunner("tasks").buildAndFail()
 
-        Assertions.assertThat(result.output)
+        assertThat(result.output)
             .contains("Plugin must be applied to the root project but was applied to :sub")
     }
 
@@ -127,7 +128,7 @@ abstract class BaseNexusPublishPluginTests {
         val result = run("retrieveSonatypeStagingProfile")
 
         assertSuccess(result, ":retrieveSonatypeStagingProfile")
-        Assertions.assertThat(result.output)
+        assertThat(result.output)
             .containsOnlyOnce("Received staging profile id: '$STAGING_PROFILE_ID' for package org.example")
         // and
         assertGetStagingProfile(1)
@@ -198,8 +199,7 @@ abstract class BaseNexusPublishPluginTests {
             version = '0.0.1'
             publishing {
                 publications {
-                                        $publishPluginContent
-
+                    $publishPluginContent
                 }
             }
 
@@ -223,8 +223,8 @@ abstract class BaseNexusPublishPluginTests {
         val result = runAndFail("publishToMyNexus")
 
         assertFailure(result, ":initializeMyNexusStagingRepository")
-        Assertions.assertThat(result.output).contains("status code 404")
-        Assertions.assertThat(result.output).contains("""{"failure":"message"}""")
+        assertThat(result.output).contains("status code 404")
+        assertThat(result.output).contains("""{"failure":"message"}""")
     }
 
     @Test
@@ -247,8 +247,7 @@ abstract class BaseNexusPublishPluginTests {
             version = '0.0.1'
             publishing {
                 publications {
-                                        $publishPluginContent
-
+                    $publishPluginContent
                 }
             }
             nexusPublishing {
@@ -272,7 +271,7 @@ abstract class BaseNexusPublishPluginTests {
 
         // we assert that the first task that sends an HTTP request to server fails as expected
         assertOutcome(result, ":initializeMyNexusStagingRepository", TaskOutcome.FAILED)
-        Assertions.assertThat(result.output).contains("SocketTimeoutException")
+        assertThat(result.output).contains("SocketTimeoutException")
     }
 
     @Test
@@ -304,8 +303,7 @@ abstract class BaseNexusPublishPluginTests {
             version = '0.0.1'
             publishing {
                 publications {
-                                        $publishPluginContent
-
+                    $publishPluginContent
                 }
             }
             nexusPublishing {
@@ -329,7 +327,7 @@ abstract class BaseNexusPublishPluginTests {
         val result = gradleRunner("initializeMyNexusStagingRepository").buildAndFail()
 
         assertOutcome(result, ":initializeMyNexusStagingRepository", TaskOutcome.FAILED)
-        Assertions.assertThat(result.output).contains("SocketTimeoutException")
+        assertThat(result.output).contains("SocketTimeoutException")
     }
 
     @Test
@@ -362,7 +360,7 @@ abstract class BaseNexusPublishPluginTests {
 
         val result = run("printSonatypeConfig")
 
-        Assertions.assertThat(result.output)
+        assertThat(result.output)
             .contains("nexusUrl = https://oss.sonatype.org/service/local/")
             .contains("snapshotRepositoryUrl = https://oss.sonatype.org/content/repositories/snapshots/")
     }
@@ -397,7 +395,7 @@ abstract class BaseNexusPublishPluginTests {
 
         val result = run("printSonatypeConfig")
 
-        Assertions.assertThat(result.output)
+        assertThat(result.output)
             .contains("nexusUrl = https://oss.sonatype.org/service/local/")
             .contains("snapshotRepositoryUrl = https://oss.sonatype.org/content/repositories/snapshots/")
     }
@@ -655,7 +653,7 @@ abstract class BaseNexusPublishPluginTests {
         val result = run("findSonatypeStagingRepository")
 
         assertSuccess(result, ":findSonatypeStagingRepository")
-        Assertions.assertThat(result.output)
+        assertThat(result.output)
             .containsPattern(Regex("Staging repository for .* '$STAGED_REPOSITORY_ID'").toPattern())
         // and
         assertGetStagingRepositoriesForStatingProfile(STAGING_PROFILE_ID)
@@ -679,7 +677,7 @@ abstract class BaseNexusPublishPluginTests {
         val result = runAndFail("findSonatypeStagingRepository")
 
         assertFailure(result, ":findSonatypeStagingRepository")
-        Assertions.assertThat(result.output)
+        assertThat(result.output)
             .contains("No staging repositories found for stagingProfileId: someProfileId, descriptionRegex: \\b\\Qorg.example:sample:2.3.4-so staging repository is not found\\E(\\s|\$). Here are all the repositories: [ReadStagingRepository(repositoryId=orgexample-42, type=open, transitioning=false, description=org.example:sample:0.0.1)]")
     }
 
@@ -709,7 +707,7 @@ abstract class BaseNexusPublishPluginTests {
         val result = runAndFail("findSonatypeStagingRepository")
 
         assertFailure(result, ":findSonatypeStagingRepository")
-        Assertions.assertThat(result.output)
+        assertThat(result.output)
             .contains("Too many repositories found for stagingProfileId: someProfileId, descriptionRegex: \\b\\Qorg.example:sample:0.0.1\\E(\\s|\$). If some of the repositories are not needed, consider deleting them manually. Here are the repositories matching the regular expression: [ReadStagingRepository(repositoryId=orgexample-42, type=open, transitioning=false, description=org.example:sample:0.0.1), ReadStagingRepository(repositoryId=orgexample-42o, type=open, transitioning=false, description=org.example:sample:0.0.1)]")
     }
 
@@ -739,8 +737,7 @@ abstract class BaseNexusPublishPluginTests {
             version = '0.0.1'
             publishing {
                 publications {
-                                        $publishPluginContent
-
+                    $publishPluginContent
                 }
             }
             """
@@ -937,14 +934,14 @@ abstract class BaseNexusPublishPluginTests {
     }
 
     private fun assertOutcome(result: BuildResult, taskPath: String, outcome: TaskOutcome) {
-        Assertions.assertThat(result.task(taskPath)).describedAs("Task $taskPath")
+        assertThat(result.task(taskPath)).describedAs("Task $taskPath")
             .isNotNull
             .extracting { it!!.outcome }
             .isEqualTo(outcome)
     }
 
     protected fun assertNotConsidered(result: BuildResult, taskPath: String) {
-        Assertions.assertThat(result.task(taskPath)).describedAs("Task $taskPath").isNull()
+        assertThat(result.task(taskPath)).describedAs("Task $taskPath").isNull()
     }
 
     private fun assertGetStagingProfile(count: Int = 1) {
