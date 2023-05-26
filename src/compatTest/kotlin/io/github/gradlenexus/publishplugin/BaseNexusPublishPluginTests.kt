@@ -21,7 +21,7 @@ import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.stubbing.Scenario
 import com.google.gson.Gson
 import io.github.gradlenexus.publishplugin.internal.StagingRepository
-import org.assertj.core.api.Assertions
+import org.assertj.core.api.Assertions.assertThat
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
@@ -33,6 +33,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.io.TempDir
 import ru.lanwen.wiremock.ext.WiremockResolver
+import java.nio.file.Files
 import java.nio.file.Path
 
 @Suppress("FunctionName") // TODO: How to suppress "kotlin:S100" from SonarLint?
@@ -43,6 +44,9 @@ abstract class BaseNexusPublishPluginTests {
     lateinit var publishPluginContent: String
     lateinit var publishGoalPrefix: String
     lateinit var publicationTypeName: String
+    lateinit var artifactList: List<String>
+    lateinit var snapshotArtifactList: List<String>
+    lateinit var pluginArtifactList: List<String>
 
     companion object {
         const val STAGING_PROFILE_ID = "someProfileId"
@@ -80,6 +84,273 @@ abstract class BaseNexusPublishPluginTests {
     }
 
     @Test
+    fun `publishes snapshots`() {
+        projectDir.resolve("settings.gradle").write(
+            """
+            rootProject.name = 'sample'
+        """
+        )
+
+        projectDir.resolve("build.gradle").write(
+            """
+            plugins {
+                id('java-library')
+                id('$publishPluginId')
+                id('io.github.gradle-nexus.publish-plugin')
+            }
+            group = 'org.example'
+            version = '0.0.1-SNAPSHOT'
+            publishing {
+                publications {
+                     $publishPluginContent
+                }
+            }
+            nexusPublishing {
+                repositories {
+                    myNexus {
+                        publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName
+                        nexusUrl = uri('${server.baseUrl()}/shouldNotBeUsed')
+                        snapshotRepositoryUrl = uri('${server.baseUrl()}/snapshots')
+                        allowInsecureProtocol = true
+                        username = 'username'
+                        password = 'password'
+                    }
+                }
+            }
+            """
+        )
+
+        expectArtifactUploads("/snapshots")
+
+        val result = run("publishToMyNexus")
+
+        assertSkipped(result, ":initializeMyNexusStagingRepository")
+        snapshotArtifactList.forEach { assertUploaded("/snapshots/org/example/sample/0.0.1-SNAPSHOT/$it") }
+    }
+
+    @Test
+    fun `publishes to two Nexus repositories`(
+        @MethodScopeWiremockResolver.MethodScopedWiremockServer @WiremockResolver.Wiremock
+        otherServer: WireMockServer
+    ) {
+        projectDir.resolve("settings.gradle").write(
+            """
+            rootProject.name = 'sample'
+            """
+        )
+        projectDir.resolve("build.gradle").write(
+            """
+            plugins {
+                id('java-library')
+                id('$publishPluginId')
+                id('io.github.gradle-nexus.publish-plugin')
+            }
+            group = 'org.example'
+            version = '0.0.1'
+            publishing {
+                publications {
+                    $publishPluginContent
+                }
+            }
+            nexusPublishing {
+                repositories {
+                    myNexus {
+                        publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName
+                        nexusUrl = uri('${server.baseUrl()}')
+                        snapshotRepositoryUrl = uri('${server.baseUrl()}/snapshots/')
+                        allowInsecureProtocol = true
+                        username = 'username'
+                        password = 'password'
+                    }
+                    someOtherNexus {
+                        publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName
+                        nexusUrl = uri('${otherServer.baseUrl()}')
+                        snapshotRepositoryUrl = uri('${otherServer.baseUrl()}/snapshots/')
+                        allowInsecureProtocol = true
+                        username = 'someUsername'
+                        password = 'somePassword'
+                    }
+                }
+            }
+            """
+        )
+
+        val otherStagingProfileId = "otherStagingProfileId"
+        val otherStagingRepositoryId = "orgexample-43"
+        stubStagingProfileRequest("/staging/profiles", mapOf("id" to STAGING_PROFILE_ID, "name" to "org.example"))
+        stubStagingProfileRequest(
+            "/staging/profiles",
+            mapOf("id" to otherStagingProfileId, "name" to "org.example"),
+            wireMockServer = otherServer
+        )
+        stubCreateStagingRepoRequest("/staging/profiles/$STAGING_PROFILE_ID/start", STAGED_REPOSITORY_ID)
+        stubCreateStagingRepoRequest(
+            "/staging/profiles/$otherStagingProfileId/start",
+            otherStagingRepositoryId,
+            wireMockServer = otherServer
+        )
+        expectArtifactUploads("/staging/deployByRepositoryId/$STAGED_REPOSITORY_ID")
+        expectArtifactUploads("/staging/deployByRepositoryId/$otherStagingRepositoryId", wireMockServer = otherServer)
+
+        val result = run("publishToMyNexus", "publishToSomeOtherNexus")
+
+        assertSuccess(result, ":initializeMyNexusStagingRepository")
+        assertSuccess(result, ":initializeSomeOtherNexusStagingRepository")
+        assertThat(result.output)
+            .containsOnlyOnce("Created staging repository '$STAGED_REPOSITORY_ID' at ${server.baseUrl()}/repositories/$STAGED_REPOSITORY_ID/content/")
+        assertThat(result.output)
+            .containsOnlyOnce("Created staging repository '$otherStagingRepositoryId' at ${otherServer.baseUrl()}/repositories/$otherStagingRepositoryId/content/")
+        server.verify(
+            WireMock.postRequestedFor(WireMock.urlEqualTo("/staging/profiles/$STAGING_PROFILE_ID/start"))
+                .withRequestBody(WireMock.matchingJsonPath("\$.data[?(@.description == 'org.example:sample:0.0.1')]"))
+        )
+        otherServer.verify(
+            WireMock.postRequestedFor(WireMock.urlEqualTo("/staging/profiles/$otherStagingProfileId/start"))
+                .withRequestBody(WireMock.matchingJsonPath("\$.data[?(@.description == 'org.example:sample:0.0.1')]"))
+        )
+
+        artifactList.forEach { assertUploadedToStagingRepo("/org/example/sample/0.0.1/$it") }
+        artifactList.forEach {
+            assertUploadedToStagingRepo(
+                "/org/example/sample/0.0.1/$it",
+                stagingRepositoryId = otherStagingRepositoryId,
+                wireMockServer = otherServer
+            )
+        }
+    }
+
+    @Test
+    fun `publishes to Nexus`() {
+        projectDir.resolve("settings.gradle").write(
+            """
+            rootProject.name = 'sample'
+            """
+        )
+        projectDir.resolve("build.gradle").write(
+            """
+            plugins {
+                id('java-library')
+                id('$publishPluginId')
+                id('io.github.gradle-nexus.publish-plugin')
+            }
+            group = 'org.example'
+            version = '0.0.1'
+            publishing {
+                publications {
+                   $publishPluginContent
+                }
+            }
+            nexusPublishing {
+                repositories {
+                    myNexus {
+                        publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName
+                        nexusUrl = uri('${server.baseUrl()}')
+                        snapshotRepositoryUrl = uri('${server.baseUrl()}/snapshots/')
+                        allowInsecureProtocol = true
+                        username = 'username'
+                        password = 'password'
+                    }
+                    someOtherNexus {
+                        nexusUrl = uri('http://example.org')
+                        snapshotRepositoryUrl = uri('http://example.org/snapshots/')
+                    }
+                }
+            }
+            """
+        )
+
+        stubStagingProfileRequest("/staging/profiles", mapOf("id" to STAGING_PROFILE_ID, "name" to "org.example"))
+        stubCreateStagingRepoRequest("/staging/profiles/$STAGING_PROFILE_ID/start", STAGED_REPOSITORY_ID)
+        expectArtifactUploads("/staging/deployByRepositoryId/$STAGED_REPOSITORY_ID")
+
+        val result = run("publishToMyNexus")
+
+        assertSuccess(result, ":initializeMyNexusStagingRepository")
+        assertThat(result.output)
+            .containsOnlyOnce("Created staging repository '$STAGED_REPOSITORY_ID' at ${server.baseUrl()}/repositories/$STAGED_REPOSITORY_ID/content/")
+        assertNotConsidered(result, ":initializeSomeOtherNexusStagingRepository")
+        server.verify(
+            WireMock.postRequestedFor(WireMock.urlEqualTo("/staging/profiles/$STAGING_PROFILE_ID/start"))
+                .withRequestBody(WireMock.matchingJsonPath("\$.data[?(@.description == 'org.example:sample:0.0.1')]"))
+        )
+        artifactList.forEach { assertUploadedToStagingRepo("/org/example/sample/0.0.1/$it") }
+    }
+
+    @Test
+    fun `can be used with lazily applied Gradle Plugin Development Plugin`() {
+        projectDir.resolve("settings.gradle").write(
+            """
+            rootProject.name = 'sample'
+            include 'gradle-plugin'
+        """
+        )
+        if (gradleVersion < GradleVersion.version("5.0")) {
+            projectDir.resolve("settings.gradle").append(
+                """
+                enableFeaturePreview("STABLE_PUBLISHING")
+                """
+            )
+        }
+
+        projectDir.resolve("build.gradle").write(
+            """
+            plugins {
+                id('io.github.gradle-nexus.publish-plugin')
+            }
+            nexusPublishing {
+                repositories {
+                    sonatype {
+                        publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName
+                        nexusUrl = uri('${server.baseUrl()}')
+                        stagingProfileId = '$STAGING_PROFILE_ID'
+                        allowInsecureProtocol = true
+                        username = 'username'
+                        password = 'password'
+                    }
+                }
+            }
+            """
+        )
+
+        val pluginDir = Files.createDirectories(projectDir.resolve("gradle-plugin"))
+        pluginDir.resolve("build.gradle").write(
+            """
+            plugins {
+                id('$publishPluginId')
+                id('java-gradle-plugin')
+            }
+            gradlePlugin {
+                plugins {
+                    foo {
+                        id = 'org.example.foo'
+                        implementationClass = 'org.example.FooPlugin'
+                    }
+                }
+            }
+            group = 'org.example'
+            version = '0.0.1'
+            """
+        )
+        val srcDir = Files.createDirectories(pluginDir.resolve("src/main/java/org/example/"))
+        srcDir.resolve("FooPlugin.java").write(
+            """
+            import org.gradle.api.*;
+            public class FooPlugin implements Plugin<Project> {
+                public void apply(Project p) {}
+            }
+            """
+        )
+
+        stubCreateStagingRepoRequest("/staging/profiles/$STAGING_PROFILE_ID/start", STAGED_REPOSITORY_ID)
+        expectArtifactUploads("/staging/deployByRepositoryId/$STAGED_REPOSITORY_ID")
+
+        val result = run("publishToSonatype", "-s")
+
+        assertSuccess(result, ":initializeSonatypeStagingRepository")
+        pluginArtifactList.forEach { assertUploadedToStagingRepo(it) }
+    }
+
+    @Test
     fun `must be applied to root project`() {
         projectDir.resolve("settings.gradle").append(
             """
@@ -99,7 +370,7 @@ abstract class BaseNexusPublishPluginTests {
 
         val result = gradleRunner("tasks").buildAndFail()
 
-        Assertions.assertThat(result.output)
+        assertThat(result.output)
             .contains("Plugin must be applied to the root project but was applied to :sub")
     }
 
@@ -127,7 +398,7 @@ abstract class BaseNexusPublishPluginTests {
         val result = run("retrieveSonatypeStagingProfile")
 
         assertSuccess(result, ":retrieveSonatypeStagingProfile")
-        Assertions.assertThat(result.output)
+        assertThat(result.output)
             .containsOnlyOnce("Received staging profile id: '$STAGING_PROFILE_ID' for package org.example")
         // and
         assertGetStagingProfile(1)
@@ -198,8 +469,7 @@ abstract class BaseNexusPublishPluginTests {
             version = '0.0.1'
             publishing {
                 publications {
-                                        $publishPluginContent
-
+                    $publishPluginContent
                 }
             }
 
@@ -223,8 +493,8 @@ abstract class BaseNexusPublishPluginTests {
         val result = runAndFail("publishToMyNexus")
 
         assertFailure(result, ":initializeMyNexusStagingRepository")
-        Assertions.assertThat(result.output).contains("status code 404")
-        Assertions.assertThat(result.output).contains("""{"failure":"message"}""")
+        assertThat(result.output).contains("status code 404")
+        assertThat(result.output).contains("""{"failure":"message"}""")
     }
 
     @Test
@@ -247,8 +517,7 @@ abstract class BaseNexusPublishPluginTests {
             version = '0.0.1'
             publishing {
                 publications {
-                                        $publishPluginContent
-
+                    $publishPluginContent
                 }
             }
             nexusPublishing {
@@ -272,7 +541,7 @@ abstract class BaseNexusPublishPluginTests {
 
         // we assert that the first task that sends an HTTP request to server fails as expected
         assertOutcome(result, ":initializeMyNexusStagingRepository", TaskOutcome.FAILED)
-        Assertions.assertThat(result.output).contains("SocketTimeoutException")
+        assertThat(result.output).contains("SocketTimeoutException")
     }
 
     @Test
@@ -304,8 +573,7 @@ abstract class BaseNexusPublishPluginTests {
             version = '0.0.1'
             publishing {
                 publications {
-                                        $publishPluginContent
-
+                    $publishPluginContent
                 }
             }
             nexusPublishing {
@@ -329,7 +597,7 @@ abstract class BaseNexusPublishPluginTests {
         val result = gradleRunner("initializeMyNexusStagingRepository").buildAndFail()
 
         assertOutcome(result, ":initializeMyNexusStagingRepository", TaskOutcome.FAILED)
-        Assertions.assertThat(result.output).contains("SocketTimeoutException")
+        assertThat(result.output).contains("SocketTimeoutException")
     }
 
     @Test
@@ -362,7 +630,7 @@ abstract class BaseNexusPublishPluginTests {
 
         val result = run("printSonatypeConfig")
 
-        Assertions.assertThat(result.output)
+        assertThat(result.output)
             .contains("nexusUrl = https://oss.sonatype.org/service/local/")
             .contains("snapshotRepositoryUrl = https://oss.sonatype.org/content/repositories/snapshots/")
     }
@@ -397,7 +665,7 @@ abstract class BaseNexusPublishPluginTests {
 
         val result = run("printSonatypeConfig")
 
-        Assertions.assertThat(result.output)
+        assertThat(result.output)
             .contains("nexusUrl = https://oss.sonatype.org/service/local/")
             .contains("snapshotRepositoryUrl = https://oss.sonatype.org/content/repositories/snapshots/")
     }
@@ -655,7 +923,7 @@ abstract class BaseNexusPublishPluginTests {
         val result = run("findSonatypeStagingRepository")
 
         assertSuccess(result, ":findSonatypeStagingRepository")
-        Assertions.assertThat(result.output)
+        assertThat(result.output)
             .containsPattern(Regex("Staging repository for .* '$STAGED_REPOSITORY_ID'").toPattern())
         // and
         assertGetStagingRepositoriesForStatingProfile(STAGING_PROFILE_ID)
@@ -679,7 +947,7 @@ abstract class BaseNexusPublishPluginTests {
         val result = runAndFail("findSonatypeStagingRepository")
 
         assertFailure(result, ":findSonatypeStagingRepository")
-        Assertions.assertThat(result.output)
+        assertThat(result.output)
             .contains("No staging repositories found for stagingProfileId: someProfileId, descriptionRegex: \\b\\Qorg.example:sample:2.3.4-so staging repository is not found\\E(\\s|\$). Here are all the repositories: [ReadStagingRepository(repositoryId=orgexample-42, type=open, transitioning=false, description=org.example:sample:0.0.1)]")
     }
 
@@ -709,7 +977,7 @@ abstract class BaseNexusPublishPluginTests {
         val result = runAndFail("findSonatypeStagingRepository")
 
         assertFailure(result, ":findSonatypeStagingRepository")
-        Assertions.assertThat(result.output)
+        assertThat(result.output)
             .contains("Too many repositories found for stagingProfileId: someProfileId, descriptionRegex: \\b\\Qorg.example:sample:0.0.1\\E(\\s|\$). If some of the repositories are not needed, consider deleting them manually. Here are the repositories matching the regular expression: [ReadStagingRepository(repositoryId=orgexample-42, type=open, transitioning=false, description=org.example:sample:0.0.1), ReadStagingRepository(repositoryId=orgexample-42o, type=open, transitioning=false, description=org.example:sample:0.0.1)]")
     }
 
@@ -739,8 +1007,7 @@ abstract class BaseNexusPublishPluginTests {
             version = '0.0.1'
             publishing {
                 publications {
-                                        $publishPluginContent
-
+                    $publishPluginContent
                 }
             }
             """
@@ -937,14 +1204,14 @@ abstract class BaseNexusPublishPluginTests {
     }
 
     private fun assertOutcome(result: BuildResult, taskPath: String, outcome: TaskOutcome) {
-        Assertions.assertThat(result.task(taskPath)).describedAs("Task $taskPath")
+        assertThat(result.task(taskPath)).describedAs("Task $taskPath")
             .isNotNull
             .extracting { it!!.outcome }
             .isEqualTo(outcome)
     }
 
     protected fun assertNotConsidered(result: BuildResult, taskPath: String) {
-        Assertions.assertThat(result.task(taskPath)).describedAs("Task $taskPath").isNull()
+        assertThat(result.task(taskPath)).describedAs("Task $taskPath").isNull()
     }
 
     private fun assertGetStagingProfile(count: Int = 1) {
