@@ -20,6 +20,8 @@ import org.gradle.api.Action
 import org.gradle.api.DefaultTask
 import org.gradle.api.NamedDomainObjectFactory
 import org.gradle.api.Project
+import org.gradle.api.artifacts.repositories.IvyPatternRepositoryLayout
+import org.gradle.api.provider.Property
 import org.gradle.api.publish.Publication
 import org.gradle.api.publish.ivy.IvyPublication
 import org.gradle.api.publish.ivy.tasks.PublishToIvyRepository
@@ -71,6 +73,14 @@ open class NexusPublishExtension(project: Project) {
             }
         )
     )
+
+
+    val publicationType: Property<PublicationType> = project.objects.property<PublicationType>().convention(PublicationType.MAVEN)
+
+    val ivyPatternLayout: Property<Action<IvyPatternRepositoryLayout>> = project.objects.property<Action<IvyPatternRepositoryLayout>>()
+    fun ivyPatternLayout(action: Action<IvyPatternRepositoryLayout>) {
+        ivyPatternLayout.set(action)
+    }
 
     fun repositories(action: Action<in NexusRepositoryContainer>) = action.execute(repositories)
 

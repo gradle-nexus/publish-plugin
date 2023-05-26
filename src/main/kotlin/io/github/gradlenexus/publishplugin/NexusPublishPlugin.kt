@@ -19,8 +19,6 @@ package io.github.gradlenexus.publishplugin
 import io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType
 import io.github.gradlenexus.publishplugin.internal.StagingRepositoryDescriptorRegistry
 import io.github.gradlenexus.publishplugin.internal.StagingRepositoryDescriptorRegistryBuildService
-import io.github.gradlenexus.publishplugin.internal.setUrl
-import io.github.gradlenexus.publishplugin.internal.url
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -221,7 +219,7 @@ class NexusPublishPlugin : Plugin<Project> {
         extension: NexusPublishExtension,
         registry: Provider<StagingRepositoryDescriptorRegistry>,
         provideFallback: Boolean
-    ) where T : ArtifactRepository, T : AuthenticationSupported {
+    ) where T : UrlArtifactRepository, T : ArtifactRepository, T : AuthenticationSupported {
         name = nexusRepo.name
         setUrl(
             project.provider {
@@ -231,7 +229,7 @@ class NexusPublishPlugin : Plugin<Project> {
         val allowInsecureProtocol = nexusRepo.allowInsecureProtocol.orNull
         if (allowInsecureProtocol != null) {
             if (GradleVersion.current() >= GradleVersion.version("6.0")) {
-                (this as UrlArtifactRepository).isAllowInsecureProtocol = allowInsecureProtocol
+                isAllowInsecureProtocol = allowInsecureProtocol
             } else {
                 project.logger.warn("Configuration of allowInsecureProtocol=$allowInsecureProtocol will be ignored because it requires Gradle 6.0 or later")
             }
@@ -263,7 +261,9 @@ class NexusPublishPlugin : Plugin<Project> {
                 dependsOn(initializeTask)
                 mustRunAfter(findStagingRepositoryTask)
                 doFirst {
-                    logger.info("Uploading to {}", artifactRepo.url)
+                    if (artifactRepo is UrlArtifactRepository) {
+                        logger.info("Uploading to {}", artifactRepo.url)
+                    }
                 }
             }
             publishAllTask {
