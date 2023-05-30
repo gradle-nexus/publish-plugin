@@ -74,7 +74,6 @@ open class NexusPublishExtension(project: Project) {
         )
     )
 
-
     val publicationType: Property<PublicationType> = project.objects.property<PublicationType>().convention(PublicationType.MAVEN)
 
     val ivyPatternLayout: Property<Action<IvyPatternRepositoryLayout>> = project.objects.property<Action<IvyPatternRepositoryLayout>>()
