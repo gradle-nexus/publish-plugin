@@ -37,7 +37,7 @@ open class NexusRepository @Inject constructor(@Input val name: String, project:
     val snapshotRepositoryUrl = project.objects.property<URI>()
 
     @Input
-    val publicationType: Property<NexusPublishExtension.PublicationType> = project.objects.property<NexusPublishExtension.PublicationType>().value(NexusPublishExtension.PublicationType.MAVEN)
+    val publicationType: Property<NexusPublishExtension.PublicationType> = project.objects.property<NexusPublishExtension.PublicationType>().convention(NexusPublishExtension.PublicationType.MAVEN)
 
     @Internal
     val username = project.objects.property<String>().apply {
