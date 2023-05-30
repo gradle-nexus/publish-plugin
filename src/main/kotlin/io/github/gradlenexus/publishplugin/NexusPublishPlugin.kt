@@ -19,8 +19,6 @@ package io.github.gradlenexus.publishplugin
 import io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType
 import io.github.gradlenexus.publishplugin.internal.StagingRepositoryDescriptorRegistry
 import io.github.gradlenexus.publishplugin.internal.StagingRepositoryDescriptorRegistryBuildService
-import io.github.gradlenexus.publishplugin.internal.setUrl
-import io.github.gradlenexus.publishplugin.internal.url
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -35,7 +33,7 @@ import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.invoke
 import org.gradle.kotlin.dsl.named
 import org.gradle.kotlin.dsl.register
-import org.gradle.kotlin.dsl.the
+import org.gradle.kotlin.dsl.typeOf
 import org.gradle.kotlin.dsl.withType
 import org.gradle.util.GradleVersion
 
@@ -50,6 +48,10 @@ class NexusPublishPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         require(project == project.rootProject) {
             "Plugin must be applied to the root project but was applied to ${project.path}"
+        }
+
+        require(GradleVersion.current() >= GradleVersion.version("6.0")) {
+            "The plugin requires Gradle version 6.0+"
         }
 
         val registry = createRegistry(project)
@@ -201,11 +203,11 @@ class NexusPublishPlugin : Plugin<Project> {
         extension: NexusPublishExtension,
         registry: Provider<StagingRepositoryDescriptorRegistry>
     ): ArtifactRepository = when (publicationType!!) {
-        PublicationType.MAVEN -> project.the<PublishingExtension>().repositories.maven {
+        PublicationType.MAVEN -> project.theExtension<PublishingExtension>().repositories.maven {
             configureArtifactRepo(nexusRepo, project, extension, registry, false)
         }
 
-        PublicationType.IVY -> project.the<PublishingExtension>().repositories.ivy {
+        PublicationType.IVY -> project.theExtension<PublishingExtension>().repositories.ivy {
             configureArtifactRepo(nexusRepo, project, extension, registry, true)
             if (nexusRepo.ivyPatternLayout.isPresent) {
                 nexusRepo.ivyPatternLayout.get().let { this.patternLayout(it) }
@@ -221,7 +223,7 @@ class NexusPublishPlugin : Plugin<Project> {
         extension: NexusPublishExtension,
         registry: Provider<StagingRepositoryDescriptorRegistry>,
         provideFallback: Boolean
-    ) where T : ArtifactRepository, T : AuthenticationSupported {
+    ) where T : UrlArtifactRepository, T : ArtifactRepository, T : AuthenticationSupported {
         name = nexusRepo.name
         setUrl(
             project.provider {
@@ -230,11 +232,7 @@ class NexusPublishPlugin : Plugin<Project> {
         )
         val allowInsecureProtocol = nexusRepo.allowInsecureProtocol.orNull
         if (allowInsecureProtocol != null) {
-            if (GradleVersion.current() >= GradleVersion.version("6.0")) {
-                (this as UrlArtifactRepository).isAllowInsecureProtocol = allowInsecureProtocol
-            } else {
-                project.logger.warn("Configuration of allowInsecureProtocol=$allowInsecureProtocol will be ignored because it requires Gradle 6.0 or later")
-            }
+            isAllowInsecureProtocol = allowInsecureProtocol
         }
         credentials {
             username = nexusRepo.username.orNull
@@ -252,7 +250,7 @@ class NexusPublishPlugin : Plugin<Project> {
         artifactRepo: ArtifactRepository,
         publicationType: PublicationType
     ) {
-        val publications = project.the<PublishingExtension>().publications.withType(publicationType.gradleType)
+        val publications = project.theExtension<PublishingExtension>().publications.withType(publicationType.gradleType)
         publications.configureEach {
             val publication = this
             val publishTask = project.tasks.named(
@@ -263,7 +261,9 @@ class NexusPublishPlugin : Plugin<Project> {
                 dependsOn(initializeTask)
                 mustRunAfter(findStagingRepositoryTask)
                 doFirst {
-                    logger.info("Uploading to {}", artifactRepo.url)
+                    if (artifactRepo is UrlArtifactRepository) {
+                        logger.info("Uploading to {}", artifactRepo.url)
+                    }
                 }
             }
             publishAllTask {
@@ -317,3 +317,8 @@ class NexusPublishPlugin : Plugin<Project> {
         }
     }
 }
+
+inline fun <reified T : Any> Project.theExtension(): T =
+    typeOf<T>().let {
+        this.extensions.findByType(it) ?: throw IllegalStateException("The plugion cannot be applied without the publishing plugin")
+    }

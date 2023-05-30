@@ -284,13 +284,6 @@ abstract class BaseNexusPublishPluginTests {
             include 'gradle-plugin'
         """
         )
-        if (gradleVersion < GradleVersion.version("5.0")) {
-            projectDir.resolve("settings.gradle").append(
-                """
-                enableFeaturePreview("STABLE_PUBLISHING")
-                """
-            )
-        }
 
         projectDir.resolve("build.gradle").write(
             """
