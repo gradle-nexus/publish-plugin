@@ -16,7 +16,7 @@ plugins {
 }
 
 group = "io.github.gradle-nexus"
-version = "1.3.1-SNAPSHOT"
+version = "2.0.0-SNAPSHOT"
 
 val readableName = "Nexus Publish Plugin"
 description = "Gradle Plugin for publishing to Nexus that automates creating, closing, and releasing staging repositories"
@@ -150,7 +150,7 @@ tasks {
         // because otherwise KotlinDslCompilerPlugins would win, and override what we've set to Kotlin 1.8.
         withType<KotlinCompile>().configureEach {
             kotlinOptions.jvmTarget = JavaVersion.VERSION_1_8.toString()
-            // Supporting Gradle 5.0+ needs to use Kotlin 1.3.
+            // Supporting Gradle 6.0+ needs to use Kotlin 1.3.
             // See https://docs.gradle.org/current/userguide/compatibility.html
             kotlinOptions.apiVersion = "1.3"
             // Theoretically we could use newer language version here,

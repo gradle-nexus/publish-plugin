@@ -50,6 +50,10 @@ class NexusPublishPlugin : Plugin<Project> {
             "Plugin must be applied to the root project but was applied to ${project.path}"
         }
 
+        require(GradleVersion.current() >= GradleVersion.version("6.0")) {
+            "The plugin requires Gradle version 6.0+"
+        }
+
         val registry = createRegistry(project)
         val extension = project.extensions.create<NexusPublishExtension>(NexusPublishExtension.NAME, project)
         configureNexusTasks(project, extension, registry)
@@ -228,11 +232,7 @@ class NexusPublishPlugin : Plugin<Project> {
         )
         val allowInsecureProtocol = nexusRepo.allowInsecureProtocol.orNull
         if (allowInsecureProtocol != null) {
-            if (GradleVersion.current() >= GradleVersion.version("6.0")) {
-                isAllowInsecureProtocol = allowInsecureProtocol
-            } else {
-                project.logger.warn("Configuration of allowInsecureProtocol=$allowInsecureProtocol will be ignored because it requires Gradle 6.0 or later")
-            }
+            isAllowInsecureProtocol = allowInsecureProtocol
         }
         credentials {
             username = nexusRepo.username.orNull
