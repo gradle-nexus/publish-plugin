@@ -76,7 +76,7 @@ class IvyNexusPublishPluginTests : BaseNexusPublishPluginTests() {
                             artifact "[organisation]/[module]_foo/[revision]/[artifact]-[revision](-[classifier])(.[ext])"
                             m2compatible = true
                         }
-                        publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.$publicationTypeName
+                        publicationType = io.github.gradlenexus.publishplugin.NexusRepository.PublicationType.$publicationTypeName
                     }
                 }
             }

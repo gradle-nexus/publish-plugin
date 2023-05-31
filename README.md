@@ -87,13 +87,17 @@ signing {
 There are cases where it may be necessary to use the `ivy-publish` plugin instead of `maven-publish`.
 For example, when publishing Sbt plugins the directory structure needs to be customized which is only possible with Gradle's `IvyArtifactRepository`.
 
-In such cases, you need to apply the `ivy-publish` plugin and configure the `nexusPublishing` extension's `publicationType` to `IVY` (default is `MAVEN`).
+In such cases, you need to apply the `ivy-publish` plugin and configure the `publicationType` fore each `NexusRepository`, that should be ivy compatible, to `IVY` (default is `MAVEN`).
 
 In case of Ivy publishing, because of compatibility with Sonatype the nexus repository layout will be used by default
 
 ```groovy
 nexusPublishing {
-    publicationType = io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.IVY
+    respositories {
+        ivyRepository {
+            publicationType = io.github.gradlenexus.publishplugin.NexusRepository.PublicationType.IVY
+        }
+    }
 }
 ```
 
@@ -101,7 +105,11 @@ Or use the kotlin DSL:
 
 ```kotlin
 nexusPublishing {
-    publicationType.set(io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType.IVY)
+    respositories {
+        ivyRepository {
+            publicationType.set(io.github.gradlenexus.publishplugin.NexusRepository.PublicationType.IVY)
+        }
+    }    
 }
 ```
 
@@ -109,21 +117,35 @@ nexusPublishing {
 
 In case of ivy it's possible to override the default artifact pattern that is used, which is the Maven pattern due to compatibility reasons with sonatype
 
-To change the pattern of artifacts and ivy files use
+To change the pattern of artifacts and ivy files configure the `ivyPatternLayout` on each repository that should be used with this layout with:
 
 ```groovy
-ivyPatternLayout {
-    artifact "[organisation]/[module]_foo/[revision]/[artifact]-[revision](-[classifier])(.[ext])"
-    m2compatible = true
+nexusPublishing {
+    respositories {
+        ivyRepository {
+            ivyPatternLayout {
+                artifact "[organisation]/[module]_foo/[revision]/[artifact]-[revision](-[classifier])(.[ext])"
+                m2compatible = true
+            }
+        }
+    }
 }
 ```
 
 Or use the kotlin DSL:
 
 ```kotlin
-ivyPatternLayout {
-    artifact("[organisation]/[module]_foo/[revision]/[artifact]-[revision](-[classifier])(.[ext])")
-    m2compatible = true
+nexusPublishing {
+    respositories {
+        ivyRepository {
+            ivyPatternLayout {
+                ivyPatternLayout {
+                    artifact("[organisation]/[module]_foo/[revision]/[artifact]-[revision](-[classifier])(.[ext])")
+                    m2compatible = true
+                }
+            }
+        }
+    }
 }
 ```
 

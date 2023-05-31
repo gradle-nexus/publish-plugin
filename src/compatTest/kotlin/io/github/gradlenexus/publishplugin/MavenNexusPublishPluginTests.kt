@@ -40,7 +40,6 @@ class MavenNexusPublishPluginTests : BaseNexusPublishPluginTests() {
         )
     }
 
-
     @Test
     fun `setting publication type to null will use maven`() {
         projectDir.resolve("settings.gradle").write(

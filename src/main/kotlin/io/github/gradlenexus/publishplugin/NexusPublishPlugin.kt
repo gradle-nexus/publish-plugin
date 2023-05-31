@@ -16,7 +16,7 @@
 
 package io.github.gradlenexus.publishplugin
 
-import io.github.gradlenexus.publishplugin.NexusPublishExtension.PublicationType
+import io.github.gradlenexus.publishplugin.NexusRepository.PublicationType
 import io.github.gradlenexus.publishplugin.internal.StagingRepositoryDescriptorRegistry
 import io.github.gradlenexus.publishplugin.internal.StagingRepositoryDescriptorRegistryBuildService
 import org.gradle.api.Plugin

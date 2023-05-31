@@ -17,15 +17,22 @@
 package io.github.gradlenexus.publishplugin
 
 import org.gradle.api.Action
+import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.artifacts.repositories.IvyPatternRepositoryLayout
 import org.gradle.api.provider.Property
+import org.gradle.api.publish.Publication
+import org.gradle.api.publish.ivy.IvyPublication
+import org.gradle.api.publish.ivy.tasks.PublishToIvyRepository
+import org.gradle.api.publish.maven.MavenPublication
+import org.gradle.api.publish.maven.tasks.PublishToMavenRepository
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.kotlin.dsl.property
 import java.net.URI
 import javax.inject.Inject
+import kotlin.reflect.KClass
 
 @Suppress("UnstableApiUsage")
 open class NexusRepository @Inject constructor(@Input val name: String, project: Project) {
@@ -37,7 +44,7 @@ open class NexusRepository @Inject constructor(@Input val name: String, project:
     val snapshotRepositoryUrl = project.objects.property<URI>()
 
     @Input
-    val publicationType: Property<NexusPublishExtension.PublicationType> = project.objects.property<NexusPublishExtension.PublicationType>().convention(NexusPublishExtension.PublicationType.MAVEN)
+    val publicationType: Property<PublicationType> = project.objects.property<PublicationType>().convention(PublicationType.MAVEN)
 
     @Internal
     val username = project.objects.property<String>().apply {
@@ -64,5 +71,10 @@ open class NexusRepository @Inject constructor(@Input val name: String, project:
     val ivyPatternLayout: Property<Action<IvyPatternRepositoryLayout>> = project.objects.property<Action<IvyPatternRepositoryLayout>>()
     fun ivyPatternLayout(action: Action<IvyPatternRepositoryLayout>) {
         ivyPatternLayout.set(action)
+    }
+
+    enum class PublicationType(internal val gradleType: KClass<out Publication>, internal val publishTaskType: KClass<out DefaultTask>) {
+        MAVEN(MavenPublication::class, PublishToMavenRepository::class),
+        IVY(IvyPublication::class, PublishToIvyRepository::class)
     }
 }
