@@ -7,3 +7,6 @@
 /.idea/
 /buildSrc/out/
 /out/
+
+#asdf
+.tool-versions
