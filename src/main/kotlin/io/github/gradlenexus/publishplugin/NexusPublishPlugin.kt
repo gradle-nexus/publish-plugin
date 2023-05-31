@@ -197,12 +197,12 @@ class NexusPublishPlugin : Plugin<Project> {
     }
 
     private fun createArtifactRepository(
-        publicationType: PublicationType?,
+        publicationType: PublicationType,
         project: Project,
         nexusRepo: NexusRepository,
         extension: NexusPublishExtension,
         registry: Provider<StagingRepositoryDescriptorRegistry>
-    ): ArtifactRepository = when (publicationType!!) {
+    ): ArtifactRepository = when (publicationType) {
         PublicationType.MAVEN -> project.theExtension<PublishingExtension>().repositories.maven {
             configureArtifactRepo(nexusRepo, project, extension, registry, false)
         }
