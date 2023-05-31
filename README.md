@@ -106,7 +106,7 @@ Or use the kotlin DSL:
 ```kotlin
 nexusPublishing {
     respositories {
-        ivyRepository {
+        register("ivyRepository") {
             publicationType.set(io.github.gradlenexus.publishplugin.NexusRepository.PublicationType.IVY)
         }
     }    
@@ -137,7 +137,7 @@ Or use the kotlin DSL:
 ```kotlin
 nexusPublishing {
     respositories {
-        ivyRepository {
+        register("ivyRepository") {
             ivyPatternLayout {
                 ivyPatternLayout {
                     artifact("[organisation]/[module]_foo/[revision]/[artifact]-[revision](-[classifier])(.[ext])")
