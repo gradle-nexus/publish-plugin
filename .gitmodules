@@ -6,7 +6,7 @@
 	url = git@github.com:gradle-nexus/nexus-publish-e2e-multi-project.git
 [submodule "src/e2eTest/resources/nexus-publish-e2e-minimal-ivy"]
 	path = src/e2eTest/resources/nexus-publish-e2e-minimal-ivy
-	url = git@github.com:maczikasz/nexus-publish-e2e-minimal-ivy.git
+	url = git@github.com:gradle-nexus/nexus-publish-e2e-minimal-ivy.git
 [submodule "src/e2eTest/resources/nexus-publish-e2e-minimal-ivy-sbt"]
 	path = src/e2eTest/resources/nexus-publish-e2e-minimal-ivy-sbt
-	url = git@github.com:maczikasz/nexus-publish-e2e-minimal-ivy-sbt.git
+	url = git@github.com:gradle-nexus/nexus-publish-e2e-minimal-ivy-sbt.git
