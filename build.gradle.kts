@@ -1,4 +1,3 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ConfigureShadowRelocation
 import org.gradle.initialization.IGradlePropertiesLoader.ENV_PROJECT_PROPERTIES_PREFIX
 import org.gradle.initialization.IGradlePropertiesLoader.SYSTEM_PROJECT_PROPERTIES_PREFIX
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
@@ -9,7 +8,7 @@ plugins {
     // From 6.14.0 onwards Spotless requires Gradle to be on Java 11,
     // but we still use Java 8 in .github/workflows/java-versions.yml.
     id("com.diffplug.spotless") version "6.13.0"
-    id("com.github.johnrengelman.shadow") version "7.1.2"
+    id("com.github.johnrengelman.shadow") version "8.1.1"
     id("org.jetbrains.gradle.plugin.idea-ext")
     id("com.github.ben-manes.versions") version "0.46.0"
     id("org.ajoberstar.stutter") version "0.6.0"
@@ -166,17 +165,14 @@ tasks {
             }
         }
     }
-    val relocateShadowJar by registering(ConfigureShadowRelocation::class) {
-        target = shadowJar.get()
-        prefix = "io.github.gradlenexus.publishplugin.shadow"
-    }
     shadowJar {
-        dependsOn(relocateShadowJar)
         exclude("META-INF/maven/**", "META-INF/proguard/**", "META-INF/*.kotlin_module")
         manifest {
             attributes["Implementation-Version"] = project.version
         }
         archiveClassifier.set("")
+        isEnableRelocation = true
+        relocationPrefix = "io.github.gradlenexus.publishplugin.shadow"
     }
     jar {
         enabled = false
