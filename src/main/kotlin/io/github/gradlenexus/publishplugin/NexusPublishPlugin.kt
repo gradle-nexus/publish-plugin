@@ -16,23 +16,24 @@
 
 package io.github.gradlenexus.publishplugin
 
+import io.github.gradlenexus.publishplugin.NexusRepository.PublicationType
 import io.github.gradlenexus.publishplugin.internal.StagingRepositoryDescriptorRegistry
 import io.github.gradlenexus.publishplugin.internal.StagingRepositoryDescriptorRegistryBuildService
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
-import org.gradle.api.artifacts.repositories.MavenArtifactRepository
+import org.gradle.api.artifacts.repositories.ArtifactRepository
+import org.gradle.api.artifacts.repositories.AuthenticationSupported
+import org.gradle.api.artifacts.repositories.UrlArtifactRepository
 import org.gradle.api.provider.Provider
 import org.gradle.api.publish.PublishingExtension
-import org.gradle.api.publish.maven.MavenPublication
-import org.gradle.api.publish.maven.tasks.PublishToMavenRepository
 import org.gradle.api.publish.plugins.PublishingPlugin
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.invoke
 import org.gradle.kotlin.dsl.named
 import org.gradle.kotlin.dsl.register
-import org.gradle.kotlin.dsl.the
+import org.gradle.kotlin.dsl.typeOf
 import org.gradle.kotlin.dsl.withType
 import org.gradle.util.GradleVersion
 
@@ -49,6 +50,10 @@ class NexusPublishPlugin : Plugin<Project> {
             "Plugin must be applied to the root project but was applied to ${project.path}"
         }
 
+        require(GradleVersion.current() >= GradleVersion.version("6.0")) {
+            "The plugin requires Gradle version 6.0+"
+        }
+
         val registry = createRegistry(project)
         val extension = project.extensions.create<NexusPublishExtension>(NexusPublishExtension.NAME, project)
         configureNexusTasks(project, extension, registry)
@@ -57,9 +62,7 @@ class NexusPublishPlugin : Plugin<Project> {
 
     private fun createRegistry(rootProject: Project): Provider<StagingRepositoryDescriptorRegistry> {
         if (GradleVersion.current() >= GradleVersion.version("6.1")) {
-            return rootProject.gradle.sharedServices
-                .registerIfAbsent("stagingRepositoryUrlRegistry", StagingRepositoryDescriptorRegistryBuildService::class.java) {}
-                .map { it.registry }
+            return rootProject.gradle.sharedServices.registerIfAbsent("stagingRepositoryUrlRegistry", StagingRepositoryDescriptorRegistryBuildService::class.java) {}.map { it.registry }
         }
         val registry = StagingRepositoryDescriptorRegistry()
         return rootProject.provider { registry }
@@ -153,24 +156,31 @@ class NexusPublishPlugin : Plugin<Project> {
         rootProject.afterEvaluate {
             allprojects {
                 val publishingProject = this
-                plugins.withId("maven-publish") {
-                    val nexusRepositories = addMavenRepositories(publishingProject, extension, registry)
-                    nexusRepositories.forEach { (nexusRepo, mavenRepo) ->
-                        val initializeTask = rootProject.tasks.named<InitializeNexusStagingRepository>("initialize${nexusRepo.capitalizedName}StagingRepository")
-                        val findStagingRepositoryTask = rootProject.tasks.named<FindStagingRepository>("find${nexusRepo.capitalizedName}StagingRepository")
-                        val closeTask = rootProject.tasks.named<CloseNexusStagingRepository>("close${nexusRepo.capitalizedName}StagingRepository")
-                        val releaseTask = rootProject.tasks.named<ReleaseNexusStagingRepository>("release${nexusRepo.capitalizedName}StagingRepository")
-                        val publishAllTask = publishingProject.tasks.register("publishTo${nexusRepo.capitalizedName}") {
-                            description = "Publishes all Maven publications produced by this project to the '${nexusRepo.name}' Nexus repository."
-                            group = PublishingPlugin.PUBLISH_TASK_GROUP
+                plugins.withType<PublishingPlugin> {
+                    val nexusRepositories = addPublicationRepositories(publishingProject, extension, registry)
+                    nexusRepositories.forEach { (nexusRepo, publicationRepo) ->
+                        val publicationType = nexusRepo.publicationType.get()
+                        val id = when (publicationType) {
+                            PublicationType.IVY -> "ivy-publish"
+                            PublicationType.MAVEN -> "maven-publish"
                         }
-                        closeTask {
-                            mustRunAfter(publishAllTask)
+                        plugins.withId(id) {
+                            val initializeTask = rootProject.tasks.named<InitializeNexusStagingRepository>("initialize${nexusRepo.capitalizedName}StagingRepository")
+                            val findStagingRepositoryTask = rootProject.tasks.named<FindStagingRepository>("find${nexusRepo.capitalizedName}StagingRepository")
+                            val closeTask = rootProject.tasks.named<CloseNexusStagingRepository>("close${nexusRepo.capitalizedName}StagingRepository")
+                            val releaseTask = rootProject.tasks.named<ReleaseNexusStagingRepository>("release${nexusRepo.capitalizedName}StagingRepository")
+                            val publishAllTask = publishingProject.tasks.register("publishTo${nexusRepo.capitalizedName}") {
+                                description = "Publishes all Maven/Ivy publications produced by this project to the '${nexusRepo.name}' Nexus repository."
+                                group = PublishingPlugin.PUBLISH_TASK_GROUP
+                            }
+                            closeTask {
+                                mustRunAfter(publishAllTask)
+                            }
+                            releaseTask {
+                                mustRunAfter(publishAllTask)
+                            }
+                            configureTaskDependencies(publishingProject, initializeTask, findStagingRepositoryTask, publishAllTask, closeTask, releaseTask, publicationRepo, publicationType)
                         }
-                        releaseTask {
-                            mustRunAfter(publishAllTask)
-                        }
-                        configureTaskDependencies(publishingProject, initializeTask, findStagingRepositoryTask, publishAllTask, closeTask, releaseTask, mavenRepo)
                     }
                 }
             }
@@ -178,28 +188,55 @@ class NexusPublishPlugin : Plugin<Project> {
         }
     }
 
-    private fun addMavenRepositories(project: Project, extension: NexusPublishExtension, registry: Provider<StagingRepositoryDescriptorRegistry>): Map<NexusRepository, MavenArtifactRepository> {
-        return extension.repositories.associateWith { nexusRepo ->
-            project.the<PublishingExtension>().repositories.maven {
-                name = nexusRepo.name
-                setUrl(
-                    project.provider {
-                        getRepoUrl(nexusRepo, extension, registry)
-                    }
-                )
-                val allowInsecureProtocol = nexusRepo.allowInsecureProtocol.orNull
-                if (allowInsecureProtocol != null) {
-                    if (GradleVersion.current() >= GradleVersion.version("6.0")) {
-                        isAllowInsecureProtocol = allowInsecureProtocol
-                    } else {
-                        project.logger.warn("Configuration of allowInsecureProtocol=$allowInsecureProtocol will be ignored because it requires Gradle 6.0 or later")
-                    }
-                }
-                credentials {
-                    username = nexusRepo.username.orNull
-                    password = nexusRepo.password.orNull
-                }
+    private fun addPublicationRepositories(
+        project: Project,
+        extension: NexusPublishExtension,
+        registry: Provider<StagingRepositoryDescriptorRegistry>
+    ): Map<NexusRepository, ArtifactRepository> = extension.repositories.associateWith { nexusRepo ->
+        createArtifactRepository(nexusRepo.publicationType.get(), project, nexusRepo, extension, registry)
+    }
+
+    private fun createArtifactRepository(
+        publicationType: PublicationType,
+        project: Project,
+        nexusRepo: NexusRepository,
+        extension: NexusPublishExtension,
+        registry: Provider<StagingRepositoryDescriptorRegistry>
+    ): ArtifactRepository = when (publicationType) {
+        PublicationType.MAVEN -> project.theExtension<PublishingExtension>().repositories.maven {
+            configureArtifactRepo(nexusRepo, project, extension, registry, false)
+        }
+
+        PublicationType.IVY -> project.theExtension<PublishingExtension>().repositories.ivy {
+            configureArtifactRepo(nexusRepo, project, extension, registry, true)
+            if (nexusRepo.ivyPatternLayout.isPresent) {
+                nexusRepo.ivyPatternLayout.get().let { this.patternLayout(it) }
+            } else {
+                this.layout("maven")
             }
+        }
+    }
+
+    private fun <T> T.configureArtifactRepo(
+        nexusRepo: NexusRepository,
+        project: Project,
+        extension: NexusPublishExtension,
+        registry: Provider<StagingRepositoryDescriptorRegistry>,
+        provideFallback: Boolean
+    ) where T : UrlArtifactRepository, T : ArtifactRepository, T : AuthenticationSupported {
+        name = nexusRepo.name
+        setUrl(
+            project.provider {
+                getRepoUrl(nexusRepo, extension, registry, provideFallback)
+            }
+        )
+        val allowInsecureProtocol = nexusRepo.allowInsecureProtocol.orNull
+        if (allowInsecureProtocol != null) {
+            isAllowInsecureProtocol = allowInsecureProtocol
+        }
+        credentials {
+            username = nexusRepo.username.orNull
+            password = nexusRepo.password.orNull
         }
     }
 
@@ -210,18 +247,24 @@ class NexusPublishPlugin : Plugin<Project> {
         publishAllTask: TaskProvider<Task>,
         closeTask: TaskProvider<CloseNexusStagingRepository>,
         releaseTask: TaskProvider<ReleaseNexusStagingRepository>,
-        mavenRepo: MavenArtifactRepository
+        artifactRepo: ArtifactRepository,
+        publicationType: PublicationType
     ) {
-        val mavenPublications = project.the<PublishingExtension>().publications.withType<MavenPublication>()
-        mavenPublications.configureEach {
+        val publications = project.theExtension<PublishingExtension>().publications.withType(publicationType.gradleType)
+        publications.configureEach {
             val publication = this
-            val publishTask = project.tasks.named<PublishToMavenRepository>(
-                "publish${publication.name.capitalize()}PublicationTo${mavenRepo.name.capitalize()}Repository"
+            val publishTask = project.tasks.named(
+                "publish${publication.name.capitalize()}PublicationTo${artifactRepo.name.capitalize()}Repository",
+                publicationType.publishTaskType
             )
             publishTask {
                 dependsOn(initializeTask)
                 mustRunAfter(findStagingRepositoryTask)
-                doFirst { logger.info("Uploading to {}", repository.url) }
+                doFirst {
+                    if (artifactRepo is UrlArtifactRepository) {
+                        logger.info("Uploading to {}", artifactRepo.url)
+                    }
+                }
             }
             publishAllTask {
                 dependsOn(publishTask)
@@ -235,19 +278,32 @@ class NexusPublishPlugin : Plugin<Project> {
         }
     }
 
-    private fun getRepoUrl(nexusRepo: NexusRepository, extension: NexusPublishExtension, registry: Provider<StagingRepositoryDescriptorRegistry>) =
-        if (extension.useStaging.get()) {
-            registry.get()[nexusRepo.name].stagingRepositoryUrl
+    private fun getRepoUrl(
+        nexusRepo: NexusRepository,
+        extension: NexusPublishExtension,
+        registry: Provider<StagingRepositoryDescriptorRegistry>,
+        provideFallback: Boolean
+    ) = if (extension.useStaging.get()) {
+        val descriptorRegistry = registry.get()
+        if (provideFallback) {
+            descriptorRegistry.tryGet(nexusRepo.name)?.stagingRepositoryUrl ?: nexusRepo.nexusUrl.get()
         } else {
-            nexusRepo.snapshotRepositoryUrl.get()
+            descriptorRegistry[nexusRepo.name].stagingRepositoryUrl
         }
+    } else {
+        nexusRepo.snapshotRepositoryUrl.get()
+    }
 
     private fun configureSimplifiedCloseAndReleaseTask(rootProject: Project, extension: NexusPublishExtension) {
         if (extension.repositories.isNotEmpty()) {
             val closeAndReleaseSimplifiedTask = rootProject.tasks.named(SIMPLIFIED_CLOSE_AND_RELEASE_TASK_NAME)
             closeAndReleaseSimplifiedTask.configure {
                 val repositoryNamesAsString = extension.repositories.joinToString(", ") { "'${it.name}'" }
-                val instanceCardinalityAwareString = if (extension.repositories.size > 1) { "instances" } else { "instance" }
+                val instanceCardinalityAwareString = if (extension.repositories.size > 1) {
+                    "instances"
+                } else {
+                    "instance"
+                }
                 description = "Closes and releases open staging repositories in the following Nexus $instanceCardinalityAwareString: $repositoryNamesAsString"
                 enabled = true
             }
@@ -261,3 +317,8 @@ class NexusPublishPlugin : Plugin<Project> {
         }
     }
 }
+
+inline fun <reified T : Any> Project.theExtension(): T =
+    typeOf<T>().let {
+        this.extensions.findByType(it) ?: throw IllegalStateException("The plugin cannot be applied without the publishing plugin")
+    }

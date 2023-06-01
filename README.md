@@ -12,7 +12,7 @@ This plugin is intended as a replacement of the [Gradle Nexus Staging Plugin](ht
 
 ### Applying the plugin
 
-The plugin must be applied to the root project and requires Gradle 5.0 or later. It is important to
+The plugin must be applied to the root project and requires Gradle 6.0 or later. It is important to
 set the group and the version to the root project, so the plugin can detect if it is a snapshot
 version or not in order to select the correct repository where artifacts will be published.
 
@@ -81,6 +81,74 @@ signing {
     sign(publishing.publications["mavenJava"])
 }
 ```
+
+#### Publishing with Ivy ####
+
+There are cases where it may be necessary to use the `ivy-publish` plugin instead of `maven-publish`.
+For example, when publishing Sbt plugins the directory structure needs to be customized which is only possible with Gradle's `IvyArtifactRepository`.
+
+In such cases, you need to apply the `ivy-publish` plugin and configure the `publicationType` fore each `NexusRepository`, that should be ivy compatible, to `IVY` (default is `MAVEN`).
+
+In case of Ivy publishing, because of compatibility with Sonatype the nexus repository layout will be used by default
+
+```groovy
+nexusPublishing {
+    respositories {
+        ivyRepository {
+            publicationType = io.github.gradlenexus.publishplugin.NexusRepository.PublicationType.IVY
+        }
+    }
+}
+```
+
+Or use the kotlin DSL:
+
+```kotlin
+nexusPublishing {
+    respositories {
+        register("ivyRepository") {
+            publicationType.set(io.github.gradlenexus.publishplugin.NexusRepository.PublicationType.IVY)
+        }
+    }    
+}
+```
+
+##### Using Ivy repositories with different artifact patterns ####
+
+In case of ivy it's possible to override the default artifact pattern that is used, which is the Maven pattern due to compatibility reasons with sonatype
+
+To change the pattern of artifacts and ivy files configure the `ivyPatternLayout` on each repository that should be used with this layout with:
+
+```groovy
+nexusPublishing {
+    respositories {
+        ivyRepository {
+            ivyPatternLayout {
+                artifact "[organisation]/[module]_foo/[revision]/[artifact]-[revision](-[classifier])(.[ext])"
+                m2compatible = true
+            }
+        }
+    }
+}
+```
+
+Or use the kotlin DSL:
+
+```kotlin
+nexusPublishing {
+    respositories {
+        register("ivyRepository") {
+            ivyPatternLayout {
+                ivyPatternLayout {
+                    artifact("[organisation]/[module]_foo/[revision]/[artifact]-[revision](-[classifier])(.[ext])")
+                    m2compatible = true
+                }
+            }
+        }
+    }
+}
+```
+
 #### Add Metadata ####
 ```kotlin
 publishing {
@@ -309,7 +377,7 @@ see any errors that have occurred.
 
 The plugin does the following:
 
-- configure a Maven artifact repository for each repository defined in the `nexusPublishing { repositories { ... } }` block in each subproject that applies the `maven-publish` plugin
+- configure a Maven artifact repository for each repository defined in the `nexusPublishing { repositories { ... } }` block in each subproject that applies the `maven-publish` or the `ivy-publish` plugin
 - creates a `retrieve{repository.name.capitalize()}StagingProfile` task that retrieves the staging profile id from the remote Nexus repository. This is a diagnostic task to enable setting the configuration property `stagingProfileId` in  `nexusPublishing { repositories { myRepository { ... } } }`. Specifying the configuration property rather than relying on the API call is considered a performance optimization.  
 - create a `initialize${repository.name.capitalize()}StagingRepository` task that starts a new staging repository in case the project's version does not end with `-SNAPSHOT` (customizable via the `useStaging` property) and sets the URL of the corresponding Maven artifact repository accordingly. In case of a multi-project build, all subprojects with the same `nexusUrl` will use the same staging repository.
 - make all publishing tasks for each configured repository depend on the `initialize${repository.name.capitalize()}StagingRepository` task
