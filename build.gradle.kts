@@ -11,7 +11,7 @@ plugins {
     id("com.github.johnrengelman.shadow") version "8.1.1"
     id("org.jetbrains.gradle.plugin.idea-ext")
     id("com.github.ben-manes.versions") version "0.46.0"
-    id("org.ajoberstar.stutter") version "0.6.0"
+    id("org.ajoberstar.stutter") version "0.7.2"
 }
 
 group = "io.github.gradle-nexus"
