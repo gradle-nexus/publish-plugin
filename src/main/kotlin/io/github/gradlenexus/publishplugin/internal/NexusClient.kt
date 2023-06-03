@@ -190,8 +190,7 @@ open class NexusClient(private val baseUrl: URI, username: String?, password: St
 
         @Headers("Content-Type: application/json")
         @POST("staging/profiles/{stagingProfileId}/start")
-        fun startStagingRepo(@Path("stagingProfileId") stagingProfileId: String, @Body description: Dto<Description>):
-            Call<Dto<CreatedStagingRepository>>
+        fun startStagingRepo(@Path("stagingProfileId") stagingProfileId: String, @Body description: Dto<Description>): Call<Dto<CreatedStagingRepository>>
 
         @Headers("Content-Type: application/json")
         @POST("staging/bulk/close")
