@@ -100,7 +100,7 @@ java {
 }
 
 stutter {
-    sparse.set(providers.gradleProperty("stutter.sparce").map(String::toBoolean).orElse(true))
+    sparse.set(providers.gradleProperty("stutter.sparse").map(String::toBoolean).orElse(true))
     matrices {
         register("java8") {
             javaToolchain {
