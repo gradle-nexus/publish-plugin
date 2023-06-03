@@ -33,9 +33,9 @@ jobs:
 
       - name: Set latest Gradle versions to test with
         run: |
-          cp "${{ env.GRADLE_VERSIONS_OUTPUT_FILE }}" .stutter/java11.lock
+          echo "java11=$(cat ${{ env.GRADLE_VERSIONS_OUTPUT_FILE }} | tr '\n' ',')" > stutter.lockfile
           echo "Gradle versions configured for compatibility tests:"
-          cat .stutter/java11.lock
+          cat stutter.lockfile
 
       - name: Run compatTest
         run: ./gradlew --continue test compatTest
