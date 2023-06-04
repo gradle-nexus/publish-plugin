@@ -38,4 +38,4 @@ jobs:
           cat stutter.lockfile
 
       - name: Run compatTest
-        run: ./gradlew --continue test compatTest
+        run: ./gradlew --scan --continue test compatTest
