@@ -11,7 +11,7 @@ plugins {
     id("com.github.johnrengelman.shadow") version "8.1.1"
     id("org.jetbrains.gradle.plugin.idea-ext")
     id("com.github.ben-manes.versions") version "0.46.0"
-    id("org.ajoberstar.stutter") version "0.6.0"
+    id("org.ajoberstar.stutter") version "0.7.2"
 }
 
 group = "io.github.gradle-nexus"
@@ -100,15 +100,32 @@ java {
 }
 
 stutter {
-    isSparse = (findProperty("stutter.sparce")?.toString()?.toBoolean()) ?: true
-    java(8) {
-        compatibleRange("6.0")
-    }
-    java(11) {
-        compatibleRange("6.0")
-    }
-    java(17) {
-        compatibleRange("7.3")
+    sparse.set(providers.gradleProperty("stutter.sparse").map(String::toBoolean).orElse(true))
+    matrices {
+        register("java8") {
+            javaToolchain {
+                languageVersion.set(JavaLanguageVersion.of(8))
+            }
+            gradleVersions {
+                compatibleRange("6.0")
+            }
+        }
+        register("java11") {
+            javaToolchain {
+                languageVersion.set(JavaLanguageVersion.of(11))
+            }
+            gradleVersions {
+                compatibleRange("6.0")
+            }
+        }
+        register("java17") {
+            javaToolchain {
+                languageVersion.set(JavaLanguageVersion.of(17))
+            }
+            gradleVersions {
+                compatibleRange("7.3")
+            }
+        }
     }
 }
 

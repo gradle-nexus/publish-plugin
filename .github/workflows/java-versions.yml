@@ -27,12 +27,14 @@ jobs:
       # Workaround https://github.com/ajoberstar/gradle-stutter/issues/22
       - name: Reduce number of Gradle regressions builds
         run: |
-          for l in .stutter/*.lock; do
-            echo $l
-            echo "$(cat $l | grep -v "^#" | tail -1)" > $l
-            cat $l
-          done
+          # Keep only the last Gradle version per Stutter matrix; for each line this transformation is done:
+          # java11=6.0.1,6.9.4,7.0.2,7.6.1,8.0.2,8.1.1,8.2-rc-1
+          # ->
+          # java11=8.2-rc-1
+          # The trick is that \2 will greedily eat everything before the last comma.
+          sed -r 's/^(.*?)=(.*),(.*)$/\1=\3/g' -i stutter.lockfile
+          cat stutter.lockfile
       - name: Test cross Java versions compatibility
         run: |
           ./gradlew --version
-          ./gradlew --stacktrace build
+          ./gradlew --stacktrace build compatTestJava${{ matrix.jdk }}

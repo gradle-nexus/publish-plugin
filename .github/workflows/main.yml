@@ -25,4 +25,4 @@ jobs:
         distribution: 'zulu'
     - uses: gradle/gradle-build-action@v2
       with:
-        arguments: --scan --stacktrace build
+        arguments: --scan --stacktrace build compatTestJava11
