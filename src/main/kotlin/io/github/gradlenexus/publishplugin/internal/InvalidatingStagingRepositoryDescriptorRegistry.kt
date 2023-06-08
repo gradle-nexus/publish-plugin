@@ -22,28 +22,27 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
 
-class InvalidatingStagingRepositoryDescriptorRegistry {
+/*
+ * This class is a temporary workaround to invalidate the repository description on a IvyArtifactRepository after the creation of the staging sonatype repo
+ */
+class InvalidatingStagingRepositoryDescriptorRegistry : StagingRepositoryDescriptorRegistry() {
 
     private val mapping = ConcurrentHashMap<String, StagingRepositoryDescriptor>()
     private val invalidateMapping = ConcurrentHashMap<String, ArtifactRepository>()
 
-    operator fun set(name: String, descriptor: StagingRepositoryDescriptor) {
-        mapping[name] = descriptor
+    override operator fun set(name: String, descriptor: StagingRepositoryDescriptor) {
+        super.set(name, descriptor)
         invalidateMapping.remove(name)?.invalidate()
     }
-
-    operator fun get(name: String) = mapping[name] ?: throw IllegalStateException("No staging repository with name $name created")
 
     fun invalidateLater(name: String, artifactRepository: ArtifactRepository) {
         invalidateMapping[name] = artifactRepository
     }
 
-    fun tryGet(name: String) = mapping[name]
-
     override fun toString() = mapping.toString()
 
     companion object {
-        private val log: Logger = LoggerFactory.getLogger(BasicActionRetrier::class.java)
+        private val log: Logger = LoggerFactory.getLogger(InvalidatingStagingRepositoryDescriptorRegistry::class.java)
 
         private fun ArtifactRepository.invalidate() {
             if (this is AbstractResolutionAwareArtifactRepository) {
