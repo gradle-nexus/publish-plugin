@@ -27,7 +27,6 @@ import java.util.concurrent.ConcurrentHashMap
  */
 class InvalidatingStagingRepositoryDescriptorRegistry : StagingRepositoryDescriptorRegistry() {
 
-    private val mapping = ConcurrentHashMap<String, StagingRepositoryDescriptor>()
     private val invalidateMapping = ConcurrentHashMap<String, ArtifactRepository>()
 
     override operator fun set(name: String, descriptor: StagingRepositoryDescriptor) {
@@ -38,8 +37,6 @@ class InvalidatingStagingRepositoryDescriptorRegistry : StagingRepositoryDescrip
     fun invalidateLater(name: String, artifactRepository: ArtifactRepository) {
         invalidateMapping[name] = artifactRepository
     }
-
-    override fun toString() = mapping.toString()
 
     companion object {
         private val log: Logger = LoggerFactory.getLogger(InvalidatingStagingRepositoryDescriptorRegistry::class.java)
