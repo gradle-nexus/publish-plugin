@@ -16,8 +16,8 @@
 
 package io.github.gradlenexus.publishplugin
 
+import io.github.gradlenexus.publishplugin.internal.InvalidatingStagingRepositoryDescriptorRegistry
 import io.github.gradlenexus.publishplugin.internal.NexusClient
-import io.github.gradlenexus.publishplugin.internal.StagingRepositoryDescriptorRegistry
 import org.gradle.api.GradleException
 import org.gradle.api.Incubating
 import org.gradle.api.model.ObjectFactory
@@ -34,7 +34,7 @@ open class FindStagingRepository @Inject constructor(
     objects: ObjectFactory,
     extension: NexusPublishExtension,
     repository: NexusRepository,
-    private val registry: Provider<StagingRepositoryDescriptorRegistry>
+    private val registry: Provider<InvalidatingStagingRepositoryDescriptorRegistry>
 ) : AbstractNexusStagingRepositoryTask(objects, extension, repository) {
 
     @Optional

@@ -17,9 +17,9 @@
 package io.github.gradlenexus.publishplugin
 
 import io.github.gradlenexus.publishplugin.internal.BasicActionRetrier
+import io.github.gradlenexus.publishplugin.internal.InvalidatingStagingRepositoryDescriptorRegistry
 import io.github.gradlenexus.publishplugin.internal.NexusClient
 import io.github.gradlenexus.publishplugin.internal.StagingRepository
-import io.github.gradlenexus.publishplugin.internal.StagingRepositoryDescriptorRegistry
 import io.github.gradlenexus.publishplugin.internal.StagingRepositoryTransitioner
 import org.gradle.api.Action
 import org.gradle.api.model.ObjectFactory
@@ -34,7 +34,7 @@ abstract class AbstractTransitionNexusStagingRepositoryTask(
     objects: ObjectFactory,
     extension: NexusPublishExtension,
     repository: NexusRepository,
-    registry: Provider<StagingRepositoryDescriptorRegistry>
+    registry: Provider<InvalidatingStagingRepositoryDescriptorRegistry>
 ) : AbstractNexusStagingRepositoryTask(objects, extension, repository) {
 
     @Input

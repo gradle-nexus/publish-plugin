@@ -18,11 +18,11 @@ package io.github.gradlenexus.publishplugin.internal
 
 import java.util.concurrent.ConcurrentHashMap
 
-class StagingRepositoryDescriptorRegistry {
+open class StagingRepositoryDescriptorRegistry {
 
     private val mapping = ConcurrentHashMap<String, StagingRepositoryDescriptor>()
 
-    operator fun set(name: String, descriptor: StagingRepositoryDescriptor) {
+    open operator fun set(name: String, descriptor: StagingRepositoryDescriptor) {
         mapping[name] = descriptor
     }
 

@@ -20,5 +20,5 @@ import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
 
 abstract class StagingRepositoryDescriptorRegistryBuildService : BuildService<BuildServiceParameters.None> {
-    val registry = StagingRepositoryDescriptorRegistry()
+    val registry = InvalidatingStagingRepositoryDescriptorRegistry()
 }
