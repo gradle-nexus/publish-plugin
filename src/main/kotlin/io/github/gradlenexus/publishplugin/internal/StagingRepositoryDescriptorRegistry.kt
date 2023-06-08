@@ -31,5 +31,4 @@ open class StagingRepositoryDescriptorRegistry {
     fun tryGet(name: String) = mapping[name]
 
     override fun toString() = mapping.toString()
-
 }

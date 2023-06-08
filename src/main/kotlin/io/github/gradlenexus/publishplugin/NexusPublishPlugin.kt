@@ -36,7 +36,6 @@ import org.gradle.kotlin.dsl.register
 import org.gradle.kotlin.dsl.typeOf
 import org.gradle.kotlin.dsl.withType
 import org.gradle.util.GradleVersion
-import java.net.URI
 
 @Suppress("UnstableApiUsage")
 class NexusPublishPlugin : Plugin<Project> {
