@@ -289,7 +289,7 @@ class NexusPublishPlugin : Plugin<Project> {
         val descriptorRegistry = registry.get()
         if (provideFallback) {
             descriptorRegistry.invalidateLater(nexusRepo.name, artifactRepo)
-            descriptorRegistry.tryGet(nexusRepo.name)?.stagingRepositoryUrl ?: nexusRepo.nexusUrl.get()gs
+            descriptorRegistry.tryGet(nexusRepo.name)?.stagingRepositoryUrl ?: nexusRepo.nexusUrl.get()
         } else {
             descriptorRegistry[nexusRepo.name].stagingRepositoryUrl
         }
