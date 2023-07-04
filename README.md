@@ -227,28 +227,29 @@ publishing {
     publications {
         mavenJava(MavenPublication) {
             from(components.java)
-        }
-        pom {
-            name = "<<Component Name>>"
-            description = "<<Component Description>>"
-            url = "<<Component URL>>"
-            licenses {
-                license {
-                    name = "<<License Name>>"
-                    url = "<<License URL>>"
+
+            pom {
+                name = "<<Component Name>>"
+                description = "<<Component Description>>"
+                url = "<<Component URL>>"
+                licenses {
+                    license {
+                        name = "<<License Name>>"
+                        url = "<<License URL>>"
+                    }
                 }
-            }
-            developers {
-                developer {
-                    id = "<<Developer ID>>"
-                    name = "<<Developer Name>>"
-                    email = "<<Developer Email>>"
+                developers {
+                    developer {
+                        id = "<<Developer ID>>"
+                        name = "<<Developer Name>>"
+                        email = "<<Developer Email>>"
+                    }
                 }
-            }
-            scm {
-                connection = "<<SCM Connection URL>>"
-                developerConnection = "<<SCM Dev Connection URL>>"
-                url = "<<Source URL>>"
+                scm {
+                    connection = "<<SCM Connection URL>>"
+                    developerConnection = "<<SCM Dev Connection URL>>"
+                    url = "<<Source URL>>"
+                }
             }
         }
     }
@@ -284,28 +285,29 @@ publishing {
     publications {
         create<MavenPublication>("mavenJava") {
             from(components["java"])
-        }
-        pom {
-            name.set("<<Component Name>>")
-            description.set("<<Component Description>>")
-            url.set("<<Component URL>>")
-            licenses {
-                license {
-                    name.set("<<License Name>>")
-                    url.set("<<License URL>>")
+
+            pom {
+                name.set("<<Component Name>>")
+                description.set("<<Component Description>>")
+                url.set("<<Component URL>>")
+                licenses {
+                    license {
+                        name.set("<<License Name>>")
+                        url.set("<<License URL>>")
+                    }
                 }
-            }
-            developers {
-                developer {
-                    id.set("<<Developer ID>>")
-                    name.set("<<Developer Name>>")
-                    email.set("<<Developer Email>>")
+                developers {
+                    developer {
+                        id.set("<<Developer ID>>")
+                        name.set("<<Developer Name>>")
+                        email.set("<<Developer Email>>")
+                    }
                 }
-            }
-            scm {
-                connection.set("<<SCM Connection URL>>")
-                developerConnection.set("<<SCM Dev Connection URL>>")
-                url.set("<<Source URL>>")
+                scm {
+                    connection.set("<<SCM Connection URL>>")
+                    developerConnection.set("<<SCM Dev Connection URL>>")
+                    url.set("<<Source URL>>")
+                }
             }
         }
     }
