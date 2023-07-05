@@ -23,8 +23,8 @@ val repoUrl = "https://github.com/gradle-nexus/publish-plugin"
 
 @Suppress("UnstableApiUsage") // Using this DSL is the only way on Gradle 8.0, could still change slightly in the future.
 gradlePlugin {
-    website.set(repoUrl)
-    vcsUrl.set(repoUrl)
+    website = repoUrl
+    vcsUrl = repoUrl
     plugins {
         create("nexusPublish") {
             id = "io.github.gradle-nexus.publish-plugin"
@@ -100,11 +100,11 @@ java {
 }
 
 stutter {
-    sparse.set(providers.gradleProperty("stutter.sparse").map(String::toBoolean).orElse(true))
+    sparse = providers.gradleProperty("stutter.sparse").map(String::toBoolean).orElse(true)
     matrices {
         register("java8") {
             javaToolchain {
-                languageVersion.set(JavaLanguageVersion.of(8))
+                languageVersion = JavaLanguageVersion.of(8)
             }
             gradleVersions {
                 compatibleRange("6.0")
@@ -112,7 +112,7 @@ stutter {
         }
         register("java11") {
             javaToolchain {
-                languageVersion.set(JavaLanguageVersion.of(11))
+                languageVersion = JavaLanguageVersion.of(11)
             }
             gradleVersions {
                 compatibleRange("6.0")
@@ -120,7 +120,7 @@ stutter {
         }
         register("java17") {
             javaToolchain {
-                languageVersion.set(JavaLanguageVersion.of(17))
+                languageVersion = JavaLanguageVersion.of(17)
             }
             gradleVersions {
                 compatibleRange("7.3")
@@ -187,7 +187,7 @@ tasks {
         manifest {
             attributes["Implementation-Version"] = project.version
         }
-        archiveClassifier.set("")
+        archiveClassifier = ""
         isEnableRelocation = true
         relocationPrefix = "io.github.gradlenexus.publishplugin.shadow"
     }
@@ -239,24 +239,24 @@ publishing {
         afterEvaluate {
             named<MavenPublication>("pluginMaven") {
                 pom {
-                    name.set(readableName)
-                    description.set(project.description)
-                    inceptionYear.set("2020")
-                    url.set(repoUrl)
+                    name = readableName
+                    description = project.description
+                    inceptionYear = "2020"
+                    url = repoUrl
                     developers {
                         developer {
-                            name.set("Marc Philipp")
-                            id.set("marcphilipp")
+                            name = "Marc Philipp"
+                            id = "marcphilipp"
                         }
                         developer {
-                            name.set("Marcin Zajączkowski")
-                            id.set("szpak")
+                            name = "Marcin Zajączkowski"
+                            id = "szpak"
                         }
                     }
                     licenses {
                         license {
-                            name.set("Apache License, Version 2.0")
-                            url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
+                            name = "Apache License, Version 2.0"
+                            url = "https://www.apache.org/licenses/LICENSE-2.0.txt"
                         }
                     }
                 }
