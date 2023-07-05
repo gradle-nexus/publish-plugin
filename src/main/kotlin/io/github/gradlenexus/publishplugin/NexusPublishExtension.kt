@@ -19,31 +19,33 @@ package io.github.gradlenexus.publishplugin
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectFactory
 import org.gradle.api.Project
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Nested
 import org.gradle.kotlin.dsl.container
 import org.gradle.kotlin.dsl.newInstance
-import org.gradle.kotlin.dsl.property
 import java.time.Duration
 
-open class NexusPublishExtension(project: Project) {
+abstract class NexusPublishExtension(project: Project) {
 
     companion object {
         internal const val NAME = "nexusPublishing"
     }
 
-    val useStaging = project.objects.property<Boolean>()
+    abstract val useStaging: Property<Boolean>
 
-    val packageGroup = project.objects.property<String>()
+    abstract val packageGroup: Property<String>
 
-    val repositoryDescription = project.objects.property<String>()
+    abstract val repositoryDescription: Property<String>
 
     // staging repository initialization can take a few minutes on Sonatype Nexus
-    val clientTimeout = project.objects.property<Duration>()
+    abstract val clientTimeout: Property<Duration>
 
-    val connectTimeout = project.objects.property<Duration>()
+    abstract val connectTimeout: Property<Duration>
 
-    val transitionCheckOptions = project.objects.property<TransitionCheckOptions>()
+    @get:Nested
+    abstract val transitionCheckOptions: TransitionCheckOptions
 
-    fun transitionCheckOptions(action: Action<in TransitionCheckOptions>) = action.execute(transitionCheckOptions.get())
+    fun transitionCheckOptions(action: Action<in TransitionCheckOptions>) = action.execute(transitionCheckOptions)
 
     val repositories: NexusRepositoryContainer = project.objects.newInstance(
         DefaultNexusRepositoryContainer::class,
