@@ -59,7 +59,7 @@ open class NexusPublishExtension(project: Project) {
         project.container(
             NexusRepository::class,
             NamedDomainObjectFactory { name ->
-                project.objects.newInstance(NexusRepository::class, name, project)
+                project.objects.newInstance(NexusRepository::class, name)
             }
         )
     )
