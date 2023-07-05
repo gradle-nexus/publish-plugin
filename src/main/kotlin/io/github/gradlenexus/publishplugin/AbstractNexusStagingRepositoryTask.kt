@@ -18,6 +18,7 @@ package io.github.gradlenexus.publishplugin
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
@@ -28,11 +29,11 @@ import javax.inject.Inject
 abstract class AbstractNexusStagingRepositoryTask @Inject
 constructor(objects: ObjectFactory, repository: NexusRepository) : DefaultTask() {
 
-    @Internal
-    val clientTimeout = objects.property<Duration>()
+    @get:Internal
+    abstract val clientTimeout: Property<Duration>
 
-    @Internal
-    val connectTimeout = objects.property<Duration>()
+    @get:Internal
+    abstract val connectTimeout: Property<Duration>
 
     // TODO: Expose externally as interface with getters only
     @Nested
@@ -40,11 +41,11 @@ constructor(objects: ObjectFactory, repository: NexusRepository) : DefaultTask()
         set(repository)
     }
 
-    @Input
-    val repositoryDescription = objects.property<String>()
+    @get:Input
+    abstract val repositoryDescription: Property<String>
 
     @get:Internal
-    internal val useStaging = objects.property<Boolean>()
+    internal abstract val useStaging: Property<Boolean>
 
     init {
         this.onlyIf { useStaging.getOrElse(false) }

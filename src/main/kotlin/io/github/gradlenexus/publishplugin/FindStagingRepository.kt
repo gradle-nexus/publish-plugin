@@ -30,7 +30,7 @@ import org.gradle.kotlin.dsl.property
 import javax.inject.Inject
 
 @Incubating
-open class FindStagingRepository @Inject constructor(
+abstract class FindStagingRepository @Inject constructor(
     objects: ObjectFactory,
     extension: NexusPublishExtension,
     repository: NexusRepository,
