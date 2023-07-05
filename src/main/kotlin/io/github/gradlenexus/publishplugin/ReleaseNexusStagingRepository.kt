@@ -25,10 +25,9 @@ import javax.inject.Inject
 
 open class ReleaseNexusStagingRepository @Inject constructor(
     objects: ObjectFactory,
-    extension: NexusPublishExtension,
     repository: NexusRepository,
     registry: Provider<InvalidatingStagingRepositoryDescriptorRegistry>
-) : AbstractTransitionNexusStagingRepositoryTask(objects, extension, repository, registry) {
+) : AbstractTransitionNexusStagingRepositoryTask(objects, repository, registry) {
 
     @Option(option = "staging-repository-id", description = "staging repository id to release")
     fun setStagingRepositoryId(stagingRepositoryId: String) {

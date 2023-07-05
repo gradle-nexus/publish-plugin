@@ -31,7 +31,6 @@ import org.gradle.kotlin.dsl.property
 
 abstract class AbstractTransitionNexusStagingRepositoryTask(
     objects: ObjectFactory,
-    extension: NexusPublishExtension,
     repository: NexusRepository,
     registry: Provider<InvalidatingStagingRepositoryDescriptorRegistry>
 ) : AbstractNexusStagingRepositoryTask(objects, repository) {
@@ -46,9 +45,7 @@ abstract class AbstractTransitionNexusStagingRepositoryTask(
     }
 
     @Internal
-    val transitionCheckOptions = project.objects.property<TransitionCheckOptions>().apply {
-        set(extension.transitionCheckOptions)
-    }
+    val transitionCheckOptions = project.objects.property<TransitionCheckOptions>()
 
     fun transitionCheckOptions(action: Action<in TransitionCheckOptions>) = action.execute(transitionCheckOptions.get())
 

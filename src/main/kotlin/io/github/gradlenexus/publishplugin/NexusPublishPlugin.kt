@@ -88,6 +88,9 @@ class NexusPublishPlugin : Plugin<Project> {
             repositoryDescription.convention(extension.repositoryDescription)
             useStaging.convention(extension.useStaging)
         }
+        rootProject.tasks.withType(AbstractTransitionNexusStagingRepositoryTask::class.java) {
+            transitionCheckOptions.convention(extension.transitionCheckOptions)
+        }
         extension.repositories.all {
             username.convention(rootProject.provider { rootProject.findProperty("${name}Username") as? String })
             password.convention(rootProject.provider { rootProject.findProperty("${name}Password") as? String })
@@ -115,14 +118,12 @@ class NexusPublishPlugin : Plugin<Project> {
             val closeTask = rootProject.tasks.register<CloseNexusStagingRepository>(
                 "close${capitalizedName}StagingRepository",
                 rootProject.objects,
-                extension,
                 repository,
                 registry
             )
             val releaseTask = rootProject.tasks.register<ReleaseNexusStagingRepository>(
                 "release${capitalizedName}StagingRepository",
                 rootProject.objects,
-                extension,
                 repository,
                 registry
             )
