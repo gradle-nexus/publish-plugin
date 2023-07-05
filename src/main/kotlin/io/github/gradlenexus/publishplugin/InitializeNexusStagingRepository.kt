@@ -28,7 +28,6 @@ import org.gradle.api.tasks.TaskAction
 import org.gradle.kotlin.dsl.property
 import javax.inject.Inject
 
-@Suppress("UnstableApiUsage")
 open class InitializeNexusStagingRepository @Inject constructor(
     objects: ObjectFactory,
     extension: NexusPublishExtension,
