@@ -18,14 +18,15 @@ package io.github.gradlenexus.publishplugin
 
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectFactory
-import org.gradle.api.Project
+import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Nested
-import org.gradle.kotlin.dsl.container
+import org.gradle.kotlin.dsl.domainObjectContainer
 import org.gradle.kotlin.dsl.newInstance
 import java.time.Duration
+import javax.inject.Inject
 
-abstract class NexusPublishExtension(project: Project) {
+abstract class NexusPublishExtension @Inject constructor(objects: ObjectFactory) {
 
     companion object {
         internal const val NAME = "nexusPublishing"
@@ -47,15 +48,15 @@ abstract class NexusPublishExtension(project: Project) {
 
     fun transitionCheckOptions(action: Action<in TransitionCheckOptions>) = action.execute(transitionCheckOptions)
 
-    val repositories: NexusRepositoryContainer = project.objects.newInstance(
+    val repositories: NexusRepositoryContainer = objects.newInstance(
         DefaultNexusRepositoryContainer::class,
-        // `project.container(NexusRepository::class) { name -> ... }`,
+        // `objects.domainObjectContainer(NexusRepository::class) { name -> ... }`,
         // but in Kotlin 1.3 "New Inference" is not implemented yet, so we have to be explicit.
         // https://kotlinlang.org/docs/whatsnew14.html#new-more-powerful-type-inference-algorithm
-        project.container(
+        objects.domainObjectContainer(
             NexusRepository::class,
             NamedDomainObjectFactory { name ->
-                project.objects.newInstance(NexusRepository::class, name)
+                objects.newInstance(NexusRepository::class, name)
             }
         )
     )

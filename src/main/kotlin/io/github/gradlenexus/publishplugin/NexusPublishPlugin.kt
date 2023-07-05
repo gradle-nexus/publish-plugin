@@ -55,7 +55,7 @@ class NexusPublishPlugin : Plugin<Project> {
         }
 
         val registry = createRegistry(project)
-        val extension = project.extensions.create<NexusPublishExtension>(NexusPublishExtension.NAME, project)
+        val extension = project.extensions.create<NexusPublishExtension>(NexusPublishExtension.NAME)
         configureExtension(project, extension)
         configureNexusTasks(project, extension, registry)
         configurePublishingForAllProjects(project, extension, registry)
