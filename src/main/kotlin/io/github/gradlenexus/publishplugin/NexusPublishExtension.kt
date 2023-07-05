@@ -30,24 +30,18 @@ open class NexusPublishExtension(project: Project) {
         internal const val NAME = "nexusPublishing"
     }
 
-    val useStaging = project.objects.property<Boolean>().apply {
-        set(project.provider { !project.version.toString().endsWith("-SNAPSHOT") })
-    }
+    val useStaging = project.objects.property<Boolean>()
 
-    val packageGroup = project.objects.property<String>().apply {
-        set(project.provider { project.group.toString() })
-    }
+    val packageGroup = project.objects.property<String>()
 
-    val repositoryDescription = project.objects.property<String>().apply {
-        set(project.provider { project.run { "$group:$name:$version" } })
-    }
+    val repositoryDescription = project.objects.property<String>()
 
     // staging repository initialization can take a few minutes on Sonatype Nexus
-    val clientTimeout = project.objects.property<Duration>().value(Duration.ofMinutes(5))
+    val clientTimeout = project.objects.property<Duration>()
 
-    val connectTimeout = project.objects.property<Duration>().value(Duration.ofMinutes(5))
+    val connectTimeout = project.objects.property<Duration>()
 
-    val transitionCheckOptions = project.objects.property<TransitionCheckOptions>().value(project.objects.newInstance(TransitionCheckOptions::class))
+    val transitionCheckOptions = project.objects.property<TransitionCheckOptions>()
 
     fun transitionCheckOptions(action: Action<in TransitionCheckOptions>) = action.execute(transitionCheckOptions.get())
 
