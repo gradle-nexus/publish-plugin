@@ -68,6 +68,8 @@ class NexusPublishPlugin : Plugin<Project> {
             repositoryDescription.convention(project.provider { project.run { "$group:$name:$version" } })
             clientTimeout.convention(Duration.ofMinutes(5))
             connectTimeout.convention(Duration.ofMinutes(5))
+            transitionCheckOptions.maxRetries.convention(60)
+            transitionCheckOptions.delayBetween.convention(Duration.ofSeconds(10))
         }
     }
 

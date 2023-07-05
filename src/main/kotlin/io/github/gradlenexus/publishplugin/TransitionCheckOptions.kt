@@ -23,7 +23,7 @@ import javax.inject.Inject
 
 open class TransitionCheckOptions @Inject constructor(objects: ObjectFactory) {
 
-    val maxRetries = objects.property<Int>().value(60)
+    val maxRetries = objects.property<Int>()
 
-    val delayBetween = objects.property<Duration>().value(Duration.ofSeconds(10))
+    val delayBetween = objects.property<Duration>()
 }
