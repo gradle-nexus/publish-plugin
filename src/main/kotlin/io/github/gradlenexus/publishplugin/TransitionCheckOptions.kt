@@ -16,14 +16,12 @@
 
 package io.github.gradlenexus.publishplugin
 
-import org.gradle.api.model.ObjectFactory
-import org.gradle.kotlin.dsl.property
+import org.gradle.api.provider.Property
 import java.time.Duration
-import javax.inject.Inject
 
-open class TransitionCheckOptions @Inject constructor(objects: ObjectFactory) {
+interface TransitionCheckOptions {
 
-    val maxRetries = objects.property<Int>()
+    val maxRetries: Property<Int>
 
-    val delayBetween = objects.property<Duration>()
+    val delayBetween: Property<Duration>
 }
