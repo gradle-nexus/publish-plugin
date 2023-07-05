@@ -34,7 +34,7 @@ abstract class AbstractTransitionNexusStagingRepositoryTask(
     extension: NexusPublishExtension,
     repository: NexusRepository,
     registry: Provider<InvalidatingStagingRepositoryDescriptorRegistry>
-) : AbstractNexusStagingRepositoryTask(objects, extension, repository) {
+) : AbstractNexusStagingRepositoryTask(objects, repository) {
 
     @Input
     val stagingRepositoryId = objects.property<String>().apply {

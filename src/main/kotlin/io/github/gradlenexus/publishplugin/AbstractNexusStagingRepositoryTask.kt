@@ -26,17 +26,13 @@ import java.time.Duration
 import javax.inject.Inject
 
 abstract class AbstractNexusStagingRepositoryTask @Inject
-constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository: NexusRepository) : DefaultTask() {
+constructor(objects: ObjectFactory, repository: NexusRepository) : DefaultTask() {
 
     @Internal
-    val clientTimeout = objects.property<Duration>().apply {
-        set(extension.clientTimeout)
-    }
+    val clientTimeout = objects.property<Duration>()
 
     @Internal
-    val connectTimeout = objects.property<Duration>().apply {
-        set(extension.connectTimeout)
-    }
+    val connectTimeout = objects.property<Duration>()
 
     // TODO: Expose externally as interface with getters only
     @Nested
@@ -45,13 +41,10 @@ constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository
     }
 
     @Input
-    val repositoryDescription = objects.property<String>().apply {
-        set(extension.repositoryDescription)
-    }
+    val repositoryDescription = objects.property<String>()
 
-    private val useStaging = objects.property<Boolean>().apply {
-        set(extension.useStaging)
-    }
+    @get:Internal
+    internal val useStaging = objects.property<Boolean>()
 
     init {
         this.onlyIf { useStaging.getOrElse(false) }

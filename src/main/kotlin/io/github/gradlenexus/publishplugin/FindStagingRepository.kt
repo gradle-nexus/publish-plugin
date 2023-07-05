@@ -35,7 +35,7 @@ open class FindStagingRepository @Inject constructor(
     extension: NexusPublishExtension,
     repository: NexusRepository,
     private val registry: Provider<InvalidatingStagingRepositoryDescriptorRegistry>
-) : AbstractNexusStagingRepositoryTask(objects, extension, repository) {
+) : AbstractNexusStagingRepositoryTask(objects, repository) {
 
     @Optional
     @Input

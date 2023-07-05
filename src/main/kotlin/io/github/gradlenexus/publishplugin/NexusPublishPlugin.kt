@@ -82,6 +82,12 @@ class NexusPublishPlugin : Plugin<Project> {
     }
 
     private fun configureNexusTasks(rootProject: Project, extension: NexusPublishExtension, registry: Provider<InvalidatingStagingRepositoryDescriptorRegistry>) {
+        rootProject.tasks.withType(AbstractNexusStagingRepositoryTask::class.java) {
+            clientTimeout.convention(extension.clientTimeout)
+            connectTimeout.convention(extension.connectTimeout)
+            repositoryDescription.convention(extension.repositoryDescription)
+            useStaging.convention(extension.useStaging)
+        }
         extension.repositories.all {
             username.convention(rootProject.provider { rootProject.findProperty("${name}Username") as? String })
             password.convention(rootProject.provider { rootProject.findProperty("${name}Password") as? String })

@@ -33,7 +33,7 @@ open class RetrieveStagingProfile @Inject constructor(
     objects: ObjectFactory,
     extension: NexusPublishExtension,
     repository: NexusRepository
-) : AbstractNexusStagingRepositoryTask(objects, extension, repository) {
+) : AbstractNexusStagingRepositoryTask(objects, repository) {
 
     @Input
     val packageGroup = objects.property<String>().apply {
