@@ -23,6 +23,7 @@ import io.github.gradlenexus.publishplugin.internal.StagingRepository
 import io.github.gradlenexus.publishplugin.internal.StagingRepositoryTransitioner
 import org.gradle.api.Action
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
@@ -44,8 +45,8 @@ abstract class AbstractTransitionNexusStagingRepositoryTask(
         )
     }
 
-    @Internal
-    val transitionCheckOptions = project.objects.property<TransitionCheckOptions>()
+    @get:Internal
+    abstract val transitionCheckOptions: Property<TransitionCheckOptions>
 
     fun transitionCheckOptions(action: Action<in TransitionCheckOptions>) = action.execute(transitionCheckOptions.get())
 

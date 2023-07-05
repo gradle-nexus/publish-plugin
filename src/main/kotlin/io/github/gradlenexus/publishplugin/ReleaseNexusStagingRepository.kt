@@ -23,7 +23,7 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.options.Option
 import javax.inject.Inject
 
-open class ReleaseNexusStagingRepository @Inject constructor(
+abstract class ReleaseNexusStagingRepository @Inject constructor(
     objects: ObjectFactory,
     repository: NexusRepository,
     registry: Provider<InvalidatingStagingRepositoryDescriptorRegistry>
