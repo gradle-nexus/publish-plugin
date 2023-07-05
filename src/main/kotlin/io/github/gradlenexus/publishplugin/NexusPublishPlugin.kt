@@ -69,6 +69,10 @@ class NexusPublishPlugin : Plugin<Project> {
 
     private fun configureNexusTasks(rootProject: Project, extension: NexusPublishExtension, registry: Provider<InvalidatingStagingRepositoryDescriptorRegistry>) {
         extension.repositories.all {
+            username.convention(rootProject.provider { rootProject.findProperty("${name}Username") as? String })
+            password.convention(rootProject.provider { rootProject.findProperty("${name}Password") as? String })
+            publicationType.convention(PublicationType.MAVEN)
+
             val repository = this
             val retrieveStagingProfileTask = rootProject.tasks.register<RetrieveStagingProfile>("retrieve${capitalizedName}StagingProfile", rootProject.objects, extension, repository)
             val initializeTask = rootProject.tasks.register<InitializeNexusStagingRepository>(

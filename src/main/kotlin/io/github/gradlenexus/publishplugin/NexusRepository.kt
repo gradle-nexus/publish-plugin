@@ -43,17 +43,13 @@ open class NexusRepository @Inject constructor(@Input val name: String, project:
     val snapshotRepositoryUrl = project.objects.property<URI>()
 
     @Input
-    val publicationType: Property<PublicationType> = project.objects.property<PublicationType>().convention(PublicationType.MAVEN)
+    val publicationType: Property<PublicationType> = project.objects.property<PublicationType>()
 
     @Internal
-    val username = project.objects.property<String>().apply {
-        set(project.provider { project.findProperty("${name}Username") as? String })
-    }
+    val username = project.objects.property<String>()
 
     @Internal
-    val password = project.objects.property<String>().apply {
-        set(project.provider { project.findProperty("${name}Password") as? String })
-    }
+    val password = project.objects.property<String>()
 
     @Internal
     val allowInsecureProtocol = project.objects.property<Boolean>()
