@@ -29,7 +29,6 @@ import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
 import org.gradle.kotlin.dsl.property
 
-@Suppress("UnstableApiUsage")
 abstract class AbstractTransitionNexusStagingRepositoryTask(
     objects: ObjectFactory,
     extension: NexusPublishExtension,

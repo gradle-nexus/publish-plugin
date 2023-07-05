@@ -37,7 +37,6 @@ import org.gradle.kotlin.dsl.typeOf
 import org.gradle.kotlin.dsl.withType
 import org.gradle.util.GradleVersion
 
-@Suppress("UnstableApiUsage")
 class NexusPublishPlugin : Plugin<Project> {
 
     companion object {

@@ -24,7 +24,6 @@ import org.gradle.kotlin.dsl.newInstance
 import org.gradle.kotlin.dsl.property
 import java.time.Duration
 
-@Suppress("UnstableApiUsage")
 open class NexusPublishExtension(project: Project) {
 
     companion object {
