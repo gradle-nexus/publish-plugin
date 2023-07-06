@@ -82,13 +82,13 @@ class NexusPublishPlugin : Plugin<Project> {
     }
 
     private fun configureNexusTasks(rootProject: Project, extension: NexusPublishExtension, registry: Provider<InvalidatingStagingRepositoryDescriptorRegistry>) {
-        rootProject.tasks.withType(AbstractNexusStagingRepositoryTask::class.java) {
+        rootProject.tasks.withType(AbstractNexusStagingRepositoryTask::class.java).configureEach {
             clientTimeout.convention(extension.clientTimeout)
             connectTimeout.convention(extension.connectTimeout)
             repositoryDescription.convention(extension.repositoryDescription)
             useStaging.convention(extension.useStaging)
         }
-        rootProject.tasks.withType(AbstractTransitionNexusStagingRepositoryTask::class.java) {
+        rootProject.tasks.withType(AbstractTransitionNexusStagingRepositoryTask::class.java).configureEach {
             transitionCheckOptions.convention(extension.transitionCheckOptions)
         }
         extension.repositories.all {
