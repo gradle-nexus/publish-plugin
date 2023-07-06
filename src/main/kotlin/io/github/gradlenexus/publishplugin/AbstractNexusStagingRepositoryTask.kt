@@ -25,7 +25,6 @@ import org.gradle.kotlin.dsl.property
 import java.time.Duration
 import javax.inject.Inject
 
-@Suppress("UnstableApiUsage")
 abstract class AbstractNexusStagingRepositoryTask @Inject
 constructor(objects: ObjectFactory, extension: NexusPublishExtension, repository: NexusRepository) : DefaultTask() {
 

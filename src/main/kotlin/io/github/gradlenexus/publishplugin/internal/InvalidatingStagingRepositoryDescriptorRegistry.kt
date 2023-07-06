@@ -42,7 +42,7 @@ class InvalidatingStagingRepositoryDescriptorRegistry : StagingRepositoryDescrip
         private val log: Logger = LoggerFactory.getLogger(InvalidatingStagingRepositoryDescriptorRegistry::class.java)
 
         private fun ArtifactRepository.invalidate() {
-            if (this is AbstractResolutionAwareArtifactRepository) {
+            if (this is AbstractResolutionAwareArtifactRepository<*>) {
                 try {
                     val invalidateDescriptorMethod = AbstractResolutionAwareArtifactRepository::class.java.declaredMethods.find { it.name.contains("invalidateDescriptor") }
                     invalidateDescriptorMethod?.isAccessible = true

@@ -34,7 +34,6 @@ import java.net.URI
 import javax.inject.Inject
 import kotlin.reflect.KClass
 
-@Suppress("UnstableApiUsage")
 open class NexusRepository @Inject constructor(@Input val name: String, project: Project) {
 
     @Input
