@@ -3,10 +3,13 @@ plugins {
     id("org.gradle.toolchains.foojay-resolver-convention") version "0.5.0"
 }
 
+val isCiBuild = System.getenv("CI") != null
+
 gradleEnterprise {
     buildScan {
         termsOfServiceUrl = "https://gradle.com/terms-of-service"
         termsOfServiceAgree = "yes"
+        publishAlwaysIf(isCiBuild)
     }
 }
 

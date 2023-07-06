@@ -15,6 +15,7 @@ jobs:
         with:
           java-version: 11
           distribution: 'zulu'
+      - uses: gradle/gradle-build-action@v2
 
       - name: Fetch latest available Gradle versions
         run: |
@@ -38,4 +39,4 @@ jobs:
           cat stutter.lockfile
 
       - name: Run compatTest
-        run: ./gradlew --scan --continue test compatTest
+        run: ./gradlew --continue test compatTest

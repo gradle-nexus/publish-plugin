@@ -22,8 +22,9 @@ jobs:
       with:
         java-version: 11
         distribution: 'zulu'
+    - uses: gradle/gradle-build-action@v2
     - name: Run sanity check
-      run: ./gradlew --scan --stacktrace test
+      run: ./gradlew --stacktrace test
     - name: Run E2E tests
       env:
         ORG_GRADLE_PROJECT_sonatypeUsernameE2E: ${{ secrets.SONATYPE_USERNAME_E2E }}
