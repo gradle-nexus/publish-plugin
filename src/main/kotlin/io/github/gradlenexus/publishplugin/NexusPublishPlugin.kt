@@ -36,6 +36,7 @@ import org.gradle.kotlin.dsl.register
 import org.gradle.kotlin.dsl.typeOf
 import org.gradle.kotlin.dsl.withType
 import org.gradle.util.GradleVersion
+import java.time.Duration
 
 class NexusPublishPlugin : Plugin<Project> {
 
@@ -54,9 +55,22 @@ class NexusPublishPlugin : Plugin<Project> {
         }
 
         val registry = createRegistry(project)
-        val extension = project.extensions.create<NexusPublishExtension>(NexusPublishExtension.NAME, project)
+        val extension = project.extensions.create<NexusPublishExtension>(NexusPublishExtension.NAME)
+        configureExtension(project, extension)
         configureNexusTasks(project, extension, registry)
         configurePublishingForAllProjects(project, extension, registry)
+    }
+
+    private fun configureExtension(project: Project, extension: NexusPublishExtension) {
+        with(extension) {
+            useStaging.convention(project.provider { !project.version.toString().endsWith("-SNAPSHOT") })
+            packageGroup.convention(project.provider { project.group.toString() })
+            repositoryDescription.convention(project.provider { project.run { "$group:$name:$version" } })
+            clientTimeout.convention(Duration.ofMinutes(5))
+            connectTimeout.convention(Duration.ofMinutes(5))
+            transitionCheckOptions.maxRetries.convention(60)
+            transitionCheckOptions.delayBetween.convention(Duration.ofSeconds(10))
+        }
     }
 
     private fun createRegistry(rootProject: Project): Provider<InvalidatingStagingRepositoryDescriptorRegistry> {
@@ -68,7 +82,20 @@ class NexusPublishPlugin : Plugin<Project> {
     }
 
     private fun configureNexusTasks(rootProject: Project, extension: NexusPublishExtension, registry: Provider<InvalidatingStagingRepositoryDescriptorRegistry>) {
+        rootProject.tasks.withType(AbstractNexusStagingRepositoryTask::class.java).configureEach {
+            clientTimeout.convention(extension.clientTimeout)
+            connectTimeout.convention(extension.connectTimeout)
+            repositoryDescription.convention(extension.repositoryDescription)
+            useStaging.convention(extension.useStaging)
+        }
+        rootProject.tasks.withType(AbstractTransitionNexusStagingRepositoryTask::class.java).configureEach {
+            transitionCheckOptions.convention(extension.transitionCheckOptions)
+        }
         extension.repositories.all {
+            username.convention(rootProject.provider { rootProject.findProperty("${name}Username") as? String })
+            password.convention(rootProject.provider { rootProject.findProperty("${name}Password") as? String })
+            publicationType.convention(PublicationType.MAVEN)
+
             val repository = this
             val retrieveStagingProfileTask = rootProject.tasks.register<RetrieveStagingProfile>("retrieve${capitalizedName}StagingProfile", rootProject.objects, extension, repository)
             val initializeTask = rootProject.tasks.register<InitializeNexusStagingRepository>(
@@ -91,14 +118,12 @@ class NexusPublishPlugin : Plugin<Project> {
             val closeTask = rootProject.tasks.register<CloseNexusStagingRepository>(
                 "close${capitalizedName}StagingRepository",
                 rootProject.objects,
-                extension,
                 repository,
                 registry
             )
             val releaseTask = rootProject.tasks.register<ReleaseNexusStagingRepository>(
                 "release${capitalizedName}StagingRepository",
                 rootProject.objects,
-                extension,
                 repository,
                 registry
             )

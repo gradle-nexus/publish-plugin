@@ -28,12 +28,12 @@ import org.gradle.api.tasks.TaskAction
 import org.gradle.kotlin.dsl.property
 import javax.inject.Inject
 
-open class InitializeNexusStagingRepository @Inject constructor(
+abstract class InitializeNexusStagingRepository @Inject constructor(
     objects: ObjectFactory,
     extension: NexusPublishExtension,
     repository: NexusRepository,
     private val registry: Provider<InvalidatingStagingRepositoryDescriptorRegistry>
-) : AbstractNexusStagingRepositoryTask(objects, extension, repository) {
+) : AbstractNexusStagingRepositoryTask(objects, repository) {
 
     @Optional
     @Input

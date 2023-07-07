@@ -18,7 +18,6 @@ package io.github.gradlenexus.publishplugin
 
 import org.gradle.api.Action
 import org.gradle.api.DefaultTask
-import org.gradle.api.Project
 import org.gradle.api.artifacts.repositories.IvyPatternRepositoryLayout
 import org.gradle.api.provider.Property
 import org.gradle.api.publish.Publication
@@ -29,45 +28,40 @@ import org.gradle.api.publish.maven.tasks.PublishToMavenRepository
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
-import org.gradle.kotlin.dsl.property
 import java.net.URI
 import javax.inject.Inject
 import kotlin.reflect.KClass
 
-open class NexusRepository @Inject constructor(@Input val name: String, project: Project) {
+abstract class NexusRepository @Inject constructor(@Input val name: String) {
 
-    @Input
-    val nexusUrl = project.objects.property<URI>()
+    @get:Input
+    abstract val nexusUrl: Property<URI>
 
-    @Input
-    val snapshotRepositoryUrl = project.objects.property<URI>()
+    @get:Input
+    abstract val snapshotRepositoryUrl: Property<URI>
 
-    @Input
-    val publicationType: Property<PublicationType> = project.objects.property<PublicationType>().convention(PublicationType.MAVEN)
+    @get:Input
+    abstract val publicationType: Property<PublicationType>
 
-    @Internal
-    val username = project.objects.property<String>().apply {
-        set(project.provider { project.findProperty("${name}Username") as? String })
-    }
+    @get:Internal
+    abstract val username: Property<String>
 
-    @Internal
-    val password = project.objects.property<String>().apply {
-        set(project.provider { project.findProperty("${name}Password") as? String })
-    }
+    @get:Internal
+    abstract val password: Property<String>
 
-    @Internal
-    val allowInsecureProtocol = project.objects.property<Boolean>()
+    @get:Internal
+    abstract val allowInsecureProtocol: Property<Boolean>
 
-    @Optional
-    @Input
-    val stagingProfileId = project.objects.property<String>()
+    @get:Optional
+    @get:Input
+    abstract val stagingProfileId: Property<String>
 
     @get:Internal
     internal val capitalizedName by lazy { name.capitalize() }
 
-    @Optional
-    @Input
-    val ivyPatternLayout: Property<Action<IvyPatternRepositoryLayout>> = project.objects.property<Action<IvyPatternRepositoryLayout>>()
+    @get:Optional
+    @get:Input
+    abstract val ivyPatternLayout: Property<Action<IvyPatternRepositoryLayout>>
     fun ivyPatternLayout(action: Action<IvyPatternRepositoryLayout>) {
         ivyPatternLayout.set(action)
     }

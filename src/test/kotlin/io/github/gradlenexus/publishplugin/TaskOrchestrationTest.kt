@@ -67,7 +67,7 @@ class TaskOrchestrationTest {
         // given
         initSingleProjectWithDefaultConfiguration()
         project.extensions.configure<NexusPublishExtension> {
-            repositories.add(NexusRepository("myNexus", project))
+            repositories.create("myNexus")
         }
         // expect
         assertGivenTaskMustNotRunAfterAnother(transitioningTaskName, "publishToMyNexus")

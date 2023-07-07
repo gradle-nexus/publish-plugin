@@ -23,6 +23,7 @@ import io.github.gradlenexus.publishplugin.internal.StagingRepository
 import io.github.gradlenexus.publishplugin.internal.StagingRepositoryTransitioner
 import org.gradle.api.Action
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
@@ -31,10 +32,9 @@ import org.gradle.kotlin.dsl.property
 
 abstract class AbstractTransitionNexusStagingRepositoryTask(
     objects: ObjectFactory,
-    extension: NexusPublishExtension,
     repository: NexusRepository,
     registry: Provider<InvalidatingStagingRepositoryDescriptorRegistry>
-) : AbstractNexusStagingRepositoryTask(objects, extension, repository) {
+) : AbstractNexusStagingRepositoryTask(objects, repository) {
 
     @Input
     val stagingRepositoryId = objects.property<String>().apply {
@@ -45,10 +45,8 @@ abstract class AbstractTransitionNexusStagingRepositoryTask(
         )
     }
 
-    @Internal
-    val transitionCheckOptions = project.objects.property<TransitionCheckOptions>().apply {
-        set(extension.transitionCheckOptions)
-    }
+    @get:Internal
+    abstract val transitionCheckOptions: Property<TransitionCheckOptions>
 
     fun transitionCheckOptions(action: Action<in TransitionCheckOptions>) = action.execute(transitionCheckOptions.get())
 

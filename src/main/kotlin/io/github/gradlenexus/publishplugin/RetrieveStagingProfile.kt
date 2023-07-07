@@ -29,11 +29,11 @@ import javax.inject.Inject
  * Diagnostic task for retrieving the [NexusRepository.stagingProfileId] for the [packageGroup] from the provided [NexusRepository] and logging it
  */
 @Incubating
-open class RetrieveStagingProfile @Inject constructor(
+abstract class RetrieveStagingProfile @Inject constructor(
     objects: ObjectFactory,
     extension: NexusPublishExtension,
     repository: NexusRepository
-) : AbstractNexusStagingRepositoryTask(objects, extension, repository) {
+) : AbstractNexusStagingRepositoryTask(objects, repository) {
 
     @Input
     val packageGroup = objects.property<String>().apply {

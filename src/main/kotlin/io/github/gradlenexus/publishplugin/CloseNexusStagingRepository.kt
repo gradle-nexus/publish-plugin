@@ -23,12 +23,11 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.options.Option
 import javax.inject.Inject
 
-open class CloseNexusStagingRepository @Inject constructor(
+abstract class CloseNexusStagingRepository @Inject constructor(
     objects: ObjectFactory,
-    extension: NexusPublishExtension,
     repository: NexusRepository,
     registry: Provider<InvalidatingStagingRepositoryDescriptorRegistry>
-) : AbstractTransitionNexusStagingRepositoryTask(objects, extension, repository, registry) {
+) : AbstractTransitionNexusStagingRepositoryTask(objects, repository, registry) {
 
     @Option(option = "staging-repository-id", description = "staging repository id to close")
     fun setStagingRepositoryId(stagingRepositoryId: String) {

@@ -18,48 +18,45 @@ package io.github.gradlenexus.publishplugin
 
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectFactory
-import org.gradle.api.Project
-import org.gradle.kotlin.dsl.container
+import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Nested
+import org.gradle.kotlin.dsl.domainObjectContainer
 import org.gradle.kotlin.dsl.newInstance
-import org.gradle.kotlin.dsl.property
 import java.time.Duration
+import javax.inject.Inject
 
-open class NexusPublishExtension(project: Project) {
+abstract class NexusPublishExtension @Inject constructor(objects: ObjectFactory) {
 
     companion object {
         internal const val NAME = "nexusPublishing"
     }
 
-    val useStaging = project.objects.property<Boolean>().apply {
-        set(project.provider { !project.version.toString().endsWith("-SNAPSHOT") })
-    }
+    abstract val useStaging: Property<Boolean>
 
-    val packageGroup = project.objects.property<String>().apply {
-        set(project.provider { project.group.toString() })
-    }
+    abstract val packageGroup: Property<String>
 
-    val repositoryDescription = project.objects.property<String>().apply {
-        set(project.provider { project.run { "$group:$name:$version" } })
-    }
+    abstract val repositoryDescription: Property<String>
 
     // staging repository initialization can take a few minutes on Sonatype Nexus
-    val clientTimeout = project.objects.property<Duration>().value(Duration.ofMinutes(5))
+    abstract val clientTimeout: Property<Duration>
 
-    val connectTimeout = project.objects.property<Duration>().value(Duration.ofMinutes(5))
+    abstract val connectTimeout: Property<Duration>
 
-    val transitionCheckOptions = project.objects.property<TransitionCheckOptions>().value(project.objects.newInstance(TransitionCheckOptions::class))
+    @get:Nested
+    abstract val transitionCheckOptions: TransitionCheckOptions
 
-    fun transitionCheckOptions(action: Action<in TransitionCheckOptions>) = action.execute(transitionCheckOptions.get())
+    fun transitionCheckOptions(action: Action<in TransitionCheckOptions>) = action.execute(transitionCheckOptions)
 
-    val repositories: NexusRepositoryContainer = project.objects.newInstance(
+    val repositories: NexusRepositoryContainer = objects.newInstance(
         DefaultNexusRepositoryContainer::class,
-        // `project.container(NexusRepository::class) { name -> ... }`,
+        // `objects.domainObjectContainer(NexusRepository::class) { name -> ... }`,
         // but in Kotlin 1.3 "New Inference" is not implemented yet, so we have to be explicit.
         // https://kotlinlang.org/docs/whatsnew14.html#new-more-powerful-type-inference-algorithm
-        project.container(
+        objects.domainObjectContainer(
             NexusRepository::class,
             NamedDomainObjectFactory { name ->
-                project.objects.newInstance(NexusRepository::class, name, project)
+                objects.newInstance(NexusRepository::class, name)
             }
         )
     )
