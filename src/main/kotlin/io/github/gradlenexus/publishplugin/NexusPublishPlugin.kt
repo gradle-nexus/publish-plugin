@@ -98,6 +98,7 @@ class NexusPublishPlugin : Plugin<Project> {
         }
         rootProject.tasks.withType(AbstractTransitionNexusStagingRepositoryTask::class.java).configureEach {
             this.transitionCheckOptions.convention(extension.transitionCheckOptions)
+            this.stagingRepositoryId.convention(registry.map { it[repository.get().name].stagingRepositoryId })
         }
         extension.repositories.all {
             val repository = this
@@ -139,19 +140,15 @@ class NexusPublishPlugin : Plugin<Project> {
                 this.descriptionRegex.convention(extension.repositoryDescription.map { "\\b" + Regex.escape(it) + "(\\s|$)" })
             }
             val closeTask = rootProject.tasks.register<CloseNexusStagingRepository>(
-                "close${capitalizedName}StagingRepository",
-                registry
-            )
-            closeTask {
+                "close${capitalizedName}StagingRepository"
+            ) {
                 this.group = PublishingPlugin.PUBLISH_TASK_GROUP
                 this.description = "Closes open staging repository in '${repository.name}' Nexus instance."
                 this.repository.convention(repository)
             }
             val releaseTask = rootProject.tasks.register<ReleaseNexusStagingRepository>(
-                "release${capitalizedName}StagingRepository",
-                registry
-            )
-            releaseTask {
+                "release${capitalizedName}StagingRepository"
+            ) {
                 this.group = PublishingPlugin.PUBLISH_TASK_GROUP
                 this.description = "Releases closed staging repository in '${repository.name}' Nexus instance."
                 this.repository.convention(repository)

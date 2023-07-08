@@ -17,31 +17,19 @@
 package io.github.gradlenexus.publishplugin
 
 import io.github.gradlenexus.publishplugin.internal.BasicActionRetrier
-import io.github.gradlenexus.publishplugin.internal.InvalidatingStagingRepositoryDescriptorRegistry
 import io.github.gradlenexus.publishplugin.internal.NexusClient
 import io.github.gradlenexus.publishplugin.internal.StagingRepository
 import io.github.gradlenexus.publishplugin.internal.StagingRepositoryTransitioner
 import org.gradle.api.Action
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
 
-abstract class AbstractTransitionNexusStagingRepositoryTask(
-    registry: Provider<InvalidatingStagingRepositoryDescriptorRegistry>
-) : AbstractNexusStagingRepositoryTask() {
+abstract class AbstractTransitionNexusStagingRepositoryTask : AbstractNexusStagingRepositoryTask() {
 
     @get:Input
     abstract val stagingRepositoryId: Property<String>
-
-    init {
-        this.stagingRepositoryId.set(
-            registry.map {
-                it[repository.get().name].stagingRepositoryId
-            }
-        )
-    }
 
     @get:Internal
     abstract val transitionCheckOptions: Property<TransitionCheckOptions>
