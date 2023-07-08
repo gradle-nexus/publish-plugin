@@ -19,6 +19,7 @@ package io.github.gradlenexus.publishplugin
 import io.github.gradlenexus.publishplugin.NexusRepository.PublicationType
 import io.github.gradlenexus.publishplugin.internal.InvalidatingStagingRepositoryDescriptorRegistry
 import io.github.gradlenexus.publishplugin.internal.StagingRepositoryDescriptorRegistryBuildService
+import org.gradle.api.Action
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -33,6 +34,7 @@ import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.invoke
 import org.gradle.kotlin.dsl.named
 import org.gradle.kotlin.dsl.register
+import org.gradle.kotlin.dsl.registerIfAbsent
 import org.gradle.kotlin.dsl.typeOf
 import org.gradle.kotlin.dsl.withType
 import org.gradle.util.GradleVersion
@@ -76,7 +78,11 @@ class NexusPublishPlugin : Plugin<Project> {
 
     private fun createRegistry(rootProject: Project): Provider<InvalidatingStagingRepositoryDescriptorRegistry> {
         if (GradleVersion.current() >= GradleVersion.version("6.1")) {
-            return rootProject.gradle.sharedServices.registerIfAbsent("stagingRepositoryUrlRegistry", StagingRepositoryDescriptorRegistryBuildService::class.java) {}.map { it.registry }
+            return rootProject.gradle.sharedServices.registerIfAbsent(
+                "stagingRepositoryUrlRegistry",
+                StagingRepositoryDescriptorRegistryBuildService::class,
+                Action { }
+            ).map { it.registry }
         }
         val registry = InvalidatingStagingRepositoryDescriptorRegistry()
         return rootProject.provider { registry }
