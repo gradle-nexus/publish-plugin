@@ -54,8 +54,8 @@ class NexusPublishPlugin : Plugin<Project> {
             "Plugin must be applied to the root project but was applied to ${project.path}"
         }
 
-        require(GradleVersion.current() >= GradleVersion.version("6.0")) {
-            "The plugin requires Gradle version 6.0+"
+        require(GradleVersion.current() >= GradleVersion.version("6.1")) {
+            "The plugin requires Gradle version 6.1+"
         }
 
         val registry = createRegistry(project)
