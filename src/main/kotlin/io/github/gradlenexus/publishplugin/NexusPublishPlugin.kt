@@ -38,6 +38,7 @@ import org.gradle.kotlin.dsl.registerIfAbsent
 import org.gradle.kotlin.dsl.typeOf
 import org.gradle.kotlin.dsl.withType
 import org.gradle.util.GradleVersion
+import java.net.URI
 import java.time.Duration
 
 class NexusPublishPlugin : Plugin<Project> {
@@ -249,11 +250,11 @@ class NexusPublishPlugin : Plugin<Project> {
         registry: Provider<InvalidatingStagingRepositoryDescriptorRegistry>
     ): ArtifactRepository = when (publicationType) {
         PublicationType.MAVEN -> project.theExtension<PublishingExtension>().repositories.maven {
-            configureArtifactRepo(nexusRepo, project, extension, registry, false)
+            configureArtifactRepo(nexusRepo, extension, registry, false)
         }
 
         PublicationType.IVY -> project.theExtension<PublishingExtension>().repositories.ivy {
-            configureArtifactRepo(nexusRepo, project, extension, registry, true)
+            configureArtifactRepo(nexusRepo, extension, registry, true)
             if (nexusRepo.ivyPatternLayout.isPresent) {
                 nexusRepo.ivyPatternLayout.get().let { this.patternLayout(it) }
             } else {
@@ -264,17 +265,12 @@ class NexusPublishPlugin : Plugin<Project> {
 
     private fun <T> T.configureArtifactRepo(
         nexusRepo: NexusRepository,
-        project: Project,
         extension: NexusPublishExtension,
         registry: Provider<InvalidatingStagingRepositoryDescriptorRegistry>,
         provideFallback: Boolean
     ) where T : UrlArtifactRepository, T : ArtifactRepository, T : AuthenticationSupported {
         name = nexusRepo.name
-        setUrl(
-            project.provider {
-                getRepoUrl(nexusRepo, extension, registry, provideFallback, this)
-            }
-        )
+        setUrl(getRepoUrl(nexusRepo, extension, registry, provideFallback, this))
         val allowInsecureProtocol = nexusRepo.allowInsecureProtocol.orNull
         if (allowInsecureProtocol != null) {
             isAllowInsecureProtocol = allowInsecureProtocol
@@ -329,17 +325,21 @@ class NexusPublishPlugin : Plugin<Project> {
         registry: Provider<InvalidatingStagingRepositoryDescriptorRegistry>,
         provideFallback: Boolean,
         artifactRepo: ArtifactRepository
-    ) = if (extension.useStaging.get()) {
-        val descriptorRegistry = registry.get()
-        if (provideFallback) {
-            descriptorRegistry.invalidateLater(nexusRepo.name, artifactRepo)
-            descriptorRegistry.tryGet(nexusRepo.name)?.stagingRepositoryUrl ?: nexusRepo.nexusUrl.get()
-        } else {
-            descriptorRegistry[nexusRepo.name].stagingRepositoryUrl
+    ): Provider<URI> =
+        extension.useStaging.flatMap { useStaging ->
+            if (useStaging) {
+                registry.map { descriptorRegistry ->
+                    if (provideFallback) {
+                        descriptorRegistry.invalidateLater(nexusRepo.name, artifactRepo)
+                        descriptorRegistry.tryGet(nexusRepo.name)?.stagingRepositoryUrl ?: nexusRepo.nexusUrl.get()
+                    } else {
+                        descriptorRegistry[nexusRepo.name].stagingRepositoryUrl
+                    }
+                }
+            } else {
+                nexusRepo.snapshotRepositoryUrl
+            }
         }
-    } else {
-        nexusRepo.snapshotRepositoryUrl.get()
-    }
 
     private fun configureSimplifiedCloseAndReleaseTask(rootProject: Project, extension: NexusPublishExtension) {
         if (extension.repositories.isNotEmpty()) {
