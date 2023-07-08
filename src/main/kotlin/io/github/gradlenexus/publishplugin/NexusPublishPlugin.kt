@@ -345,7 +345,7 @@ class NexusPublishPlugin : Plugin<Project> {
     }
 }
 
-inline fun <reified T : Any> Project.theExtension(): T =
+private inline fun <reified T : Any> Project.theExtension(): T =
     typeOf<T>().let {
         this.extensions.findByType(it)
             ?: error("The plugin cannot be applied without the publishing plugin")
