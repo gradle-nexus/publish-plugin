@@ -102,8 +102,8 @@ class NexusPublishPlugin : Plugin<Project> {
             stagingRepositoryId.convention(registryService.map { it.registry[repository.get().name].stagingRepositoryId })
         }
         extension.repositories.all {
-            username.convention(rootProject.provider { rootProject.findProperty("${name}Username") as? String })
-            password.convention(rootProject.provider { rootProject.findProperty("${name}Password") as? String })
+            username.convention(rootProject.providers.gradleProperty("${name}Username"))
+            password.convention(rootProject.providers.gradleProperty("${name}Password"))
             publicationType.convention(PublicationType.MAVEN)
             configureRepositoryTasks(rootProject.tasks, extension, this, registryService)
         }
