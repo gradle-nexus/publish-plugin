@@ -33,7 +33,7 @@ data class StagingRepository constructor(val id: String, val state: State, val t
                 try {
                     return valueOf(stateAsString.toUpperCase())
                 } catch (e: IllegalArgumentException) {
-                    throw IllegalStateException("Unsupported repository state '$stateAsString'. Supported values: ${values()}")
+                    error("Unsupported repository state '$stateAsString'. Supported values: ${values()}")
                 }
             }
         }
