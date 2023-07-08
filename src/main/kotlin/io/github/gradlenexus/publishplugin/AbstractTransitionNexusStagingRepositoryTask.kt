@@ -48,7 +48,9 @@ abstract class AbstractTransitionNexusStagingRepositoryTask(
     @get:Internal
     abstract val transitionCheckOptions: Property<TransitionCheckOptions>
 
-    fun transitionCheckOptions(action: Action<in TransitionCheckOptions>) = action.execute(transitionCheckOptions.get())
+    fun transitionCheckOptions(action: Action<in TransitionCheckOptions>) {
+        action.execute(transitionCheckOptions.get())
+    }
 
     @TaskAction
     fun transitionStagingRepo() {

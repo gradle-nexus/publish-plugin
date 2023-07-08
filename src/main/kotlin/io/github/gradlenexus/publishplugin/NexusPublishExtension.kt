@@ -45,7 +45,9 @@ abstract class NexusPublishExtension @Inject constructor(objects: ObjectFactory)
     @get:Nested
     abstract val transitionCheckOptions: TransitionCheckOptions
 
-    fun transitionCheckOptions(action: Action<in TransitionCheckOptions>) = action.execute(transitionCheckOptions)
+    fun transitionCheckOptions(action: Action<in TransitionCheckOptions>) {
+        action.execute(transitionCheckOptions)
+    }
 
     val repositories: NexusRepositoryContainer = objects.newInstance(
         DefaultNexusRepositoryContainer::class,
@@ -60,5 +62,7 @@ abstract class NexusPublishExtension @Inject constructor(objects: ObjectFactory)
         )
     )
 
-    fun repositories(action: Action<in NexusRepositoryContainer>) = action.execute(repositories)
+    fun repositories(action: Action<in NexusRepositoryContainer>) {
+        action.execute(repositories)
+    }
 }
