@@ -22,15 +22,12 @@ import org.gradle.api.Incubating
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
-import javax.inject.Inject
 
 /**
  * Diagnostic task for retrieving the [NexusRepository.stagingProfileId] for the [packageGroup] from the provided [NexusRepository] and logging it
  */
 @Incubating
-abstract class RetrieveStagingProfile @Inject constructor(
-    repository: NexusRepository
-) : AbstractNexusStagingRepositoryTask(repository) {
+abstract class RetrieveStagingProfile : AbstractNexusStagingRepositoryTask() {
 
     @get:Input
     abstract val packageGroup: Property<String>

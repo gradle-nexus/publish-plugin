@@ -22,10 +22,8 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
 import java.time.Duration
-import javax.inject.Inject
 
-abstract class AbstractNexusStagingRepositoryTask @Inject
-constructor(repository: NexusRepository) : DefaultTask() {
+abstract class AbstractNexusStagingRepositoryTask : DefaultTask() {
 
     @get:Internal
     abstract val clientTimeout: Property<Duration>
@@ -44,7 +42,6 @@ constructor(repository: NexusRepository) : DefaultTask() {
     internal abstract val useStaging: Property<Boolean>
 
     init {
-        this.repository.set(repository)
         this.onlyIf { useStaging.getOrElse(false) }
     }
 }

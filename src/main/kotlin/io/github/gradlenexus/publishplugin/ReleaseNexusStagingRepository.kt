@@ -23,9 +23,8 @@ import org.gradle.api.tasks.options.Option
 import javax.inject.Inject
 
 abstract class ReleaseNexusStagingRepository @Inject constructor(
-    repository: NexusRepository,
     registry: Provider<InvalidatingStagingRepositoryDescriptorRegistry>
-) : AbstractTransitionNexusStagingRepositoryTask(repository, registry) {
+) : AbstractTransitionNexusStagingRepositoryTask(registry) {
 
     @Option(option = "staging-repository-id", description = "staging repository id to release")
     fun setStagingRepositoryIdToRelease(stagingRepositoryId: String) {

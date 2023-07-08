@@ -30,9 +30,8 @@ import javax.inject.Inject
 
 @Incubating
 abstract class FindStagingRepository @Inject constructor(
-    repository: NexusRepository,
     private val registry: Provider<InvalidatingStagingRepositoryDescriptorRegistry>
-) : AbstractNexusStagingRepositoryTask(repository) {
+) : AbstractNexusStagingRepositoryTask() {
 
     @get:Optional
     @get:Input

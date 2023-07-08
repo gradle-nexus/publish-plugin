@@ -29,9 +29,8 @@ import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
 
 abstract class AbstractTransitionNexusStagingRepositoryTask(
-    repository: NexusRepository,
     registry: Provider<InvalidatingStagingRepositoryDescriptorRegistry>
-) : AbstractNexusStagingRepositoryTask(repository) {
+) : AbstractNexusStagingRepositoryTask() {
 
     @get:Input
     abstract val stagingRepositoryId: Property<String>
@@ -39,7 +38,7 @@ abstract class AbstractTransitionNexusStagingRepositoryTask(
     init {
         this.stagingRepositoryId.set(
             registry.map {
-                it[repository.name].stagingRepositoryId
+                it[repository.get().name].stagingRepositoryId
             }
         )
     }

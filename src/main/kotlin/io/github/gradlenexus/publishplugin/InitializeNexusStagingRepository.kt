@@ -28,9 +28,8 @@ import org.gradle.api.tasks.TaskAction
 import javax.inject.Inject
 
 abstract class InitializeNexusStagingRepository @Inject constructor(
-    repository: NexusRepository,
     private val registry: Provider<InvalidatingStagingRepositoryDescriptorRegistry>
-) : AbstractNexusStagingRepositoryTask(repository) {
+) : AbstractNexusStagingRepositoryTask() {
 
     @get:Optional
     @get:Input
