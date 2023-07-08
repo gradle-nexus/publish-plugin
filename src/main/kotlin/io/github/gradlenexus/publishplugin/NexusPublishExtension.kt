@@ -17,7 +17,6 @@
 package io.github.gradlenexus.publishplugin
 
 import org.gradle.api.Action
-import org.gradle.api.NamedDomainObjectFactory
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Nested
@@ -51,15 +50,7 @@ abstract class NexusPublishExtension @Inject constructor(objects: ObjectFactory)
 
     val repositories: NexusRepositoryContainer = objects.newInstance(
         DefaultNexusRepositoryContainer::class,
-        // `objects.domainObjectContainer(NexusRepository::class) { name -> ... }`,
-        // but in Kotlin 1.3 "New Inference" is not implemented yet, so we have to be explicit.
-        // https://kotlinlang.org/docs/whatsnew14.html#new-more-powerful-type-inference-algorithm
-        objects.domainObjectContainer(
-            NexusRepository::class,
-            NamedDomainObjectFactory { name ->
-                objects.newInstance(NexusRepository::class, name)
-            }
-        )
+        objects.domainObjectContainer(NexusRepository::class)
     )
 
     fun repositories(action: Action<in NexusRepositoryContainer>) {
