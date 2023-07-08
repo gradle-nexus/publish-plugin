@@ -18,19 +18,17 @@ package io.github.gradlenexus.publishplugin
 
 import io.github.gradlenexus.publishplugin.internal.InvalidatingStagingRepositoryDescriptorRegistry
 import io.github.gradlenexus.publishplugin.internal.StagingRepositoryTransitioner
-import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.options.Option
 import javax.inject.Inject
 
 abstract class ReleaseNexusStagingRepository @Inject constructor(
-    objects: ObjectFactory,
     repository: NexusRepository,
     registry: Provider<InvalidatingStagingRepositoryDescriptorRegistry>
-) : AbstractTransitionNexusStagingRepositoryTask(objects, repository, registry) {
+) : AbstractTransitionNexusStagingRepositoryTask(repository, registry) {
 
     @Option(option = "staging-repository-id", description = "staging repository id to release")
-    fun setStagingRepositoryId(stagingRepositoryId: String) {
+    fun setStagingRepositoryIdToRelease(stagingRepositoryId: String) {
         this.stagingRepositoryId.set(stagingRepositoryId)
     }
 

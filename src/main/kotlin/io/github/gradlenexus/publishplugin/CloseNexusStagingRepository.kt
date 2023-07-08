@@ -18,19 +18,17 @@ package io.github.gradlenexus.publishplugin
 
 import io.github.gradlenexus.publishplugin.internal.InvalidatingStagingRepositoryDescriptorRegistry
 import io.github.gradlenexus.publishplugin.internal.StagingRepositoryTransitioner
-import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.options.Option
 import javax.inject.Inject
 
 abstract class CloseNexusStagingRepository @Inject constructor(
-    objects: ObjectFactory,
     repository: NexusRepository,
     registry: Provider<InvalidatingStagingRepositoryDescriptorRegistry>
-) : AbstractTransitionNexusStagingRepositoryTask(objects, repository, registry) {
+) : AbstractTransitionNexusStagingRepositoryTask(repository, registry) {
 
     @Option(option = "staging-repository-id", description = "staging repository id to close")
-    fun setStagingRepositoryId(stagingRepositoryId: String) {
+    fun setStagingRepositoryIdToClose(stagingRepositoryId: String) {
         this.stagingRepositoryId.set(stagingRepositoryId)
     }
 

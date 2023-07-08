@@ -19,10 +19,9 @@ package io.github.gradlenexus.publishplugin
 import io.github.gradlenexus.publishplugin.internal.NexusClient
 import org.gradle.api.GradleException
 import org.gradle.api.Incubating
-import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
-import org.gradle.kotlin.dsl.property
 import javax.inject.Inject
 
 /**
@@ -30,14 +29,15 @@ import javax.inject.Inject
  */
 @Incubating
 abstract class RetrieveStagingProfile @Inject constructor(
-    objects: ObjectFactory,
     extension: NexusPublishExtension,
     repository: NexusRepository
-) : AbstractNexusStagingRepositoryTask(objects, repository) {
+) : AbstractNexusStagingRepositoryTask(repository) {
 
-    @Input
-    val packageGroup = objects.property<String>().apply {
-        set(extension.packageGroup)
+    @get:Input
+    abstract val packageGroup: Property<String>
+
+    init {
+        this.packageGroup.set(extension.packageGroup)
     }
 
     @TaskAction
