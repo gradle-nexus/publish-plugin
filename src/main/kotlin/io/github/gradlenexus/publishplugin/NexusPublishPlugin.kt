@@ -17,7 +17,6 @@
 package io.github.gradlenexus.publishplugin
 
 import io.github.gradlenexus.publishplugin.NexusRepository.PublicationType
-import io.github.gradlenexus.publishplugin.internal.InvalidatingStagingRepositoryDescriptorRegistry
 import io.github.gradlenexus.publishplugin.internal.StagingRepositoryDescriptorRegistryBuildService
 import org.gradle.api.Action
 import org.gradle.api.Plugin
@@ -78,19 +77,18 @@ class NexusPublishPlugin : Plugin<Project> {
         }
     }
 
-    private fun createRegistry(rootProject: Project): Provider<InvalidatingStagingRepositoryDescriptorRegistry> {
-        if (GradleVersion.current() >= GradleVersion.version("6.1")) {
-            return rootProject.gradle.sharedServices.registerIfAbsent(
-                "stagingRepositoryUrlRegistry",
-                StagingRepositoryDescriptorRegistryBuildService::class,
-                Action { }
-            ).map { it.registry }
-        }
-        val registry = InvalidatingStagingRepositoryDescriptorRegistry()
-        return rootProject.provider { registry }
-    }
+    private fun createRegistry(rootProject: Project): Provider<StagingRepositoryDescriptorRegistryBuildService> =
+        rootProject.gradle.sharedServices.registerIfAbsent(
+            "stagingRepositoryUrlRegistry",
+            StagingRepositoryDescriptorRegistryBuildService::class,
+            Action { }
+        )
 
-    private fun configureNexusTasks(rootProject: Project, extension: NexusPublishExtension, registry: Provider<InvalidatingStagingRepositoryDescriptorRegistry>) {
+    private fun configureNexusTasks(
+        rootProject: Project,
+        extension: NexusPublishExtension,
+        registryService: Provider<StagingRepositoryDescriptorRegistryBuildService>
+    ) {
         rootProject.tasks.withType(AbstractNexusStagingRepositoryTask::class.java).configureEach {
             clientTimeout.convention(extension.clientTimeout)
             connectTimeout.convention(extension.connectTimeout)
@@ -100,13 +98,14 @@ class NexusPublishPlugin : Plugin<Project> {
         }
         rootProject.tasks.withType(AbstractTransitionNexusStagingRepositoryTask::class.java).configureEach {
             transitionCheckOptions.convention(extension.transitionCheckOptions)
-            stagingRepositoryId.convention(registry.map { it[repository.get().name].stagingRepositoryId })
+            usesService(registryService)
+            stagingRepositoryId.convention(registryService.map { it.registry[repository.get().name].stagingRepositoryId })
         }
         extension.repositories.all {
             username.convention(rootProject.provider { rootProject.findProperty("${name}Username") as? String })
             password.convention(rootProject.provider { rootProject.findProperty("${name}Password") as? String })
             publicationType.convention(PublicationType.MAVEN)
-            configureRepositoryTasks(rootProject.tasks, extension, this, registry)
+            configureRepositoryTasks(rootProject.tasks, extension, this, registryService)
         }
         extension.repositories.whenObjectRemoved {
             rootProject.tasks.named("initialize${capitalizedName}StagingRepository").configure {
@@ -136,7 +135,7 @@ class NexusPublishPlugin : Plugin<Project> {
         tasks: TaskContainer,
         extension: NexusPublishExtension,
         repo: NexusRepository,
-        registryProvider: Provider<InvalidatingStagingRepositoryDescriptorRegistry>
+        registryService: Provider<StagingRepositoryDescriptorRegistryBuildService>
     ) {
         @Suppress("UNUSED_VARIABLE") // Keep it consistent.
         val retrieveStagingProfileTask = tasks.register<RetrieveStagingProfile>(
@@ -154,7 +153,8 @@ class NexusPublishPlugin : Plugin<Project> {
         ) {
             group = PublishingPlugin.PUBLISH_TASK_GROUP
             description = "Initializes the staging repository in '${repo.name}' Nexus instance."
-            registry.set(registryProvider)
+            registry.set(registryService)
+            usesService(registryService)
             repository.convention(repo)
             packageGroup.convention(extension.packageGroup)
         }
@@ -163,7 +163,8 @@ class NexusPublishPlugin : Plugin<Project> {
         ) {
             group = PublishingPlugin.PUBLISH_TASK_GROUP
             description = "Finds the staging repository for ${repo.name}"
-            registry.set(registryProvider)
+            registry.set(registryService)
+            usesService(registryService)
             repository.convention(repo)
             packageGroup.convention(extension.packageGroup)
             descriptionRegex.convention(extension.repositoryDescription.map { "\\b" + Regex.escape(it) + "(\\s|$)" })
@@ -203,7 +204,11 @@ class NexusPublishPlugin : Plugin<Project> {
         }
     }
 
-    private fun configurePublishingForAllProjects(rootProject: Project, extension: NexusPublishExtension, registry: Provider<InvalidatingStagingRepositoryDescriptorRegistry>) {
+    private fun configurePublishingForAllProjects(
+        rootProject: Project,
+        extension: NexusPublishExtension,
+        registry: Provider<StagingRepositoryDescriptorRegistryBuildService>
+    ) {
         rootProject.afterEvaluate {
             allprojects {
                 val publishingProject = this
@@ -242,7 +247,7 @@ class NexusPublishPlugin : Plugin<Project> {
     private fun addPublicationRepositories(
         project: Project,
         extension: NexusPublishExtension,
-        registry: Provider<InvalidatingStagingRepositoryDescriptorRegistry>
+        registry: Provider<StagingRepositoryDescriptorRegistryBuildService>
     ): Map<NexusRepository, ArtifactRepository> = extension.repositories.associateWith { nexusRepo ->
         createArtifactRepository(nexusRepo.publicationType.get(), project, nexusRepo, extension, registry)
     }
@@ -252,7 +257,7 @@ class NexusPublishPlugin : Plugin<Project> {
         project: Project,
         nexusRepo: NexusRepository,
         extension: NexusPublishExtension,
-        registry: Provider<InvalidatingStagingRepositoryDescriptorRegistry>
+        registry: Provider<StagingRepositoryDescriptorRegistryBuildService>
     ): ArtifactRepository = when (publicationType) {
         PublicationType.MAVEN -> project.theExtension<PublishingExtension>().repositories.maven {
             configureArtifactRepo(nexusRepo, extension, registry, false)
@@ -271,7 +276,7 @@ class NexusPublishPlugin : Plugin<Project> {
     private fun <T> T.configureArtifactRepo(
         nexusRepo: NexusRepository,
         extension: NexusPublishExtension,
-        registry: Provider<InvalidatingStagingRepositoryDescriptorRegistry>,
+        registry: Provider<StagingRepositoryDescriptorRegistryBuildService>,
         provideFallback: Boolean
     ) where T : UrlArtifactRepository, T : ArtifactRepository, T : AuthenticationSupported {
         name = nexusRepo.name
@@ -327,13 +332,13 @@ class NexusPublishPlugin : Plugin<Project> {
     private fun getRepoUrl(
         nexusRepo: NexusRepository,
         extension: NexusPublishExtension,
-        registry: Provider<InvalidatingStagingRepositoryDescriptorRegistry>,
+        registry: Provider<StagingRepositoryDescriptorRegistryBuildService>,
         provideFallback: Boolean,
         artifactRepo: ArtifactRepository
     ): Provider<URI> =
         extension.useStaging.flatMap { useStaging ->
             if (useStaging) {
-                registry.map { descriptorRegistry ->
+                registry.map { it.registry }.map { descriptorRegistry ->
                     if (provideFallback) {
                         descriptorRegistry.invalidateLater(nexusRepo.name, artifactRepo)
                         descriptorRegistry.tryGet(nexusRepo.name)?.stagingRepositoryUrl ?: nexusRepo.nexusUrl.get()
