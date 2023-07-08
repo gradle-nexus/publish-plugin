@@ -29,6 +29,7 @@ import org.gradle.api.artifacts.repositories.UrlArtifactRepository
 import org.gradle.api.provider.Provider
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.plugins.PublishingPlugin
+import org.gradle.api.tasks.TaskContainer
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.invoke
@@ -91,88 +92,21 @@ class NexusPublishPlugin : Plugin<Project> {
 
     private fun configureNexusTasks(rootProject: Project, extension: NexusPublishExtension, registry: Provider<InvalidatingStagingRepositoryDescriptorRegistry>) {
         rootProject.tasks.withType(AbstractNexusStagingRepositoryTask::class.java).configureEach {
-            this.clientTimeout.convention(extension.clientTimeout)
-            this.connectTimeout.convention(extension.connectTimeout)
-            this.repositoryDescription.convention(extension.repositoryDescription)
-            this.useStaging.convention(extension.useStaging)
-            // this.repository.convention() is set inside extension.repositories.all { }.
+            clientTimeout.convention(extension.clientTimeout)
+            connectTimeout.convention(extension.connectTimeout)
+            repositoryDescription.convention(extension.repositoryDescription)
+            useStaging.convention(extension.useStaging)
+            // repository.convention() is set in configureRepositoryTasks().
         }
         rootProject.tasks.withType(AbstractTransitionNexusStagingRepositoryTask::class.java).configureEach {
-            this.transitionCheckOptions.convention(extension.transitionCheckOptions)
-            this.stagingRepositoryId.convention(registry.map { it[repository.get().name].stagingRepositoryId })
+            transitionCheckOptions.convention(extension.transitionCheckOptions)
+            stagingRepositoryId.convention(registry.map { it[repository.get().name].stagingRepositoryId })
         }
         extension.repositories.all {
-            val repository = this
-
-            repository.username.convention(rootProject.provider { rootProject.findProperty("${name}Username") as? String })
-            repository.password.convention(rootProject.provider { rootProject.findProperty("${name}Password") as? String })
-            repository.publicationType.convention(PublicationType.MAVEN)
-
-            @Suppress("UNUSED_VARIABLE") // Keep it consistent.
-            val retrieveStagingProfileTask = rootProject.tasks.register<RetrieveStagingProfile>(
-                "retrieve${capitalizedName}StagingProfile"
-            ) {
-                this.group = PublishingPlugin.PUBLISH_TASK_GROUP
-                this.description = "Gets and displays a staging profile id for a given repository and package group. " +
-                    "This is a diagnostic task to get the value and " +
-                    "put it into the NexusRepository configuration closure as stagingProfileId."
-                this.repository.convention(repository)
-                this.packageGroup.convention(extension.packageGroup)
-            }
-            val initializeTask = rootProject.tasks.register<InitializeNexusStagingRepository>(
-                "initialize${capitalizedName}StagingRepository",
-                registry
-            )
-            initializeTask {
-                this.group = PublishingPlugin.PUBLISH_TASK_GROUP
-                this.description = "Initializes the staging repository in '${repository.name}' Nexus instance."
-                this.repository.convention(repository)
-                this.packageGroup.convention(extension.packageGroup)
-            }
-            val findStagingRepository = rootProject.tasks.register<FindStagingRepository>(
-                "find${capitalizedName}StagingRepository",
-                registry
-            )
-            findStagingRepository {
-                this.group = PublishingPlugin.PUBLISH_TASK_GROUP
-                this.description = "Finds the staging repository for ${repository.name}"
-                this.repository.convention(repository)
-                this.packageGroup.convention(extension.packageGroup)
-                this.descriptionRegex.convention(extension.repositoryDescription.map { "\\b" + Regex.escape(it) + "(\\s|$)" })
-            }
-            val closeTask = rootProject.tasks.register<CloseNexusStagingRepository>(
-                "close${capitalizedName}StagingRepository"
-            ) {
-                this.group = PublishingPlugin.PUBLISH_TASK_GROUP
-                this.description = "Closes open staging repository in '${repository.name}' Nexus instance."
-                this.repository.convention(repository)
-            }
-            val releaseTask = rootProject.tasks.register<ReleaseNexusStagingRepository>(
-                "release${capitalizedName}StagingRepository"
-            ) {
-                this.group = PublishingPlugin.PUBLISH_TASK_GROUP
-                this.description = "Releases closed staging repository in '${repository.name}' Nexus instance."
-                this.repository.convention(repository)
-            }
-            val closeAndReleaseTask = rootProject.tasks.register<Task>(
-                "closeAndRelease${capitalizedName}StagingRepository"
-            ) {
-                this.group = PublishingPlugin.PUBLISH_TASK_GROUP
-                this.description = "Closes and releases open staging repository in '${repository.name}' Nexus instance."
-            }
-
-            closeTask {
-                mustRunAfter(initializeTask)
-                mustRunAfter(findStagingRepository)
-            }
-            releaseTask {
-                mustRunAfter(initializeTask)
-                mustRunAfter(findStagingRepository)
-                mustRunAfter(closeTask)
-            }
-            closeAndReleaseTask {
-                dependsOn(closeTask, releaseTask)
-            }
+            username.convention(rootProject.provider { rootProject.findProperty("${name}Username") as? String })
+            password.convention(rootProject.provider { rootProject.findProperty("${name}Password") as? String })
+            publicationType.convention(PublicationType.MAVEN)
+            configureRepositoryTasks(rootProject.tasks, extension, this, registry)
         }
         extension.repositories.whenObjectRemoved {
             rootProject.tasks.named("initialize${capitalizedName}StagingRepository").configure {
@@ -195,6 +129,79 @@ class NexusPublishPlugin : Plugin<Project> {
             group = PublishingPlugin.PUBLISH_TASK_GROUP
             description = "Closes and releases open staging repositories in all configured Nexus instances."
             enabled = false
+        }
+    }
+
+    private fun configureRepositoryTasks(
+        tasks: TaskContainer,
+        extension: NexusPublishExtension,
+        repo: NexusRepository,
+        registry: Provider<InvalidatingStagingRepositoryDescriptorRegistry>
+    ) {
+        @Suppress("UNUSED_VARIABLE") // Keep it consistent.
+        val retrieveStagingProfileTask = tasks.register<RetrieveStagingProfile>(
+            "retrieve${repo.capitalizedName}StagingProfile"
+        ) {
+            group = PublishingPlugin.PUBLISH_TASK_GROUP
+            description = "Gets and displays a staging profile id for a given repository and package group. " +
+                "This is a diagnostic task to get the value and " +
+                "put it into the NexusRepository configuration closure as stagingProfileId."
+            repository.convention(repo)
+            packageGroup.convention(extension.packageGroup)
+        }
+        val initializeTask = tasks.register<InitializeNexusStagingRepository>(
+            "initialize${repo.capitalizedName}StagingRepository",
+            registry
+        )
+        initializeTask {
+            group = PublishingPlugin.PUBLISH_TASK_GROUP
+            description = "Initializes the staging repository in '${repo.name}' Nexus instance."
+            repository.convention(repo)
+            packageGroup.convention(extension.packageGroup)
+        }
+        val findStagingRepository = tasks.register<FindStagingRepository>(
+            "find${repo.capitalizedName}StagingRepository",
+            registry
+        )
+        findStagingRepository {
+            group = PublishingPlugin.PUBLISH_TASK_GROUP
+            description = "Finds the staging repository for ${repo.name}"
+            repository.convention(repo)
+            packageGroup.convention(extension.packageGroup)
+            descriptionRegex.convention(extension.repositoryDescription.map { "\\b" + Regex.escape(it) + "(\\s|$)" })
+        }
+        val closeTask = tasks.register<CloseNexusStagingRepository>(
+            "close${repo.capitalizedName}StagingRepository"
+        ) {
+            group = PublishingPlugin.PUBLISH_TASK_GROUP
+            description = "Closes open staging repository in '${repo.name}' Nexus instance."
+            repository.convention(repo)
+        }
+        val releaseTask = tasks.register<ReleaseNexusStagingRepository>(
+            "release${repo.capitalizedName}StagingRepository"
+        ) {
+            group = PublishingPlugin.PUBLISH_TASK_GROUP
+            description = "Releases closed staging repository in '${repo.name}' Nexus instance."
+            repository.convention(repo)
+        }
+        val closeAndReleaseTask = tasks.register<Task>(
+            "closeAndRelease${repo.capitalizedName}StagingRepository"
+        ) {
+            group = PublishingPlugin.PUBLISH_TASK_GROUP
+            description = "Closes and releases open staging repository in '${repo.name}' Nexus instance."
+        }
+
+        closeTask {
+            mustRunAfter(initializeTask)
+            mustRunAfter(findStagingRepository)
+        }
+        releaseTask {
+            mustRunAfter(initializeTask)
+            mustRunAfter(findStagingRepository)
+            mustRunAfter(closeTask)
+        }
+        closeAndReleaseTask {
+            dependsOn(closeTask, releaseTask)
         }
     }
 
