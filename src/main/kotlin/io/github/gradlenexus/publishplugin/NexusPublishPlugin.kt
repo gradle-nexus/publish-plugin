@@ -90,20 +90,21 @@ class NexusPublishPlugin : Plugin<Project> {
 
     private fun configureNexusTasks(rootProject: Project, extension: NexusPublishExtension, registry: Provider<InvalidatingStagingRepositoryDescriptorRegistry>) {
         rootProject.tasks.withType(AbstractNexusStagingRepositoryTask::class.java).configureEach {
-            clientTimeout.convention(extension.clientTimeout)
-            connectTimeout.convention(extension.connectTimeout)
-            repositoryDescription.convention(extension.repositoryDescription)
-            useStaging.convention(extension.useStaging)
+            this.clientTimeout.convention(extension.clientTimeout)
+            this.connectTimeout.convention(extension.connectTimeout)
+            this.repositoryDescription.convention(extension.repositoryDescription)
+            this.useStaging.convention(extension.useStaging)
         }
         rootProject.tasks.withType(AbstractTransitionNexusStagingRepositoryTask::class.java).configureEach {
-            transitionCheckOptions.convention(extension.transitionCheckOptions)
+            this.transitionCheckOptions.convention(extension.transitionCheckOptions)
         }
         extension.repositories.all {
-            username.convention(rootProject.provider { rootProject.findProperty("${name}Username") as? String })
-            password.convention(rootProject.provider { rootProject.findProperty("${name}Password") as? String })
-            publicationType.convention(PublicationType.MAVEN)
-
             val repository = this
+
+            repository.username.convention(rootProject.provider { rootProject.findProperty("${name}Username") as? String })
+            repository.password.convention(rootProject.provider { rootProject.findProperty("${name}Password") as? String })
+            repository.publicationType.convention(PublicationType.MAVEN)
+
             val retrieveStagingProfileTask = rootProject.tasks.register<RetrieveStagingProfile>("retrieve${capitalizedName}StagingProfile", rootProject.objects, extension, repository)
             val initializeTask = rootProject.tasks.register<InitializeNexusStagingRepository>(
                 "initialize${capitalizedName}StagingRepository",
