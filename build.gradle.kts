@@ -228,7 +228,7 @@ tasks {
     withType<Test>().configureEach {
         dependsOn(shadowJar)
         useJUnitPlatform()
-        maxParallelForks = 8
+        maxParallelForks = if (name.startsWith("compatTest")) 1 else 8
     }
     withType<Test>().matching { it.name.startsWith("compatTest") }.configureEach {
         systemProperty("plugin.version", project.version)
