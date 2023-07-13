@@ -17,8 +17,7 @@
 package io.github.gradlenexus.publishplugin
 
 import io.github.gradlenexus.publishplugin.internal.InvalidatingStagingRepositoryDescriptorRegistry
-import io.github.gradlenexus.publishplugin.internal.NexusClient
-import org.gradle.api.GradleException
+import io.github.gradlenexus.publishplugin.internal.determineStagingProfileId
 import org.gradle.api.Incubating
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
@@ -53,24 +52,12 @@ abstract class FindStagingRepository : AbstractNexusStagingRepositoryTask() {
         val repository = repository.get()
         val serverUrl = repository.nexusUrl.get()
         val client = createNexusClient()
-        val stagingProfileId = determineStagingProfileId(repository, client)
+        val stagingProfileId = determineStagingProfileId(client, logger, repository, packageGroup.get())
         logger.info("Fetching staging repositories for {} at {}, stagingProfileId '{}'", repository.name, serverUrl, stagingProfileId)
         val descriptionRegex = descriptionRegex.get()
         val descriptor = client.findStagingRepository(stagingProfileId, Regex(descriptionRegex))
         logger.lifecycle("Staging repository for {} at {}, stagingProfileId '{}', descriptionRegex '{}' is '{}'", repository.name, serverUrl, stagingProfileId, descriptionRegex, descriptor.stagingRepositoryId)
         stagingRepositoryId.set(descriptor.stagingRepositoryId)
         registry.get()[repository.name] = descriptor
-    }
-
-    // TODO: Duplication with InitializeNexusStagingRepository
-    private fun determineStagingProfileId(repository: NexusRepository, client: NexusClient): String {
-        var stagingProfileId = repository.stagingProfileId.orNull
-        if (stagingProfileId == null) {
-            val packageGroup = packageGroup.get()
-            logger.info("No stagingProfileId set, querying for packageGroup '{}'", packageGroup)
-            stagingProfileId = client.findStagingProfileId(packageGroup)
-                ?: throw GradleException("Failed to find staging profile for package group: $packageGroup")
-        }
-        return stagingProfileId
     }
 }
