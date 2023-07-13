@@ -136,7 +136,7 @@ class NexusPublishPlugin : Plugin<Project> {
         tasks: TaskContainer,
         extension: NexusPublishExtension,
         repo: NexusRepository,
-        registry: Provider<InvalidatingStagingRepositoryDescriptorRegistry>
+        registryProvider: Provider<InvalidatingStagingRepositoryDescriptorRegistry>
     ) {
         @Suppress("UNUSED_VARIABLE") // Keep it consistent.
         val retrieveStagingProfileTask = tasks.register<RetrieveStagingProfile>(
@@ -150,22 +150,20 @@ class NexusPublishPlugin : Plugin<Project> {
             packageGroup.convention(extension.packageGroup)
         }
         val initializeTask = tasks.register<InitializeNexusStagingRepository>(
-            "initialize${repo.capitalizedName}StagingRepository",
-            registry
-        )
-        initializeTask {
+            "initialize${repo.capitalizedName}StagingRepository"
+        ) {
             group = PublishingPlugin.PUBLISH_TASK_GROUP
             description = "Initializes the staging repository in '${repo.name}' Nexus instance."
+            registry.set(registryProvider)
             repository.convention(repo)
             packageGroup.convention(extension.packageGroup)
         }
         val findStagingRepository = tasks.register<FindStagingRepository>(
-            "find${repo.capitalizedName}StagingRepository",
-            registry
-        )
-        findStagingRepository {
+            "find${repo.capitalizedName}StagingRepository"
+        ) {
             group = PublishingPlugin.PUBLISH_TASK_GROUP
             description = "Finds the staging repository for ${repo.name}"
+            registry.set(registryProvider)
             repository.convention(repo)
             packageGroup.convention(extension.packageGroup)
             descriptionRegex.convention(extension.repositoryDescription.map { "\\b" + Regex.escape(it) + "(\\s|$)" })
