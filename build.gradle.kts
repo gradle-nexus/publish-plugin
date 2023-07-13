@@ -131,7 +131,8 @@ stutter {
     }
 }
 
-val e2eTest by sourceSets.creating {    //separate infrastructure as compatTest is called multiple times with different Java versions
+// Separate infrastructure as compatTest is called multiple times with different Java versions.
+val e2eTest: SourceSet by sourceSets.creating {
     compileClasspath += sourceSets["compatTest"].output
     compileClasspath += sourceSets["main"].output
     runtimeClasspath += sourceSets["compatTest"].output
