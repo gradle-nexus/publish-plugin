@@ -59,7 +59,7 @@ abstract class BaseNexusPublishPluginTests {
 
     private val gson = Gson()
 
-    protected val gradleVersion =
+    protected val gradleVersion: GradleVersion =
         System.getProperty("compat.gradle.version")?.let { GradleVersion.version(it) } ?: GradleVersion.current()
 
     private val gradleRunner = GradleRunner.create()
