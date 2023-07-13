@@ -201,8 +201,8 @@ By default, `initialize${repository.name.capitalize()}StagingRepository` task ad
 
 The description can be customized via:
 * `io.github.gradlenexus.publishplugin.NexusPublishExtension.getRepositoryDescription` property (default: `$group:$module:$version` of the root project)
-* `io.github.gradlenexus.publishplugin.InitializeNexusStagingRepository.repositoryDescription` property
-* `io.github.gradlenexus.publishplugin.FindStagingRepository.descriptionRegex` property (regex, default: `"\\b" + Regex.escape(repositoryDescription) + "(\\s|$)"`)
+* `io.github.gradlenexus.publishplugin.InitializeNexusStagingRepositoryTask.repositoryDescription` property
+* `io.github.gradlenexus.publishplugin.FindStagingRepositoryTask.descriptionRegex` property (regex, default: `"\\b" + Regex.escape(repositoryDescription) + "(\\s|$)"`)
 
 So the steps to publish and release in different Gradle invocations are:
 1. Publish the artifacts to the staging repository: `./gradlew publishToSonatype`

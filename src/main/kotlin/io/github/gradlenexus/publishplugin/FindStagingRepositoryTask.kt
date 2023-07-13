@@ -62,7 +62,7 @@ abstract class FindStagingRepositoryTask : AbstractNexusStagingRepositoryTask() 
         registry.get()[repository.name] = descriptor
     }
 
-    // TODO: Duplication with InitializeNexusStagingRepository
+    // TODO: Duplication with InitializeNexusStagingRepositoryTask
     private fun determineStagingProfileId(repository: NexusRepository, client: NexusClient): String {
         var stagingProfileId = repository.stagingProfileId.orNull
         if (stagingProfileId == null) {
