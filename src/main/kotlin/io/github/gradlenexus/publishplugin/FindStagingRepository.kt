@@ -52,7 +52,7 @@ abstract class FindStagingRepository : AbstractNexusStagingRepositoryTask() {
     fun findStagingRepository() {
         val repository = repository.get()
         val serverUrl = repository.nexusUrl.get()
-        val client = NexusClient(serverUrl, repository.username.orNull, repository.password.orNull, clientTimeout.orNull, connectTimeout.orNull)
+        val client = createNexusClient()
         val stagingProfileId = determineStagingProfileId(repository, client)
         logger.info("Fetching staging repositories for {} at {}, stagingProfileId '{}'", repository.name, serverUrl, stagingProfileId)
         val descriptionRegex = descriptionRegex.get()

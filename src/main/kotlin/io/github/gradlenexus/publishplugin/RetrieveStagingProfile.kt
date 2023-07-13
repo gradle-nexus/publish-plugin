@@ -16,7 +16,6 @@
 
 package io.github.gradlenexus.publishplugin
 
-import io.github.gradlenexus.publishplugin.internal.NexusClient
 import org.gradle.api.GradleException
 import org.gradle.api.Incubating
 import org.gradle.api.provider.Property
@@ -34,16 +33,7 @@ abstract class RetrieveStagingProfile : AbstractNexusStagingRepositoryTask() {
 
     @TaskAction
     fun retrieveStagingProfile() {
-        val repository = repository.get()
-
-        val client = NexusClient(
-            repository.nexusUrl.get(),
-            repository.username.orNull,
-            repository.password.orNull,
-            clientTimeout.orNull,
-            connectTimeout.orNull
-        )
-
+        val client = createNexusClient()
         val packageGroup = packageGroup.get()
         val stagingProfileId = client.findStagingProfileId(packageGroup)
             ?: throw GradleException("Failed to find staging profile for package group: $packageGroup")

@@ -16,6 +16,7 @@
 
 package io.github.gradlenexus.publishplugin
 
+import io.github.gradlenexus.publishplugin.internal.NexusClient
 import org.gradle.api.DefaultTask
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
@@ -43,5 +44,16 @@ abstract class AbstractNexusStagingRepositoryTask : DefaultTask() {
 
     init {
         this.onlyIf { useStaging.getOrElse(false) }
+    }
+
+    protected fun createNexusClient(): NexusClient {
+        val repository = repository.get()
+        return NexusClient(
+            repository.nexusUrl.get(),
+            repository.username.orNull,
+            repository.password.orNull,
+            clientTimeout.orNull,
+            connectTimeout.orNull
+        )
     }
 }

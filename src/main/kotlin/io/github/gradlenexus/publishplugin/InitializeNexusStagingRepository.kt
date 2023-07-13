@@ -39,7 +39,7 @@ abstract class InitializeNexusStagingRepository : AbstractNexusStagingRepository
     fun createStagingRepo() {
         val repository = repository.get()
         val serverUrl = repository.nexusUrl.get()
-        val client = NexusClient(serverUrl, repository.username.orNull, repository.password.orNull, clientTimeout.orNull, connectTimeout.orNull)
+        val client = createNexusClient()
         val stagingProfileId = determineStagingProfileId(repository, client)
         logger.info("Creating staging repository for {} at {}, stagingProfileId '{}'", repository.name, serverUrl, stagingProfileId)
         val descriptor = client.createStagingRepository(stagingProfileId, repositoryDescription.get())
