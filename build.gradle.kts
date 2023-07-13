@@ -4,10 +4,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
 plugins {
-    id("org.gradle.java-gradle-plugin")
-    id("org.gradle.kotlin.embedded-kotlin") version "4.0.14"
-    id("org.jetbrains.kotlin.jvm") version "1.8.20"
-    id("org.jetbrains.kotlin.plugin.sam.with.receiver") version "1.8.20"
+    `kotlin-dsl`
     id("com.gradle.plugin-publish") version "1.2.0"
     // From 6.14.0 onwards Spotless requires Gradle to be on Java 11,
     // but we still use Java 8 in .github/workflows/java-versions.yml.
@@ -84,12 +81,10 @@ configurations {
 }
 
 dependencies {
-    compileOnly(gradleKotlinDsl())
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("net.jodah:failsafe:2.4.4")
 
-    testImplementation(gradleKotlinDsl())
     testImplementation("org.junit.jupiter:junit-jupiter:5.9.3")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("com.github.tomakehurst:wiremock:2.27.2")
@@ -190,12 +185,16 @@ kotlin {
                 // Suppress "Language version 1.3 is deprecated and its support will be removed in a future version of Kotlin".
                 freeCompilerArgs.add("-Xsuppress-version-warnings")
             }
+            compileTaskProvider.configure {
+                doFirst {
+                    @Suppress("DEPRECATION")
+                    if (compilerOptions.apiVersion.get() != KotlinVersion.KOTLIN_1_3) {
+                        val langVersion = compilerOptions.languageVersion.get()
+                        TODO("Remove -Xsuppress-version-warnings suppression, or change the condition to ${langVersion}")
+                    }
+                }
+            }
         }
-    }
-
-    // Transform Action<T> (i.e. (T) -> Unit) to T.() -> Unit so that .configure { ... } has receivers as they do in gradle.kts.
-    samWithReceiver {
-        annotation(HasImplicitReceiver::class.qualifiedName!!)
     }
 }
 
