@@ -215,8 +215,7 @@ tasks {
         dependsOn(shadowJar)
     }
     pluginUnderTestMetadata {
-        pluginClasspath.from.clear()
-        pluginClasspath.from(shadowJar)
+        pluginClasspath.setFrom(shadowJar)
     }
     register<Test>("e2eTest") {
         description = "Run E2E tests."
