@@ -1031,15 +1031,10 @@ abstract class BaseNexusPublishPluginTests {
         gradleRunner(*arguments).buildAndFail()
 
     private fun gradleRunner(vararg arguments: String): GradleRunner {
-        val warnings = when {
-            // Failing only became an option at Gradle 5.6.
-            gradleVersion >= GradleVersion.version("5.6") -> "fail"
-            else -> "all"
-        }
         return gradleRunner
-//                .withDebug(true)
+//            .withDebug(true)
             .withProjectDir(projectDir.toFile())
-            .withArguments(*arguments, "--stacktrace", "--warning-mode=$warnings")
+            .withArguments(*arguments, "--stacktrace", "--warning-mode=fail")
             .forwardOutput()
     }
 
