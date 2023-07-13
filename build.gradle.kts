@@ -239,12 +239,13 @@ tasks {
         ).forEach {
             val e2eName = "${it}E2E"
             val e2eEnvName = "${ENV_PROJECT_PROPERTIES_PREFIX}${e2eName}"
-            //properties defined using ORG_GRADLE_PROJECT_ are accessible in child process anyway
+            // Properties defined using ORG_GRADLE_PROJECT_ are accessible in child process anyway.
             if (project.hasProperty(e2eName) && System.getenv(e2eEnvName) == null) {
+                val e2eValue = project.property(e2eName)!!
                 if (e2eName.contains(".")) {
-                    systemProperties.put("${SYSTEM_PROJECT_PROPERTIES_PREFIX}${e2eName}", project.property(e2eName))
+                    systemProperty("${SYSTEM_PROJECT_PROPERTIES_PREFIX}${e2eName}", e2eValue)
                 } else {
-                    environment("$ENV_PROJECT_PROPERTIES_PREFIX${e2eName}", project.property(e2eName)!!)
+                    environment("${ENV_PROJECT_PROPERTIES_PREFIX}${e2eName}", e2eValue)
                 }
             }
         }
