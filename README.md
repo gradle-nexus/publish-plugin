@@ -4,7 +4,7 @@
 
 This Gradle plugin is a turn-key solution for publishing to Nexus. You can use it to publish your artifacts to any Nexus instance (internal or public). It is great for publishing your open source to Sonatype, and then to Maven Central, in a fully automated fashion.
 
-Vanilla Gradle is great but it cannot fully automate publications to Nexus. This plugin enables isolation of staging repositories so that you can reliably publish from CI, and each publication uses a brand new, explicitly created staging repo ([more](https://github.com/gradle-nexus/publish-plugin/issues/63)). Moreover, the plugin provides tasks to close and release staging repositories, covering the whole releasing process to Maven Central.
+Vanilla Gradle is great, but it cannot fully automate publications to Nexus. This plugin enables isolation of staging repositories so that you can reliably publish from CI, and each publication uses a brand new, explicitly created staging repo ([more](https://github.com/gradle-nexus/publish-plugin/issues/63)). Moreover, the plugin provides tasks to close and release staging repositories, covering the whole releasing process to Maven Central.
 
 This plugin is intended as a replacement of the [Gradle Nexus Staging Plugin](https://github.com/Codearte/gradle-nexus-staging-plugin/) and [Nexus Publish Plugin](https://github.com/marcphilipp/nexus-publish-plugin) duo. See a dedicated [migration guide](https://github.com/gradle-nexus/publish-plugin/wiki/Migration-from-gradle_nexus_staging-plugin---nexus_publish-plugin-duo).
 
@@ -202,7 +202,7 @@ By default, `initialize${repository.name.capitalize()}StagingRepository` task ad
 The description can be customized via:
 * `io.github.gradlenexus.publishplugin.NexusPublishExtension.getRepositoryDescription` property (default: `$group:$module:$version` of the root project)
 * `io.github.gradlenexus.publishplugin.InitializeNexusStagingRepository.repositoryDescription` property
-* `io.github.gradlenexus.publishplugin.FindStagingRepository.getDescriptionRegex` property (regex, default: `"\\b" + Regex.escape(repositoryDescription) + "(\\s|$)"`)
+* `io.github.gradlenexus.publishplugin.FindStagingRepository.descriptionRegex` property (regex, default: `"\\b" + Regex.escape(repositoryDescription) + "(\\s|$)"`)
 
 So the steps to publish and release in different Gradle invocations are:
 1. Publish the artifacts to the staging repository: `./gradlew publishToSonatype`
