@@ -165,20 +165,13 @@ sourceSets {
 kotlin {
     target {
         compilations.configureEach {
-            // For future maintainer: Kotlin 1.9.0 dropped support for Kotlin 1.3, it'll only support 1.4+.
-            // This means Gradle 7.0 will be the lowest supportable version for plugins.
-
             // Supporting Gradle 6.0+ needs to use Kotlin 1.3.
             // See https://docs.gradle.org/current/userguide/compatibility.html
+            // For future maintainer: Kotlin 1.9.0 dropped support for Kotlin 1.3, it'll only support 1.4+.
+            // This means Gradle 7.0 will be the lowest supportable version for plugins.
             val usedKotlinVersion = @Suppress("DEPRECATION") KotlinVersion.KOTLIN_1_3
 
             compilerOptions.configure {
-                apiVersion = usedKotlinVersion
-
-                // Theoretically we could use newer language version here,
-                // but sadly the @kotlin.Metadata created on the classes would be incompatible with older consumers.
-                languageVersion = usedKotlinVersion
-
                 // Gradle fully supports running on Java 8: https://docs.gradle.org/current/userguide/compatibility.html,
                 // so we should allow users to do that too.
                 jvmTarget = JvmTarget.fromTarget(JavaVersion.VERSION_1_8.toString())
@@ -187,10 +180,12 @@ kotlin {
                 freeCompilerArgs.add("-Xsuppress-version-warnings")
             }
             compileTaskProvider.configure {
-                // This needs to be here too to prevent KotlinDslCompilerPlugins overriding to Kotlin 1.8.
-                compilerOptions.languageVersion = usedKotlinVersion
-                // This needs to be here too to prevent KotlinDslCompilerPlugins overriding to Kotlin 1.8.
+                // These two (api & lang) needs to be here instead of in compilations.compilerOptions.configure { },
+                // to prevent KotlinDslCompilerPlugins overriding to Kotlin 1.8.
                 compilerOptions.apiVersion = usedKotlinVersion
+                // Theoretically we could use newer language version here,
+                // but sadly the @kotlin.Metadata created on the classes would be incompatible with older consumers.
+                compilerOptions.languageVersion = usedKotlinVersion
 
                 // Validate that we're using the right version.
                 doFirst {
