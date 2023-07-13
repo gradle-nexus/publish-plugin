@@ -1,3 +1,5 @@
+@file:Suppress("UnstableApiUsage") // Property assignment is incubating in Gradle 8.1/8.2.
+
 import org.gradle.initialization.IGradlePropertiesLoader.ENV_PROJECT_PROPERTIES_PREFIX
 import org.gradle.initialization.IGradlePropertiesLoader.SYSTEM_PROJECT_PROPERTIES_PREFIX
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
