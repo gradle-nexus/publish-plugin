@@ -26,7 +26,6 @@ import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.gradle.util.GradleVersion
-import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
@@ -540,11 +539,6 @@ abstract class BaseNexusPublishPluginTests {
     @Test
     @Disabled("Fails on my Fedora...")
     fun `uses configured connect timeout`() {
-        Assumptions.assumeTrue(
-            gradleVersion >= GradleVersion.version("5.0"),
-            "Task timeouts were added in Gradle 5.0"
-        )
-
         // Taken from https://stackoverflow.com/a/904609/5866817
         val nonRoutableAddress = "10.255.255.1"
 
