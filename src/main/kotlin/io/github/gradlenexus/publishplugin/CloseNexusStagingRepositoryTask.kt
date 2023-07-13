@@ -19,7 +19,7 @@ package io.github.gradlenexus.publishplugin
 import io.github.gradlenexus.publishplugin.internal.StagingRepositoryTransitioner
 import org.gradle.api.tasks.options.Option
 
-abstract class CloseNexusStagingRepository : AbstractTransitionNexusStagingRepositoryTask() {
+abstract class CloseNexusStagingRepositoryTask : AbstractTransitionNexusStagingRepositoryTask() {
 
     @Option(option = "staging-repository-id", description = "staging repository id to close")
     fun setStagingRepositoryIdToClose(stagingRepositoryId: String) {

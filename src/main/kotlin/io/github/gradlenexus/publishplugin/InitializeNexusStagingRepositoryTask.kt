@@ -18,16 +18,15 @@ package io.github.gradlenexus.publishplugin
 
 import io.github.gradlenexus.publishplugin.internal.InvalidatingStagingRepositoryDescriptorRegistry
 import io.github.gradlenexus.publishplugin.internal.NexusClient
+import okhttp3.HttpUrl
 import org.gradle.api.GradleException
-import org.gradle.api.Incubating
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
 
-@Incubating
-abstract class FindStagingRepository : AbstractNexusStagingRepositoryTask() {
+abstract class InitializeNexusStagingRepositoryTask : AbstractNexusStagingRepositoryTask() {
 
     @get:Internal
     abstract val registry: Property<InvalidatingStagingRepositoryDescriptorRegistry>
@@ -36,33 +35,19 @@ abstract class FindStagingRepository : AbstractNexusStagingRepositoryTask() {
     @get:Input
     abstract val packageGroup: Property<String>
 
-    @get:Input
-    abstract val descriptionRegex: Property<String>
-
-    @get:Internal
-    abstract val stagingRepositoryId: Property<String>
-
-    init {
-        outputs.cacheIf("the task requests data from the external repository, so we don't want to cache it") {
-            false
-        }
-    }
-
     @TaskAction
-    fun findStagingRepository() {
+    fun createStagingRepo() {
         val repository = repository.get()
         val serverUrl = repository.nexusUrl.get()
         val client = NexusClient(serverUrl, repository.username.orNull, repository.password.orNull, clientTimeout.orNull, connectTimeout.orNull)
         val stagingProfileId = determineStagingProfileId(repository, client)
-        logger.info("Fetching staging repositories for {} at {}, stagingProfileId '{}'", repository.name, serverUrl, stagingProfileId)
-        val descriptionRegex = descriptionRegex.get()
-        val descriptor = client.findStagingRepository(stagingProfileId, Regex(descriptionRegex))
-        logger.lifecycle("Staging repository for {} at {}, stagingProfileId '{}', descriptionRegex '{}' is '{}'", repository.name, serverUrl, stagingProfileId, descriptionRegex, descriptor.stagingRepositoryId)
-        stagingRepositoryId.set(descriptor.stagingRepositoryId)
+        logger.info("Creating staging repository for {} at {}, stagingProfileId '{}'", repository.name, serverUrl, stagingProfileId)
+        val descriptor = client.createStagingRepository(stagingProfileId, repositoryDescription.get())
+        val consumerUrl = HttpUrl.get(serverUrl)!!.newBuilder().addEncodedPathSegments("repositories/${descriptor.stagingRepositoryId}/content/").build()
+        logger.lifecycle("Created staging repository '{}' at {}", descriptor.stagingRepositoryId, consumerUrl)
         registry.get()[repository.name] = descriptor
     }
 
-    // TODO: Duplication with InitializeNexusStagingRepository
     private fun determineStagingProfileId(repository: NexusRepository, client: NexusClient): String {
         var stagingProfileId = repository.stagingProfileId.orNull
         if (stagingProfileId == null) {

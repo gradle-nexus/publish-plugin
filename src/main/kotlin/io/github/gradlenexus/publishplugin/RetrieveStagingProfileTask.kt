@@ -27,7 +27,7 @@ import org.gradle.api.tasks.TaskAction
  * Diagnostic task for retrieving the [NexusRepository.stagingProfileId] for the [packageGroup] from the provided [NexusRepository] and logging it
  */
 @Incubating
-abstract class RetrieveStagingProfile : AbstractNexusStagingRepositoryTask() {
+abstract class RetrieveStagingProfileTask : AbstractNexusStagingRepositoryTask() {
 
     @get:Input
     abstract val packageGroup: Property<String>
