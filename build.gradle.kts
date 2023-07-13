@@ -109,7 +109,7 @@ stutter {
                 languageVersion = JavaLanguageVersion.of(8)
             }
             gradleVersions {
-                compatibleRange("6.1")
+                compatibleRange("6.2")
             }
         }
         register("java11") {
@@ -117,7 +117,7 @@ stutter {
                 languageVersion = JavaLanguageVersion.of(11)
             }
             gradleVersions {
-                compatibleRange("6.1")
+                compatibleRange("6.2")
             }
         }
         register("java17") {
@@ -164,7 +164,7 @@ sourceSets {
 }
 
 kotlin.target.compilations.configureEach {
-    // Supporting Gradle 6.1+ needs to use Kotlin 1.3.
+    // Supporting Gradle 6.2+ needs to use Kotlin 1.3.
     // See https://docs.gradle.org/current/userguide/compatibility.html
     // For future maintainer: Kotlin 1.9.0 dropped support for Kotlin 1.3, it'll only support 1.4+.
     // This means Gradle 7.0 will be the lowest supportable version for plugins.
