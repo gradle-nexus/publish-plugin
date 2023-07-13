@@ -39,7 +39,7 @@ abstract class AbstractNexusStagingRepositoryTask : DefaultTask() {
     abstract val repositoryDescription: Property<String>
 
     @get:Internal
-    internal abstract val useStaging: Property<Boolean>
+    abstract val useStaging: Property<Boolean>
 
     init {
         this.onlyIf { useStaging.getOrElse(false) }
