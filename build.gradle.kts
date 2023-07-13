@@ -5,8 +5,9 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
 plugins {
     id("org.gradle.java-gradle-plugin")
-    id("org.jetbrains.kotlin.jvm") version "1.8.22"
-    id("org.jetbrains.kotlin.plugin.sam.with.receiver") version "1.8.22"
+    id("org.gradle.kotlin.embedded-kotlin") version "4.0.14"
+    id("org.jetbrains.kotlin.jvm") version "1.8.20"
+    id("org.jetbrains.kotlin.plugin.sam.with.receiver") version "1.8.20"
     id("com.gradle.plugin-publish") version "1.2.0"
     // From 6.14.0 onwards Spotless requires Gradle to be on Java 11,
     // but we still use Java 8 in .github/workflows/java-versions.yml.
