@@ -187,6 +187,7 @@ class NexusPublishPlugin : Plugin<Project> {
                         val id = when (publicationType) {
                             PublicationType.IVY -> "ivy-publish"
                             PublicationType.MAVEN -> "maven-publish"
+                            null -> error("Publication type for ${nexusRepo.name} must be set.")
                         }
                         plugins.withId(id) {
                             val initializeTask = rootProject.tasks.named<InitializeNexusStagingRepository>("initialize${nexusRepo.capitalizedName}StagingRepository")
