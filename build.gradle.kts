@@ -1,6 +1,7 @@
 import org.gradle.initialization.IGradlePropertiesLoader.ENV_PROJECT_PROPERTIES_PREFIX
 import org.gradle.initialization.IGradlePropertiesLoader.SYSTEM_PROJECT_PROPERTIES_PREFIX
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
 plugins {
     id("org.gradle.java-gradle-plugin")
@@ -165,33 +166,39 @@ sourceSets {
     }
 }
 
-// Transform Action<T> (i.e. (T) -> Unit) to T.() -> Unit so that .configure { ... } has receivers as they do in gradle.kts.
-samWithReceiver {
-    annotation(HasImplicitReceiver::class.qualifiedName!!)
-}
+kotlin {
+    target {
+        compilations.configureEach {
+            // For future maintainer: Kotlin 1.9.0 dropped support for Kotlin 1.3, it'll only support 1.4+.
+            // This means Gradle 7.0 will be the lowest supportable version for plugins.
+            compilerOptions.configure {
+                // Gradle fully supports running on Java 8: https://docs.gradle.org/current/userguide/compatibility.html,
+                // so we should allow users to do that too.
+                jvmTarget = JvmTarget.fromTarget(JavaVersion.VERSION_1_8.toString())
 
-tasks {
-    afterEvaluate {
-        // This needs to be in an afterEvaluate block,
-        // because otherwise KotlinDslCompilerPlugins would win, and override what we've set to Kotlin 1.8.
-        withType<KotlinCompile>().configureEach {
-            kotlinOptions.jvmTarget = JavaVersion.VERSION_1_8.toString()
-            // Supporting Gradle 6.0+ needs to use Kotlin 1.3.
-            // See https://docs.gradle.org/current/userguide/compatibility.html
-            kotlinOptions.apiVersion = "1.3"
-            // Theoretically we could use newer language version here,
-            // but sadly the @kotlin.Metadata created on the classes would be incompatible with Kotlin 1.3 consumers.
-            kotlinOptions.languageVersion = "1.3"
-            doFirst {
-                if (kotlinOptions.apiVersion == "1.3") {
-                    // Suppress "Language version 1.3 is deprecated and its support will be removed in a future version of Kotlin".
-                    kotlinOptions.freeCompilerArgs += "-Xsuppress-version-warnings"
-                } else {
-                    TODO("Remove -Xsuppress-version-warnings suppression, or change the condition to ${kotlinOptions.languageVersion}")
-                }
+                // Supporting Gradle 6.0+ needs to use Kotlin 1.3.
+                // See https://docs.gradle.org/current/userguide/compatibility.html
+                @Suppress("DEPRECATION")
+                apiVersion = KotlinVersion.KOTLIN_1_3
+
+                // Theoretically we could use newer language version here,
+                // but sadly the @kotlin.Metadata created on the classes would be incompatible with Kotlin 1.3 consumers.
+                @Suppress("DEPRECATION")
+                languageVersion = KotlinVersion.KOTLIN_1_3
+
+                // Suppress "Language version 1.3 is deprecated and its support will be removed in a future version of Kotlin".
+                freeCompilerArgs.add("-Xsuppress-version-warnings")
             }
         }
     }
+
+    // Transform Action<T> (i.e. (T) -> Unit) to T.() -> Unit so that .configure { ... } has receivers as they do in gradle.kts.
+    samWithReceiver {
+        annotation(HasImplicitReceiver::class.qualifiedName!!)
+    }
+}
+
+tasks {
     shadowJar {
         exclude("META-INF/maven/**", "META-INF/proguard/**", "META-INF/*.kotlin_module")
         manifest {
