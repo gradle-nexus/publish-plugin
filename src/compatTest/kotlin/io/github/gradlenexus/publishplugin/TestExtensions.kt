@@ -20,13 +20,13 @@ import java.nio.file.Files
 import java.nio.file.Path
 
 fun Path.write(text: String): Path {
-    Files.createDirectories(parent)
-    toFile().writeText(text)
+    Files.createDirectories(this.parent)
+    this.toFile().writeText(text)
     return this
 }
 
 fun Path.append(text: String): Path {
-    Files.createDirectories(parent)
-    toFile().appendText(text)
+    Files.createDirectories(this.parent)
+    this.toFile().appendText(text)
     return this
 }
