@@ -19,26 +19,18 @@ package io.github.gradlenexus.publishplugin
 import io.github.gradlenexus.publishplugin.internal.NexusClient
 import org.gradle.api.GradleException
 import org.gradle.api.Incubating
-import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
-import org.gradle.kotlin.dsl.property
-import javax.inject.Inject
 
 /**
  * Diagnostic task for retrieving the [NexusRepository.stagingProfileId] for the [packageGroup] from the provided [NexusRepository] and logging it
  */
 @Incubating
-abstract class RetrieveStagingProfile @Inject constructor(
-    objects: ObjectFactory,
-    extension: NexusPublishExtension,
-    repository: NexusRepository
-) : AbstractNexusStagingRepositoryTask(objects, repository) {
+abstract class RetrieveStagingProfile : AbstractNexusStagingRepositoryTask() {
 
-    @Input
-    val packageGroup = objects.property<String>().apply {
-        set(extension.packageGroup)
-    }
+    @get:Input
+    abstract val packageGroup: Property<String>
 
     @TaskAction
     fun retrieveStagingProfile() {

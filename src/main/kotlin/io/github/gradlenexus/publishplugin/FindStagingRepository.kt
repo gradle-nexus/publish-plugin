@@ -20,36 +20,27 @@ import io.github.gradlenexus.publishplugin.internal.InvalidatingStagingRepositor
 import io.github.gradlenexus.publishplugin.internal.NexusClient
 import org.gradle.api.GradleException
 import org.gradle.api.Incubating
-import org.gradle.api.model.ObjectFactory
-import org.gradle.api.provider.Provider
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
-import org.gradle.kotlin.dsl.property
-import javax.inject.Inject
 
 @Incubating
-abstract class FindStagingRepository @Inject constructor(
-    objects: ObjectFactory,
-    extension: NexusPublishExtension,
-    repository: NexusRepository,
-    private val registry: Provider<InvalidatingStagingRepositoryDescriptorRegistry>
-) : AbstractNexusStagingRepositoryTask(objects, repository) {
+abstract class FindStagingRepository : AbstractNexusStagingRepositoryTask() {
 
-    @Optional
-    @Input
-    val packageGroup = objects.property<String>().apply {
-        set(extension.packageGroup)
-    }
+    @get:Internal
+    abstract val registry: Property<InvalidatingStagingRepositoryDescriptorRegistry>
 
-    @Input
-    val descriptionRegex = objects.property<String>().apply {
-        set(extension.repositoryDescription.map { "\\b" + Regex.escape(it) + "(\\s|$)" })
-    }
+    @get:Optional
+    @get:Input
+    abstract val packageGroup: Property<String>
 
-    @Internal
-    val stagingRepositoryId = objects.property<String>()
+    @get:Input
+    abstract val descriptionRegex: Property<String>
+
+    @get:Internal
+    abstract val stagingRepositoryId: Property<String>
 
     init {
         outputs.cacheIf("the task requests data from the external repository, so we don't want to cache it") {
