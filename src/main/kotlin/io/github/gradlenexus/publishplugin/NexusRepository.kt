@@ -57,7 +57,7 @@ abstract class NexusRepository @Inject constructor(@Input val name: String) {
     abstract val stagingProfileId: Property<String>
 
     @get:Internal
-    internal val capitalizedName by lazy { name.capitalize() }
+    internal val capitalizedName: String by lazy { name.capitalize() }
 
     @get:Optional
     @get:Input

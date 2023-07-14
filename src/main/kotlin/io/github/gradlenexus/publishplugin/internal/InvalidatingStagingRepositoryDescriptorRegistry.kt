@@ -44,11 +44,12 @@ class InvalidatingStagingRepositoryDescriptorRegistry : StagingRepositoryDescrip
         private fun ArtifactRepository.invalidate() {
             if (this is AbstractResolutionAwareArtifactRepository<*>) {
                 try {
-                    val invalidateDescriptorMethod = AbstractResolutionAwareArtifactRepository::class.java.declaredMethods.find { it.name.contains("invalidateDescriptor") }
-                    invalidateDescriptorMethod?.isAccessible = true
-                    invalidateDescriptorMethod?.invoke(this)
+                    AbstractResolutionAwareArtifactRepository::class.java
+                        .getDeclaredMethod("invalidateDescriptor")
+                        .apply { isAccessible = true }
+                        .invoke(this)
                 } catch (e: Exception) {
-                    log.warn("Failed to invalidate artifacty repository URL, publishing will not work correctly")
+                    log.warn("Failed to invalidate artifact repository URL, publishing will not work correctly.")
                 }
             }
         }

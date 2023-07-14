@@ -17,38 +17,26 @@
 package io.github.gradlenexus.publishplugin
 
 import io.github.gradlenexus.publishplugin.internal.BasicActionRetrier
-import io.github.gradlenexus.publishplugin.internal.InvalidatingStagingRepositoryDescriptorRegistry
 import io.github.gradlenexus.publishplugin.internal.NexusClient
 import io.github.gradlenexus.publishplugin.internal.StagingRepository
 import io.github.gradlenexus.publishplugin.internal.StagingRepositoryTransitioner
 import org.gradle.api.Action
-import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
-import org.gradle.kotlin.dsl.property
 
-abstract class AbstractTransitionNexusStagingRepositoryTask(
-    objects: ObjectFactory,
-    repository: NexusRepository,
-    registry: Provider<InvalidatingStagingRepositoryDescriptorRegistry>
-) : AbstractNexusStagingRepositoryTask(objects, repository) {
+abstract class AbstractTransitionNexusStagingRepositoryTask : AbstractNexusStagingRepositoryTask() {
 
-    @Input
-    val stagingRepositoryId = objects.property<String>().apply {
-        set(
-            registry.map {
-                it[repository.name].stagingRepositoryId
-            }
-        )
-    }
+    @get:Input
+    abstract val stagingRepositoryId: Property<String>
 
     @get:Internal
     abstract val transitionCheckOptions: Property<TransitionCheckOptions>
 
-    fun transitionCheckOptions(action: Action<in TransitionCheckOptions>) = action.execute(transitionCheckOptions.get())
+    fun transitionCheckOptions(action: Action<in TransitionCheckOptions>) {
+        action.execute(transitionCheckOptions.get())
+    }
 
     @TaskAction
     fun transitionStagingRepo() {

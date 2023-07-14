@@ -19,7 +19,7 @@ package io.github.gradlenexus.publishplugin.internal
 import java.net.URI
 
 data class StagingRepositoryDescriptor(private val baseUrl: URI, val stagingRepositoryId: String) {
-    val stagingRepositoryUrl by lazy {
+    val stagingRepositoryUrl: URI by lazy {
         URI.create("${baseUrl.toString().removeSuffix("/")}/staging/deployByRepositoryId/$stagingRepositoryId")
     }
 }
