@@ -1,3 +1,5 @@
+@file:Suppress("UnstableApiUsage") // Property assignment is incubating in Gradle 8.1/8.2.
+
 import org.gradle.initialization.IGradlePropertiesLoader.ENV_PROJECT_PROPERTIES_PREFIX
 import org.gradle.initialization.IGradlePropertiesLoader.SYSTEM_PROJECT_PROPERTIES_PREFIX
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -6,8 +8,6 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 plugins {
     `kotlin-dsl`
     id("com.gradle.plugin-publish") version "1.2.0"
-    // From 6.14.0 onwards Spotless requires Gradle to be on Java 11,
-    // but we still use Java 8 in .github/workflows/java-versions.yml.
     id("com.diffplug.spotless") version "6.19.0"
     id("com.github.johnrengelman.shadow") version "8.1.1"
     id("org.jetbrains.gradle.plugin.idea-ext")
@@ -131,7 +131,8 @@ stutter {
     }
 }
 
-val e2eTest by sourceSets.creating {    //separate infrastructure as compatTest is called multiple times with different Java versions
+// Separate infrastructure as compatTest is called multiple times with different Java versions.
+val e2eTest: SourceSet by sourceSets.creating {
     compileClasspath += sourceSets["compatTest"].output
     compileClasspath += sourceSets["main"].output
     runtimeClasspath += sourceSets["compatTest"].output
@@ -214,25 +215,34 @@ tasks {
         dependsOn(shadowJar)
     }
     pluginUnderTestMetadata {
-        pluginClasspath.from.clear()
-        pluginClasspath.from(shadowJar)
+        pluginClasspath.setFrom(shadowJar)
     }
     register<Test>("e2eTest") {
         description = "Run E2E tests."
         group = "Verification"
         testClassesDirs = e2eTest.output.classesDirs
         classpath = e2eTest.runtimeClasspath
-        //pass E2E releasing properties to tests. Prefer environment variables which are not displayed with --info
-        // (unless non CI friendly properties with "." are used)
-        listOf("sonatypeUsername", "sonatypePassword", "signingKey", "signingPassword", "signing.gnupg.homeDir", "signing.gnupg.keyName", "signing.gnupg.passphrase").forEach {
+        // Pass E2E releasing properties to tests.
+        // Prefer environment variables which are not displayed with --info
+        // (unless non CI friendly properties with "." are used).
+        listOf(
+            "sonatypeUsername",
+            "sonatypePassword",
+            "signingKey",
+            "signingPassword",
+            "signing.gnupg.homeDir",
+            "signing.gnupg.keyName",
+            "signing.gnupg.passphrase"
+        ).forEach {
             val e2eName = "${it}E2E"
             val e2eEnvName = "${ENV_PROJECT_PROPERTIES_PREFIX}${e2eName}"
-            //properties defined using ORG_GRADLE_PROJECT_ are accessible in child process anyway
+            // Properties defined using ORG_GRADLE_PROJECT_ are accessible in child process anyway.
             if (project.hasProperty(e2eName) && System.getenv(e2eEnvName) == null) {
+                val e2eValue = project.property(e2eName)!!
                 if (e2eName.contains(".")) {
-                    systemProperties.put("${SYSTEM_PROJECT_PROPERTIES_PREFIX}${e2eName}", project.property(e2eName))
+                    systemProperty("${SYSTEM_PROJECT_PROPERTIES_PREFIX}${e2eName}", e2eValue)
                 } else {
-                    environment("$ENV_PROJECT_PROPERTIES_PREFIX${e2eName}", project.property(e2eName)!!)
+                    environment("${ENV_PROJECT_PROPERTIES_PREFIX}${e2eName}", e2eValue)
                 }
             }
         }

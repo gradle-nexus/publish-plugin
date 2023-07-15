@@ -26,7 +26,6 @@ import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.gradle.util.GradleVersion
-import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
@@ -60,7 +59,7 @@ abstract class BaseNexusPublishPluginTests {
 
     private val gson = Gson()
 
-    protected val gradleVersion =
+    protected val gradleVersion: GradleVersion =
         System.getProperty("compat.gradle.version")?.let { GradleVersion.version(it) } ?: GradleVersion.current()
 
     private val gradleRunner = GradleRunner.create()
@@ -540,11 +539,6 @@ abstract class BaseNexusPublishPluginTests {
     @Test
     @Disabled("Fails on my Fedora...")
     fun `uses configured connect timeout`() {
-        Assumptions.assumeTrue(
-            gradleVersion >= GradleVersion.version("5.0"),
-            "Task timeouts were added in Gradle 5.0"
-        )
-
         // Taken from https://stackoverflow.com/a/904609/5866817
         val nonRoutableAddress = "10.255.255.1"
 
@@ -1037,15 +1031,10 @@ abstract class BaseNexusPublishPluginTests {
         gradleRunner(*arguments).buildAndFail()
 
     private fun gradleRunner(vararg arguments: String): GradleRunner {
-        val warnings = when {
-            // Failing only became an option at Gradle 5.6.
-            gradleVersion >= GradleVersion.version("5.6") -> "fail"
-            else -> "all"
-        }
         return gradleRunner
-//                .withDebug(true)
+//            .withDebug(true)
             .withProjectDir(projectDir.toFile())
-            .withArguments(*arguments, "--stacktrace", "--warning-mode=$warnings")
+            .withArguments(*arguments, "--stacktrace", "--warning-mode=fail")
             .forwardOutput()
     }
 
