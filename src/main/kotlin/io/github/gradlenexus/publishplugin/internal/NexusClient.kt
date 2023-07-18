@@ -30,7 +30,6 @@ import retrofit2.http.Path
 import java.io.IOException
 import java.net.URI
 import java.time.Duration
-import java.util.NoSuchElementException
 
 open class NexusClient(private val baseUrl: URI, username: String?, password: String?, timeout: Duration?, connectTimeout: Duration?) {
     private val api: NexusApi
