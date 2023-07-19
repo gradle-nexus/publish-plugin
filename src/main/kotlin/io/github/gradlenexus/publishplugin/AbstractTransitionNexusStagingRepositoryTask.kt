@@ -17,7 +17,6 @@
 package io.github.gradlenexus.publishplugin
 
 import io.github.gradlenexus.publishplugin.internal.BasicActionRetrier
-import io.github.gradlenexus.publishplugin.internal.NexusClient
 import io.github.gradlenexus.publishplugin.internal.StagingRepository
 import io.github.gradlenexus.publishplugin.internal.StagingRepositoryTransitioner
 import org.gradle.api.Action
@@ -40,17 +39,10 @@ abstract class AbstractTransitionNexusStagingRepositoryTask : AbstractNexusStagi
 
     @TaskAction
     fun transitionStagingRepo() {
-        val client = NexusClient(
-            repository.get().nexusUrl.get(),
-            repository.get().username.orNull,
-            repository.get().password.orNull,
-            clientTimeout.orNull,
-            connectTimeout.orNull
-        )
         val retrier = transitionCheckOptions.get().run {
             BasicActionRetrier(maxRetries.get(), delayBetween.get(), StagingRepository::transitioning)
         }
-        transitionStagingRepo(StagingRepositoryTransitioner(client, retrier))
+        transitionStagingRepo(StagingRepositoryTransitioner(createNexusClient(), retrier))
     }
 
     protected abstract fun transitionStagingRepo(repositoryTransitioner: StagingRepositoryTransitioner)

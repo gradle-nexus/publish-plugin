@@ -17,9 +17,8 @@
 package io.github.gradlenexus.publishplugin
 
 import io.github.gradlenexus.publishplugin.internal.InvalidatingStagingRepositoryDescriptorRegistry
-import io.github.gradlenexus.publishplugin.internal.NexusClient
+import io.github.gradlenexus.publishplugin.internal.determineStagingProfileId
 import okhttp3.HttpUrl
-import org.gradle.api.GradleException
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
@@ -39,23 +38,12 @@ abstract class InitializeNexusStagingRepository : AbstractNexusStagingRepository
     fun createStagingRepo() {
         val repository = repository.get()
         val serverUrl = repository.nexusUrl.get()
-        val client = NexusClient(serverUrl, repository.username.orNull, repository.password.orNull, clientTimeout.orNull, connectTimeout.orNull)
-        val stagingProfileId = determineStagingProfileId(repository, client)
+        val client = createNexusClient()
+        val stagingProfileId = determineStagingProfileId(client, logger, repository, packageGroup.get())
         logger.info("Creating staging repository for {} at {}, stagingProfileId '{}'", repository.name, serverUrl, stagingProfileId)
         val descriptor = client.createStagingRepository(stagingProfileId, repositoryDescription.get())
         val consumerUrl = HttpUrl.get(serverUrl)!!.newBuilder().addEncodedPathSegments("repositories/${descriptor.stagingRepositoryId}/content/").build()
         logger.lifecycle("Created staging repository '{}' at {}", descriptor.stagingRepositoryId, consumerUrl)
         registry.get()[repository.name] = descriptor
-    }
-
-    private fun determineStagingProfileId(repository: NexusRepository, client: NexusClient): String {
-        var stagingProfileId = repository.stagingProfileId.orNull
-        if (stagingProfileId == null) {
-            val packageGroup = packageGroup.get()
-            logger.info("No stagingProfileId set, querying for packageGroup '{}'", packageGroup)
-            stagingProfileId = client.findStagingProfileId(packageGroup)
-                ?: throw GradleException("Failed to find staging profile for package group: $packageGroup")
-        }
-        return stagingProfileId
     }
 }
