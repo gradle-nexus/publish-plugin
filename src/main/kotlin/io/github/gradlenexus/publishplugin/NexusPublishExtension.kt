@@ -23,9 +23,8 @@ import org.gradle.api.tasks.Nested
 import org.gradle.kotlin.dsl.domainObjectContainer
 import org.gradle.kotlin.dsl.newInstance
 import java.time.Duration
-import javax.inject.Inject
 
-abstract class NexusPublishExtension @Inject constructor(objects: ObjectFactory) {
+abstract class NexusPublishExtension(objects: ObjectFactory) {
 
     companion object {
         internal const val NAME = "nexusPublishing"
