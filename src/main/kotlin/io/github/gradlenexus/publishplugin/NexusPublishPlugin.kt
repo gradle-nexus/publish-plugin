@@ -54,7 +54,7 @@ class NexusPublishPlugin : Plugin<Project> {
         }
 
         require(GradleVersion.current() >= GradleVersion.version("6.2")) {
-            "The plugin requires Gradle version 6.2+"
+            "io.github.gradle-nexus.publish-plugin requires Gradle version 6.2+"
         }
 
         val registry = createRegistry(project)
