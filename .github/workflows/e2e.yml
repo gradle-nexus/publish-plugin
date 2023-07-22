@@ -36,5 +36,9 @@ jobs:
         ORG_GRADLE_PROJECT_sonatypePasswordE2E: ${{ secrets.SONATYPE_PASSWORD_E2E }}
         ORG_GRADLE_PROJECT_signingKeyE2E: ${{ secrets.GPG_SIGNING_KEY_E2E }}
         ORG_GRADLE_PROJECT_signingPasswordE2E: ${{ secrets.GPG_SIGNING_KEY_PASSPHRASE_E2E }}
-      run: |
-        ./gradlew --stacktrace -PnexusPublishPlugin.test.java=${{ matrix.jdk }} -Pe2eVerboseOutput e2eTest
+      run: >
+        ./gradlew
+        --stacktrace
+        -PnexusPublishPlugin.test.java=${{ matrix.jdk }}
+        -Pe2eVerboseOutput
+        e2eTest
