@@ -14,7 +14,6 @@ on:
 jobs:
   openjdk:
     strategy:
-      fail-fast: false
       matrix:
         jdk: [8, 11, 17]
     name: "OpenJDK ${{ matrix.jdk }}"
