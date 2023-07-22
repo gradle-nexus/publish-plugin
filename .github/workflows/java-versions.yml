@@ -29,7 +29,7 @@ jobs:
       - name: Reduce number of Gradle regressions builds
         run: |
           # Keep only the last Gradle version per Stutter matrix; for each line this transformation is done:
-          # java11=6.0.1,6.9.4,7.0.2,7.6.1,8.0.2,8.1.1,8.2-rc-1
+          # java11=6.2.2,6.9.4,7.0.2,7.6.1,8.0.2,8.1.1,8.2-rc-1
           # ->
           # java11=8.2-rc-1
           # The trick is that \2 will greedily eat everything before the last comma.
