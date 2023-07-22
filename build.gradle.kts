@@ -249,6 +249,17 @@ tasks {
                 showStandardStreams = true
             }
         }
+        javaLauncher = project.javaToolchains.launcherFor {
+            languageVersion = providers
+                .gradleProperty("nexusPublishPlugin.test.java")
+                .map {
+                    if (it == "auto") {
+                        JavaLanguageVersion.of(JavaVersion.current().majorVersion)
+                    } else {
+                        JavaLanguageVersion.of(it)
+                    }
+                }
+        }
     }
     withType<Test>().configureEach {
         dependsOn(shadowJar)

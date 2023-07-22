@@ -11,7 +11,12 @@ on:
 
 jobs:
   tests:
+    name: "E2E tests on Java ${{ matrix.jdk }}"
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        jdk: [ 8, 11, 17 ]
     steps:
     - name: Checkout project with submodules
       uses: actions/checkout@v3
@@ -20,7 +25,7 @@ jobs:
     - name: Setup JDK
       uses: actions/setup-java@v3
       with:
-        java-version: 11
+        java-version: 19
         distribution: 'zulu'
     - uses: gradle/gradle-build-action@v2
     - name: Run sanity check
@@ -32,4 +37,4 @@ jobs:
         ORG_GRADLE_PROJECT_signingKeyE2E: ${{ secrets.GPG_SIGNING_KEY_E2E }}
         ORG_GRADLE_PROJECT_signingPasswordE2E: ${{ secrets.GPG_SIGNING_KEY_PASSPHRASE_E2E }}
       run: |
-        ./gradlew --stacktrace -Pe2eVerboseOutput e2eTest
+        ./gradlew --stacktrace -PnexusPublishPlugin.test.java=${{ matrix.jdk }} -Pe2eVerboseOutput e2eTest
