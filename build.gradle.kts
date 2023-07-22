@@ -171,6 +171,7 @@ kotlin.target.compilations.configureEach {
     val usedKotlinVersion = @Suppress("DEPRECATION") KotlinVersion.KOTLIN_1_3
 
     compilerOptions.configure {
+        if (this@configureEach.name == "main") moduleName = "publish-plugin"
         // Gradle fully supports running on Java 8: https://docs.gradle.org/current/userguide/compatibility.html,
         // so we should allow users to do that too.
         jvmTarget = JvmTarget.fromTarget(JavaVersion.VERSION_1_8.toString())
