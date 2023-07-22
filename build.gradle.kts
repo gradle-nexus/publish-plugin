@@ -15,6 +15,7 @@ plugins {
     id("org.ajoberstar.stutter") version "0.7.2"
 }
 
+base { archivesName = "publish-plugin" }
 group = "io.github.gradle-nexus"
 version = "2.0.0-SNAPSHOT"
 
@@ -171,7 +172,6 @@ kotlin.target.compilations.configureEach {
     val usedKotlinVersion = @Suppress("DEPRECATION") KotlinVersion.KOTLIN_1_3
 
     compilerOptions.configure {
-        if (this@configureEach.name == "main") moduleName = "publish-plugin"
         // Gradle fully supports running on Java 8: https://docs.gradle.org/current/userguide/compatibility.html,
         // so we should allow users to do that too.
         jvmTarget = JvmTarget.fromTarget(JavaVersion.VERSION_1_8.toString())
@@ -267,7 +267,7 @@ publishing {
     publications {
         afterEvaluate {
             named<MavenPublication>("pluginMaven") {
-                artifactId = "publish-plugin"
+                artifactId = base.archivesName.get()
                 pom {
                     name = readableName
                     description = project.description
