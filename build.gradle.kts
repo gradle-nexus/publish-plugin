@@ -258,6 +258,11 @@ tasks {
     withType<Test>().matching { it.name.startsWith("compatTest") }.configureEach {
         systemProperty("plugin.version", project.version)
     }
+    named<Test>("test").configure {
+        javaLauncher = project.javaToolchains.launcherFor {
+            languageVersion = JavaLanguageVersion.of(11)
+        }
+    }
 }
 
 publishing {
