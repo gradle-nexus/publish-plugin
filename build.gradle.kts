@@ -6,7 +6,9 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
 plugins {
-    `kotlin-dsl`
+    // Leave this version behind of the current Gradle version, on the level of Gradle 8.2.1.
+    // See https://github.com/gradle/gradle/issues/25868 for more details.
+    `kotlin-dsl` version "4.0.14"
     id("com.gradle.plugin-publish") version "1.2.0"
     id("com.diffplug.spotless") version "6.20.0"
     id("com.github.johnrengelman.shadow") version "8.1.1"
