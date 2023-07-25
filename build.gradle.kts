@@ -5,10 +5,21 @@ import org.gradle.initialization.IGradlePropertiesLoader.SYSTEM_PROJECT_PROPERTI
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
+buildscript {
+    configurations.classpath.get().dependencyConstraints.apply {
+        removeAll(filter { it.reason == "Pinned to the embedded Kotlin" }.toSet())
+    }
+    dependencies {
+        classpath(enforcedPlatform("org.jetbrains.kotlin:kotlin-bom:1.8.22"))
+    }
+}
+
 plugins {
     // Leave this version behind of the current Gradle version, on the level of Gradle 8.2.1.
     // See https://github.com/gradle/gradle/issues/25868 for more details.
     `kotlin-dsl` version "4.0.14"
+    // Last version of Kotlin Gradle Plugin to support Kotlin 1.3 back-compilation.
+    id("org.jetbrains.kotlin.jvm") version "1.8.22"
     id("com.gradle.plugin-publish") version "1.2.0"
     id("com.diffplug.spotless") version "6.20.0"
     id("com.github.johnrengelman.shadow") version "8.1.1"
