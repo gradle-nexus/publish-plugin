@@ -31,7 +31,7 @@ In order to publish to Maven Central (aka the Central Repository or just Central
 
 ```groovy
 nexusPublishing {
-    repositories {
+    this.repositories {
         sonatype()
     }
 }
@@ -41,7 +41,7 @@ nexusPublishing {
 
 ```groovy
 nexusPublishing {
-    repositories {
+    this.repositories {
         sonatype {  //only for users registered in Sonatype after 24 Feb 2021
             nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
             snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
@@ -57,7 +57,7 @@ Alternatively, you can configure credentials in the `sonatype` block:
 
 ```groovy
 nexusPublishing {
-    repositories {
+    this.repositories {
         sonatype {
             username = "your-user-token-username"
             password = "your-user-token-password"
@@ -93,7 +93,7 @@ In case of Ivy publishing, because of compatibility with Sonatype the nexus repo
 
 ```groovy
 nexusPublishing {
-    respositories {
+    this.respositories {
         ivyRepository {
             publicationType = io.github.gradlenexus.publishplugin.NexusRepository.PublicationType.IVY
         }
@@ -105,7 +105,7 @@ Or use the kotlin DSL:
 
 ```kotlin
 nexusPublishing {
-    respositories {
+    this.respositories {
         register("ivyRepository") {
             publicationType.set(io.github.gradlenexus.publishplugin.NexusRepository.PublicationType.IVY)
         }
@@ -121,7 +121,7 @@ To change the pattern of artifacts and ivy files configure the `ivyPatternLayout
 
 ```groovy
 nexusPublishing {
-    respositories {
+    this.respositories {
         ivyRepository {
             ivyPatternLayout {
                 artifact "[organisation]/[module]_foo/[revision]/[artifact]-[revision](-[classifier])(.[ext])"
@@ -136,7 +136,7 @@ Or use the kotlin DSL:
 
 ```kotlin
 nexusPublishing {
-    respositories {
+    this.respositories {
         register("ivyRepository") {
             ivyPatternLayout {
                 ivyPatternLayout {
@@ -256,7 +256,7 @@ publishing {
 }
 
 nexusPublishing {
-    repositories {
+    this.repositories {
         myNexus {
             nexusUrl = uri("https://your-server.com/staging")
             snapshotRepositoryUrl = uri("https://your-server.com/snapshots")
@@ -314,7 +314,7 @@ publishing {
 }
 
 nexusPublishing {
-    repositories {
+    this.repositories {
         create("myNexus") {
             nexusUrl.set(uri("https://your-server.com/staging"))
             snapshotRepositoryUrl.set(uri("https://your-server.com/snapshots"))
