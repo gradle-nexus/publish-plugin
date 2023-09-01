@@ -13,6 +13,4 @@ gradleEnterprise {
     }
 }
 
-// this needs to stay this way since it's used as the plugin's artifact id
-// for generating the plugin marker
-rootProject.name = "publish-plugin"
+rootProject.name = "gradle-nexus-publish-plugin"

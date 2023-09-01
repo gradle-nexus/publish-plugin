@@ -15,6 +15,7 @@ plugins {
     id("org.ajoberstar.stutter") version "0.7.2"
 }
 
+base { archivesName = "publish-plugin" }
 group = "io.github.gradle-nexus"
 version = "2.0.0-SNAPSHOT"
 
@@ -266,6 +267,7 @@ publishing {
     publications {
         afterEvaluate {
             named<MavenPublication>("pluginMaven") {
+                artifactId = base.archivesName.get()
                 pom {
                     name = readableName
                     description = project.description
@@ -292,4 +294,3 @@ publishing {
         }
     }
 }
-
