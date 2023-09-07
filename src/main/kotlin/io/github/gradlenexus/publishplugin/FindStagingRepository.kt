@@ -16,7 +16,7 @@
 
 package io.github.gradlenexus.publishplugin
 
-import io.github.gradlenexus.publishplugin.internal.StagingRepositoryDescriptorRegistryBuildService
+import io.github.gradlenexus.publishplugin.internal.InvalidatingStagingRepositoryDescriptorRegistry
 import io.github.gradlenexus.publishplugin.internal.determineStagingProfileId
 import org.gradle.api.Incubating
 import org.gradle.api.provider.Property
@@ -29,8 +29,7 @@ import org.gradle.api.tasks.TaskAction
 abstract class FindStagingRepository : AbstractNexusStagingRepositoryTask() {
 
     @get:Internal
-    // TODO use @ServiceReference instead of @Internal when minimum is Gradle 8.0.
-    abstract val registry: Property<StagingRepositoryDescriptorRegistryBuildService>
+    abstract val registry: Property<InvalidatingStagingRepositoryDescriptorRegistry>
 
     @get:Optional
     @get:Input
@@ -59,6 +58,6 @@ abstract class FindStagingRepository : AbstractNexusStagingRepositoryTask() {
         val descriptor = client.findStagingRepository(stagingProfileId, Regex(descriptionRegex))
         logger.lifecycle("Staging repository for {} at {}, stagingProfileId '{}', descriptionRegex '{}' is '{}'", repository.name, serverUrl, stagingProfileId, descriptionRegex, descriptor.stagingRepositoryId)
         stagingRepositoryId.set(descriptor.stagingRepositoryId)
-        registry.get().registry[repository.name] = descriptor
+        registry.get()[repository.name] = descriptor
     }
 }
