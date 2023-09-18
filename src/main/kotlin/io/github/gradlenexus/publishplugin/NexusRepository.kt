@@ -29,10 +29,9 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import java.net.URI
-import javax.inject.Inject
 import kotlin.reflect.KClass
 
-abstract class NexusRepository @Inject constructor(@Input val name: String) {
+abstract class NexusRepository(@Input val name: String) {
 
     @get:Input
     abstract val nexusUrl: Property<URI>
