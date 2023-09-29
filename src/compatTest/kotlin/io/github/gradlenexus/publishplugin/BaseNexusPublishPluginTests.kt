@@ -53,8 +53,12 @@ abstract class BaseNexusPublishPluginTests {
         private const val OVERRIDDEN_STAGED_REPOSITORY_ID = "orgexample-42o"
     }
 
-    private enum class StagingRepoTransitionOperation(val urlSufix: String, val desiredState: StagingRepository.State) {
-        CLOSE("close", StagingRepository.State.CLOSED), RELEASE("promote", StagingRepository.State.NOT_FOUND)
+    private enum class StagingRepoTransitionOperation(
+        val urlSufix: String,
+        val desiredState: StagingRepository.State
+    ) {
+        CLOSE("close", StagingRepository.State.CLOSED),
+        RELEASE("promote", StagingRepository.State.NOT_FOUND)
     }
 
     private val gson = Gson()
