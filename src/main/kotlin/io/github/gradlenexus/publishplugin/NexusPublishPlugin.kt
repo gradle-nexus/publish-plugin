@@ -45,8 +45,9 @@ import java.time.Duration
 class NexusPublishPlugin : Plugin<Project> {
 
     companion object {
-        // visibility for testing
-        const val SIMPLIFIED_CLOSE_AND_RELEASE_TASK_NAME = "closeAndReleaseStagingRepository"
+        private const val SIMPLIFIED_CLOSE_AND_RELEASE_TASK_NAME = "closeAndReleaseStagingRepositories"
+        private const val SIMPLIFIED_CLOSE_TASK_NAME = "closeStagingRepositories"
+        private const val SIMPLIFIED_RELEASE_TASK_NAME = "releaseStagingRepositories"
     }
 
     override fun apply(project: Project) {
@@ -125,10 +126,17 @@ class NexusPublishPlugin : Plugin<Project> {
                 enabled = false
             }
         }
-        rootProject.tasks.register<Task>(SIMPLIFIED_CLOSE_AND_RELEASE_TASK_NAME) {
+        rootProject.tasks.register(SIMPLIFIED_CLOSE_AND_RELEASE_TASK_NAME) {
             group = PublishingPlugin.PUBLISH_TASK_GROUP
             description = "Closes and releases open staging repositories in all configured Nexus instances."
-            enabled = false
+        }
+        rootProject.tasks.register(SIMPLIFIED_CLOSE_TASK_NAME) {
+            group = PublishingPlugin.PUBLISH_TASK_GROUP
+            description = "Closes open staging repositories in all configured Nexus instances."
+        }
+        rootProject.tasks.register(SIMPLIFIED_RELEASE_TASK_NAME) {
+            group = PublishingPlugin.PUBLISH_TASK_GROUP
+            description = "Releases open staging repositories in all configured Nexus instances."
         }
     }
 
@@ -235,7 +243,7 @@ class NexusPublishPlugin : Plugin<Project> {
                     }
                 }
             }
-            configureSimplifiedCloseAndReleaseTask(rootProject, extension)
+            configureSimplifiedCloseAndReleaseTasks(rootProject, extension)
         }
     }
 
@@ -346,24 +354,36 @@ class NexusPublishPlugin : Plugin<Project> {
             }
         }
 
-    private fun configureSimplifiedCloseAndReleaseTask(rootProject: Project, extension: NexusPublishExtension) {
+    private fun configureSimplifiedCloseAndReleaseTasks(rootProject: Project, extension: NexusPublishExtension) {
         if (extension.repositories.isNotEmpty()) {
-            val closeAndReleaseSimplifiedTask = rootProject.tasks.named(SIMPLIFIED_CLOSE_AND_RELEASE_TASK_NAME)
-            closeAndReleaseSimplifiedTask.configure {
-                val repositoryNamesAsString = extension.repositories.joinToString(", ") { "'${it.name}'" }
-                val instanceCardinalityAwareString = if (extension.repositories.size > 1) {
-                    "instances"
-                } else {
-                    "instance"
-                }
+            val repositoryNamesAsString = extension.repositories.joinToString(", ") { "'${it.name}'" }
+            val instanceCardinalityAwareString = if (extension.repositories.size > 1) {
+                "instances"
+            } else {
+                "instance"
+            }
+            val closeAndReleaseSimplifiedTask = rootProject.tasks.named(SIMPLIFIED_CLOSE_AND_RELEASE_TASK_NAME) {
                 description = "Closes and releases open staging repositories in the following Nexus $instanceCardinalityAwareString: $repositoryNamesAsString"
-                enabled = true
+            }
+            val closeSimplifiedTask = rootProject.tasks.named(SIMPLIFIED_CLOSE_TASK_NAME) {
+                description = "Closes open staging repositories in the following Nexus $instanceCardinalityAwareString: $repositoryNamesAsString"
+            }
+            val releaseSimplifiedTask = rootProject.tasks.named(SIMPLIFIED_RELEASE_TASK_NAME) {
+                description = "Releases open staging repositories in the following Nexus $instanceCardinalityAwareString: $repositoryNamesAsString"
             }
             extension.repositories.all {
                 val repositoryCapitalizedName = this.capitalizedName
                 val closeAndReleaseTask = rootProject.tasks.named<Task>("closeAndRelease${repositoryCapitalizedName}StagingRepository")
-                closeAndReleaseSimplifiedTask.configure {
+                closeAndReleaseSimplifiedTask {
                     dependsOn(closeAndReleaseTask)
+                }
+                val closeTask = rootProject.tasks.named<Task>("close${repositoryCapitalizedName}StagingRepository")
+                closeSimplifiedTask {
+                    dependsOn(closeTask)
+                }
+                val releaseTask = rootProject.tasks.named<Task>("release${repositoryCapitalizedName}StagingRepository")
+                releaseSimplifiedTask {
+                    dependsOn(releaseTask)
                 }
             }
         }
