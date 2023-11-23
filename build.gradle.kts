@@ -11,7 +11,7 @@ plugins {
     id("com.diffplug.spotless") version "6.22.0"
     id("com.github.johnrengelman.shadow") version "8.1.1"
     id("org.jetbrains.gradle.plugin.idea-ext")
-    id("com.github.ben-manes.versions") version "0.48.0"
+    id("com.github.ben-manes.versions") version "0.50.0"
     id("org.ajoberstar.stutter") version "0.7.2"
 }
 
