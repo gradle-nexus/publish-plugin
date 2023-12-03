@@ -31,7 +31,9 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.MethodSource
+import org.junit.jupiter.params.provider.ValueSource
 import java.nio.file.Path
 
 @KotlinParameterizeTest
@@ -93,44 +95,64 @@ class TaskOrchestrationTest {
             .contains("closeSonatypeStagingRepository", "releaseSonatypeStagingRepository")
     }
 
-    @Test
-    internal fun `simplified close and release task without repository name should be available but trigger nothing if no repositories are configured`() {
+    @ParameterizedTest(name = "{0}")
+    @ValueSource(
+        strings = [
+            "closeAndReleaseStagingRepositories",
+            "closeStagingRepositories",
+            "releaseStagingRepositories"
+        ]
+    )
+    internal fun `simplified task without repository name should be available but trigger nothing if no repositories are configured`(simplifiedTaskName: String) {
         initSingleProjectWithDefaultConfiguration()
         project.extensions.configure<NexusPublishExtension> {
             repositories.clear()
         }
 
-        val simplifiedCloseAndReleaseTasks = project.getTasksByName(NexusPublishPlugin.SIMPLIFIED_CLOSE_AND_RELEASE_TASK_NAME, true)
+        val simplifiedTasks = project.getTasksByName(simplifiedTaskName, true)
 
-        assertThat(simplifiedCloseAndReleaseTasks).hasSize(1)
-        assertThat(simplifiedCloseAndReleaseTasks.first().dependsOn).isEmpty()
+        assertThat(simplifiedTasks).hasSize(1)
+        assertThat(simplifiedTasks.first().dependsOn).isEmpty()
     }
 
-    @Test
-    internal fun `simplified closeAndRelease task without repository name should depend on all closeAndRelease (created one per defined repository)`() {
+    @ParameterizedTest(name = "{0}")
+    @CsvSource(
+        textBlock = """
+            closeAndReleaseStagingRepositories, closeAndReleaseSonatypeStagingRepository, closeAndReleaseOtherNexusStagingRepository
+            closeStagingRepositories          , closeSonatypeStagingRepository          , closeOtherNexusStagingRepository
+            releaseStagingRepositories        , releaseSonatypeStagingRepository        , releaseOtherNexusStagingRepository"""
+    )
+    internal fun `simplified task without repository name should depend on all normal tasks (created one per defined repository)`(simplifiedTaskName: String, sonatypeTaskName: String, otherNexusTaskName: String) {
         initSingleProjectWithDefaultConfiguration()
         project.extensions.configure<NexusPublishExtension> {
             repositories.create("otherNexus")
         }
 
-        val closeAndReleaseTask = getJustOneTaskByNameOrFail(NexusPublishPlugin.SIMPLIFIED_CLOSE_AND_RELEASE_TASK_NAME)
+        val simplifiedTasks = getJustOneTaskByNameOrFail(simplifiedTaskName)
 
-        assertThat(closeAndReleaseTask.taskDependencies.getDependencies(null).map { it.name })
+        assertThat(simplifiedTasks.taskDependencies.getDependencies(null).map { it.name })
             .hasSize(2)
-            .contains("closeAndReleaseSonatypeStagingRepository")
-            .contains("closeAndReleaseOtherNexusStagingRepository")
+            .contains(sonatypeTaskName)
+            .contains(otherNexusTaskName)
     }
 
-    @Test
-    internal fun `description of simplified closeAndRelease task contains names of all defined Nexus instances`() {
+    @ParameterizedTest(name = "{0}")
+    @ValueSource(
+        strings = [
+            "closeAndReleaseStagingRepositories",
+            "closeStagingRepositories",
+            "releaseStagingRepositories"
+        ]
+    )
+    internal fun `description of simplified task contains names of all defined Nexus instances`(simplifiedTaskName: String) {
         initSingleProjectWithDefaultConfiguration()
         project.extensions.configure<NexusPublishExtension> {
             repositories.create("otherNexus")
         }
 
-        val closeAndReleaseTask = getJustOneTaskByNameOrFail(NexusPublishPlugin.SIMPLIFIED_CLOSE_AND_RELEASE_TASK_NAME)
+        val simplifiedTasks = getJustOneTaskByNameOrFail(simplifiedTaskName)
 
-        assertThat(closeAndReleaseTask.description)
+        assertThat(simplifiedTasks.description)
             .contains("sonatype")
             .contains("otherNexus")
     }
