@@ -91,9 +91,7 @@ dependencies {
     testImplementation("com.github.tomakehurst:wiremock:2.27.2")
     testImplementation("ru.lanwen.wiremock:wiremock-junit5:1.3.1")
     testImplementation("org.assertj:assertj-core:3.24.2")
-    // This cannot be updated to 5.x as it requires Java 11,
-    // but we are running CI on Java 8 in .github/workflows/java-versions.yml.
-    testImplementation("org.mockito:mockito-junit-jupiter:4.11.0")
+    testImplementation("org.mockito:mockito-junit-jupiter:5.4.0")
     testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
 }
 
@@ -252,6 +250,17 @@ tasks {
                 showStandardStreams = true
             }
         }
+        javaLauncher = project.javaToolchains.launcherFor {
+            languageVersion = providers
+                .gradleProperty("nexusPublishPlugin.test.java")
+                .map {
+                    if (it == "auto") {
+                        JavaLanguageVersion.of(JavaVersion.current().majorVersion)
+                    } else {
+                        JavaLanguageVersion.of(it)
+                    }
+                }
+        }
     }
     withType<Test>().configureEach {
         dependsOn(shadowJar)
@@ -260,6 +269,11 @@ tasks {
     }
     withType<Test>().matching { it.name.startsWith("compatTest") }.configureEach {
         systemProperty("plugin.version", project.version)
+    }
+    named<Test>("test").configure {
+        javaLauncher = project.javaToolchains.launcherFor {
+            languageVersion = JavaLanguageVersion.of(11)
+        }
     }
 }
 
