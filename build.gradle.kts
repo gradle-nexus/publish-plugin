@@ -8,11 +8,11 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 plugins {
     `kotlin-dsl`
     id("com.gradle.plugin-publish") version "1.2.1"
-    id("com.diffplug.spotless") version "6.21.0"
+    id("com.diffplug.spotless") version "6.23.2"
     id("com.github.johnrengelman.shadow") version "8.1.1"
     id("org.jetbrains.gradle.plugin.idea-ext")
-    id("com.github.ben-manes.versions") version "0.48.0"
-    id("org.ajoberstar.stutter") version "0.7.2"
+    id("com.github.ben-manes.versions") version "0.50.0"
+    id("org.ajoberstar.stutter") version "0.7.3"
 }
 
 base { archivesName = "publish-plugin" }
@@ -86,7 +86,7 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("net.jodah:failsafe:2.4.4")
 
-    testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("com.github.tomakehurst:wiremock:2.27.2")
     testImplementation("ru.lanwen.wiremock:wiremock-junit5:1.3.1")
