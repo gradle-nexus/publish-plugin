@@ -65,8 +65,8 @@ abstract class NexusRepository(@Input val name: String) {
         ivyPatternLayout.set(action)
     }
 
-    enum class PublicationType(internal val gradleType: KClass<out Publication>, internal val publishTaskType: KClass<out DefaultTask>) {
-        MAVEN(MavenPublication::class, PublishToMavenRepository::class),
-        IVY(IvyPublication::class, PublishToIvyRepository::class)
+    enum class PublicationType(internal val gradleType: Class<out Publication>, internal val publishTaskType: Class<out DefaultTask>) {
+        MAVEN(MavenPublication::class.java, PublishToMavenRepository::class.java),
+        IVY(IvyPublication::class.java, PublishToIvyRepository::class.java)
     }
 }

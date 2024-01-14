@@ -20,8 +20,6 @@ import org.gradle.api.Action
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Nested
-import org.gradle.kotlin.dsl.domainObjectContainer
-import org.gradle.kotlin.dsl.newInstance
 import java.time.Duration
 
 abstract class NexusPublishExtension(objects: ObjectFactory) {
@@ -48,8 +46,8 @@ abstract class NexusPublishExtension(objects: ObjectFactory) {
     }
 
     val repositories: NexusRepositoryContainer = objects.newInstance(
-        DefaultNexusRepositoryContainer::class,
-        objects.domainObjectContainer(NexusRepository::class)
+        DefaultNexusRepositoryContainer::class.java,
+        objects.domainObjectContainer(NexusRepository::class.java)
     )
 
     fun repositories(action: Action<in NexusRepositoryContainer>) {
