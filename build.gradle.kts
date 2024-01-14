@@ -1,5 +1,3 @@
-@file:Suppress("UnstableApiUsage") // Property assignment is incubating in Gradle 8.1/8.2.
-
 import org.gradle.initialization.IGradlePropertiesLoader.ENV_PROJECT_PROPERTIES_PREFIX
 import org.gradle.initialization.IGradlePropertiesLoader.SYSTEM_PROJECT_PROPERTIES_PREFIX
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -75,10 +73,8 @@ idea {
     }
 }
 
-configurations {
-    testImplementation {
-        exclude(group = "junit", module = "junit")
-    }
+configurations.testImplementation {
+    exclude(group = "junit", module = "junit")
 }
 
 dependencies {
@@ -142,6 +138,7 @@ val e2eTest: SourceSet by sourceSets.creating {
     runtimeClasspath += sourceSets["main"].output
 }
 
+@Suppress("UnstableApiUsage") // `configurations` container is incubating
 configurations {
     compatTestCompileClasspath {
         extendsFrom(testCompileClasspath.get())
