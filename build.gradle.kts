@@ -95,6 +95,8 @@ dependencies {
     // but we are running CI on Java 8 in .github/workflows/java-versions.yml.
     testImplementation("org.mockito:mockito-junit-jupiter:4.11.0")
     testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
+
+    testImplementation(gradleApi())
 }
 
 java {
