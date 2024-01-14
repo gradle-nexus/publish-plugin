@@ -395,17 +395,3 @@ private inline fun <reified T : Any> Project.theExtension(): T =
         this.extensions.findByType(it)
             ?: error("The plugin cannot be applied without the publishing plugin")
     }
-
-private fun <T> Provider<T>.forUseAtConfigurationTimeCompat(): Provider<T> =
-    if (GradleVersion.current() < GradleVersion.version("6.5")) {
-        // Gradle < 6.5 doesn't have this function.
-        this
-    } else if (GradleVersion.current() < GradleVersion.version("7.4")) {
-        // Gradle 6.5 - 7.3 requires this function to be called.
-        @Suppress("DEPRECATION")
-        this.forUseAtConfigurationTime()
-    } else {
-        // Gradle >= 7.4 deprecated this function in favor of not calling it (became no-op, and will eventually nag).
-        // https://docs.gradle.org/current/userguide/upgrading_version_7.html#for_use_at_configuration_time_deprecation
-        this
-    }
