@@ -29,7 +29,6 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import java.net.URI
-import kotlin.reflect.KClass
 
 abstract class NexusRepository(@Input val name: String) {
 
