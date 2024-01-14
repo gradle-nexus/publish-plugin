@@ -170,7 +170,7 @@ class NexusPublishPlugin : Plugin<Project> {
             it.usesService(registryService)
             it.repository.convention(repo)
             it.packageGroup.convention(extension.packageGroup)
-            it.descriptionRegex.convention(extension.repositoryDescription.map { "\\b" + Regex.escape(it) + "(\\s|$)" })
+            it.descriptionRegex.convention(extension.repositoryDescription.map { repoDescription -> "\\b" + Regex.escape(repoDescription) + "(\\s|$)" })
         }
         val closeTask = tasks.register(
             "close${repo.capitalizedName}StagingRepository",
@@ -230,9 +230,9 @@ class NexusPublishPlugin : Plugin<Project> {
                             val findStagingRepositoryTask = rootProject.tasks.named("find${nexusRepo.capitalizedName}StagingRepository", FindStagingRepository::class.java)
                             val closeTask = rootProject.tasks.named("close${nexusRepo.capitalizedName}StagingRepository", CloseNexusStagingRepository::class.java)
                             val releaseTask = rootProject.tasks.named("release${nexusRepo.capitalizedName}StagingRepository", ReleaseNexusStagingRepository::class.java)
-                            val publishAllTask = publishingProject.tasks.register("publishTo${nexusRepo.capitalizedName}") {
-                                it.group = PublishingPlugin.PUBLISH_TASK_GROUP
-                                it.description = "Publishes all Maven/Ivy publications produced by this project to the '${nexusRepo.name}' Nexus repository."
+                            val publishAllTask = publishingProject.tasks.register("publishTo${nexusRepo.capitalizedName}") { task ->
+                                task.group = PublishingPlugin.PUBLISH_TASK_GROUP
+                                task.description = "Publishes all Maven/Ivy publications produced by this project to the '${nexusRepo.name}' Nexus repository."
                             }
                             closeTask.configure { task ->
                                 task.mustRunAfter(publishAllTask)
@@ -315,9 +315,9 @@ class NexusPublishPlugin : Plugin<Project> {
             publishTask.configure {
                 it.dependsOn(initializeTask)
                 it.mustRunAfter(findStagingRepositoryTask)
-                it.doFirst {
+                it.doFirst { task ->
                     if (artifactRepo is UrlArtifactRepository) {
-                        it.logger.info("Uploading to {}", artifactRepo.url)
+                        task.logger.info("Uploading to {}", artifactRepo.url)
                     }
                 }
             }
@@ -375,16 +375,16 @@ class NexusPublishPlugin : Plugin<Project> {
             extension.repositories.all {
                 val repositoryCapitalizedName = it.capitalizedName
                 val closeAndReleaseTask = rootProject.tasks.named("closeAndRelease${repositoryCapitalizedName}StagingRepository")
-                closeAndReleaseSimplifiedTask.configure {
-                    it.dependsOn(closeAndReleaseTask)
+                closeAndReleaseSimplifiedTask.configure { task ->
+                    task.dependsOn(closeAndReleaseTask)
                 }
                 val closeTask = rootProject.tasks.named("close${repositoryCapitalizedName}StagingRepository")
-                closeSimplifiedTask.configure {
-                    it.dependsOn(closeTask)
+                closeSimplifiedTask.configure { task ->
+                    task.dependsOn(closeTask)
                 }
                 val releaseTask = rootProject.tasks.named("release${repositoryCapitalizedName}StagingRepository")
-                releaseSimplifiedTask.configure {
-                    it.dependsOn(releaseTask)
+                releaseSimplifiedTask.configure { task ->
+                    task.dependsOn(releaseTask)
                 }
             }
         }
