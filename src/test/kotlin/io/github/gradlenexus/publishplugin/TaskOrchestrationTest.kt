@@ -21,10 +21,6 @@ import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
-import org.gradle.kotlin.dsl.apply
-import org.gradle.kotlin.dsl.configure
-import org.gradle.kotlin.dsl.create
-import org.gradle.kotlin.dsl.get
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
@@ -68,8 +64,8 @@ class TaskOrchestrationTest {
     internal fun `transitioning task should not run after non-related publish`(transitioningTaskName: String) {
         // given
         initSingleProjectWithDefaultConfiguration()
-        project.extensions.configure<NexusPublishExtension> {
-            repositories.create("myNexus")
+        project.extensions.configure(NexusPublishExtension::class.java) {
+            it.repositories.create("myNexus")
         }
         // expect
         assertGivenTaskMustNotRunAfterAnother(transitioningTaskName, "publishToMyNexus")
@@ -105,8 +101,8 @@ class TaskOrchestrationTest {
     )
     internal fun `simplified task without repository name should be available but trigger nothing if no repositories are configured`(simplifiedTaskName: String) {
         initSingleProjectWithDefaultConfiguration()
-        project.extensions.configure<NexusPublishExtension> {
-            repositories.clear()
+        project.extensions.configure(NexusPublishExtension::class.java) {
+            it.repositories.clear()
         }
 
         val simplifiedTasks = project.getTasksByName(simplifiedTaskName, true)
@@ -124,8 +120,8 @@ class TaskOrchestrationTest {
     )
     internal fun `simplified task without repository name should depend on all normal tasks (created one per defined repository)`(simplifiedTaskName: String, sonatypeTaskName: String, otherNexusTaskName: String) {
         initSingleProjectWithDefaultConfiguration()
-        project.extensions.configure<NexusPublishExtension> {
-            repositories.create("otherNexus")
+        project.extensions.configure(NexusPublishExtension::class.java) {
+            it.repositories.create("otherNexus")
         }
 
         val simplifiedTasks = getJustOneTaskByNameOrFail(simplifiedTaskName)
@@ -146,8 +142,8 @@ class TaskOrchestrationTest {
     )
     internal fun `description of simplified task contains names of all defined Nexus instances`(simplifiedTaskName: String) {
         initSingleProjectWithDefaultConfiguration()
-        project.extensions.configure<NexusPublishExtension> {
-            repositories.create("otherNexus")
+        project.extensions.configure(NexusPublishExtension::class.java) {
+            it.repositories.create("otherNexus")
         }
 
         val simplifiedTasks = getJustOneTaskByNameOrFail(simplifiedTaskName)
@@ -158,15 +154,15 @@ class TaskOrchestrationTest {
     }
 
     private fun initSingleProjectWithDefaultConfiguration() {
-        project.apply(plugin = "java")
-        project.apply(plugin = "maven-publish")
-        project.apply<NexusPublishPlugin>()
-        project.extensions.configure<NexusPublishExtension> {
-            repositories.sonatype()
+        project.pluginManager.apply("java")
+        project.pluginManager.apply("maven-publish")
+        project.pluginManager.apply(NexusPublishPlugin::class.java)
+        project.extensions.configure(NexusPublishExtension::class.java) {
+            it.repositories.sonatype()
         }
-        project.extensions.configure<PublishingExtension> {
-            publications.create<MavenPublication>("mavenJava") {
-                from(project.components["java"])
+        project.extensions.configure(PublishingExtension::class.java) {
+            it.publications.create("mavenJava", MavenPublication::class.java) { publication ->
+                publication.from(project.components.getByName("java"))
             }
         }
     }
