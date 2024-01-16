@@ -17,7 +17,6 @@
 package io.github.gradlenexus.publishplugin
 
 import io.github.gradlenexus.publishplugin.NexusRepository.PublicationType
-import io.github.gradlenexus.publishplugin.internal.InvalidatingStagingRepositoryDescriptorRegistry
 import io.github.gradlenexus.publishplugin.internal.StagingRepositoryDescriptorRegistryBuildService
 import org.gradle.api.Action
 import org.gradle.api.Plugin
@@ -45,8 +44,9 @@ import java.time.Duration
 class NexusPublishPlugin : Plugin<Project> {
 
     companion object {
-        // visibility for testing
-        const val SIMPLIFIED_CLOSE_AND_RELEASE_TASK_NAME = "closeAndReleaseStagingRepository"
+        private const val SIMPLIFIED_CLOSE_AND_RELEASE_TASK_NAME = "closeAndReleaseStagingRepositories"
+        private const val SIMPLIFIED_CLOSE_TASK_NAME = "closeStagingRepositories"
+        private const val SIMPLIFIED_RELEASE_TASK_NAME = "releaseStagingRepositories"
     }
 
     override fun apply(project: Project) {
@@ -54,8 +54,8 @@ class NexusPublishPlugin : Plugin<Project> {
             "Plugin must be applied to the root project but was applied to ${project.path}"
         }
 
-        require(GradleVersion.current() >= GradleVersion.version("6.0")) {
-            "The plugin requires Gradle version 6.0+"
+        require(GradleVersion.current() >= GradleVersion.version("6.2")) {
+            "io.github.gradle-nexus.publish-plugin requires Gradle version 6.2+"
         }
 
         val registry = createRegistry(project)
@@ -78,19 +78,18 @@ class NexusPublishPlugin : Plugin<Project> {
         }
     }
 
-    private fun createRegistry(rootProject: Project): Provider<InvalidatingStagingRepositoryDescriptorRegistry> {
-        if (GradleVersion.current() >= GradleVersion.version("6.1")) {
-            return rootProject.gradle.sharedServices.registerIfAbsent(
-                "stagingRepositoryUrlRegistry",
-                StagingRepositoryDescriptorRegistryBuildService::class,
-                Action { }
-            ).map { it.registry }
-        }
-        val registry = InvalidatingStagingRepositoryDescriptorRegistry()
-        return rootProject.provider { registry }
-    }
+    private fun createRegistry(rootProject: Project): Provider<StagingRepositoryDescriptorRegistryBuildService> =
+        rootProject.gradle.sharedServices.registerIfAbsent(
+            "stagingRepositoryUrlRegistry",
+            StagingRepositoryDescriptorRegistryBuildService::class,
+            Action { }
+        )
 
-    private fun configureNexusTasks(rootProject: Project, extension: NexusPublishExtension, registry: Provider<InvalidatingStagingRepositoryDescriptorRegistry>) {
+    private fun configureNexusTasks(
+        rootProject: Project,
+        extension: NexusPublishExtension,
+        registryService: Provider<StagingRepositoryDescriptorRegistryBuildService>
+    ) {
         rootProject.tasks.withType(AbstractNexusStagingRepositoryTask::class.java).configureEach {
             clientTimeout.convention(extension.clientTimeout)
             connectTimeout.convention(extension.connectTimeout)
@@ -100,13 +99,14 @@ class NexusPublishPlugin : Plugin<Project> {
         }
         rootProject.tasks.withType(AbstractTransitionNexusStagingRepositoryTask::class.java).configureEach {
             transitionCheckOptions.convention(extension.transitionCheckOptions)
-            stagingRepositoryId.convention(registry.map { it[repository.get().name].stagingRepositoryId })
+            usesService(registryService)
+            stagingRepositoryId.convention(registryService.map { it.registry[repository.get().name].stagingRepositoryId })
         }
         extension.repositories.all {
             username.convention(rootProject.provider { rootProject.findProperty("${name}Username") as? String })
             password.convention(rootProject.provider { rootProject.findProperty("${name}Password") as? String })
             publicationType.convention(PublicationType.MAVEN)
-            configureRepositoryTasks(rootProject.tasks, extension, this, registry)
+            configureRepositoryTasks(rootProject.tasks, extension, this, registryService)
         }
         extension.repositories.whenObjectRemoved {
             rootProject.tasks.named("initialize${capitalizedName}StagingRepository").configure {
@@ -125,10 +125,17 @@ class NexusPublishPlugin : Plugin<Project> {
                 enabled = false
             }
         }
-        rootProject.tasks.register<Task>(SIMPLIFIED_CLOSE_AND_RELEASE_TASK_NAME) {
+        rootProject.tasks.register(SIMPLIFIED_CLOSE_AND_RELEASE_TASK_NAME) {
             group = PublishingPlugin.PUBLISH_TASK_GROUP
             description = "Closes and releases open staging repositories in all configured Nexus instances."
-            enabled = false
+        }
+        rootProject.tasks.register(SIMPLIFIED_CLOSE_TASK_NAME) {
+            group = PublishingPlugin.PUBLISH_TASK_GROUP
+            description = "Closes open staging repositories in all configured Nexus instances."
+        }
+        rootProject.tasks.register(SIMPLIFIED_RELEASE_TASK_NAME) {
+            group = PublishingPlugin.PUBLISH_TASK_GROUP
+            description = "Releases open staging repositories in all configured Nexus instances."
         }
     }
 
@@ -136,7 +143,7 @@ class NexusPublishPlugin : Plugin<Project> {
         tasks: TaskContainer,
         extension: NexusPublishExtension,
         repo: NexusRepository,
-        registryProvider: Provider<InvalidatingStagingRepositoryDescriptorRegistry>
+        registryService: Provider<StagingRepositoryDescriptorRegistryBuildService>
     ) {
         @Suppress("UNUSED_VARIABLE") // Keep it consistent.
         val retrieveStagingProfileTask = tasks.register<RetrieveStagingProfile>(
@@ -154,7 +161,8 @@ class NexusPublishPlugin : Plugin<Project> {
         ) {
             group = PublishingPlugin.PUBLISH_TASK_GROUP
             description = "Initializes the staging repository in '${repo.name}' Nexus instance."
-            registry.set(registryProvider)
+            registry.set(registryService)
+            usesService(registryService)
             repository.convention(repo)
             packageGroup.convention(extension.packageGroup)
         }
@@ -163,7 +171,8 @@ class NexusPublishPlugin : Plugin<Project> {
         ) {
             group = PublishingPlugin.PUBLISH_TASK_GROUP
             description = "Finds the staging repository for ${repo.name}"
-            registry.set(registryProvider)
+            registry.set(registryService)
+            usesService(registryService)
             repository.convention(repo)
             packageGroup.convention(extension.packageGroup)
             descriptionRegex.convention(extension.repositoryDescription.map { "\\b" + Regex.escape(it) + "(\\s|$)" })
@@ -203,7 +212,11 @@ class NexusPublishPlugin : Plugin<Project> {
         }
     }
 
-    private fun configurePublishingForAllProjects(rootProject: Project, extension: NexusPublishExtension, registry: Provider<InvalidatingStagingRepositoryDescriptorRegistry>) {
+    private fun configurePublishingForAllProjects(
+        rootProject: Project,
+        extension: NexusPublishExtension,
+        registry: Provider<StagingRepositoryDescriptorRegistryBuildService>
+    ) {
         rootProject.afterEvaluate {
             allprojects {
                 val publishingProject = this
@@ -235,14 +248,14 @@ class NexusPublishPlugin : Plugin<Project> {
                     }
                 }
             }
-            configureSimplifiedCloseAndReleaseTask(rootProject, extension)
+            configureSimplifiedCloseAndReleaseTasks(rootProject, extension)
         }
     }
 
     private fun addPublicationRepositories(
         project: Project,
         extension: NexusPublishExtension,
-        registry: Provider<InvalidatingStagingRepositoryDescriptorRegistry>
+        registry: Provider<StagingRepositoryDescriptorRegistryBuildService>
     ): Map<NexusRepository, ArtifactRepository> = extension.repositories.associateWith { nexusRepo ->
         createArtifactRepository(nexusRepo.publicationType.get(), project, nexusRepo, extension, registry)
     }
@@ -252,7 +265,7 @@ class NexusPublishPlugin : Plugin<Project> {
         project: Project,
         nexusRepo: NexusRepository,
         extension: NexusPublishExtension,
-        registry: Provider<InvalidatingStagingRepositoryDescriptorRegistry>
+        registry: Provider<StagingRepositoryDescriptorRegistryBuildService>
     ): ArtifactRepository = when (publicationType) {
         PublicationType.MAVEN -> project.theExtension<PublishingExtension>().repositories.maven {
             configureArtifactRepo(nexusRepo, extension, registry, false)
@@ -271,7 +284,7 @@ class NexusPublishPlugin : Plugin<Project> {
     private fun <T> T.configureArtifactRepo(
         nexusRepo: NexusRepository,
         extension: NexusPublishExtension,
-        registry: Provider<InvalidatingStagingRepositoryDescriptorRegistry>,
+        registry: Provider<StagingRepositoryDescriptorRegistryBuildService>,
         provideFallback: Boolean
     ) where T : UrlArtifactRepository, T : ArtifactRepository, T : AuthenticationSupported {
         name = nexusRepo.name
@@ -327,13 +340,13 @@ class NexusPublishPlugin : Plugin<Project> {
     private fun getRepoUrl(
         nexusRepo: NexusRepository,
         extension: NexusPublishExtension,
-        registry: Provider<InvalidatingStagingRepositoryDescriptorRegistry>,
+        registry: Provider<StagingRepositoryDescriptorRegistryBuildService>,
         provideFallback: Boolean,
         artifactRepo: ArtifactRepository
     ): Provider<URI> =
         extension.useStaging.flatMap { useStaging ->
             if (useStaging) {
-                registry.map { descriptorRegistry ->
+                registry.map { it.registry }.map { descriptorRegistry ->
                     if (provideFallback) {
                         descriptorRegistry.invalidateLater(nexusRepo.name, artifactRepo)
                         descriptorRegistry.tryGet(nexusRepo.name)?.stagingRepositoryUrl ?: nexusRepo.nexusUrl.get()
@@ -346,24 +359,36 @@ class NexusPublishPlugin : Plugin<Project> {
             }
         }
 
-    private fun configureSimplifiedCloseAndReleaseTask(rootProject: Project, extension: NexusPublishExtension) {
+    private fun configureSimplifiedCloseAndReleaseTasks(rootProject: Project, extension: NexusPublishExtension) {
         if (extension.repositories.isNotEmpty()) {
-            val closeAndReleaseSimplifiedTask = rootProject.tasks.named(SIMPLIFIED_CLOSE_AND_RELEASE_TASK_NAME)
-            closeAndReleaseSimplifiedTask.configure {
-                val repositoryNamesAsString = extension.repositories.joinToString(", ") { "'${it.name}'" }
-                val instanceCardinalityAwareString = if (extension.repositories.size > 1) {
-                    "instances"
-                } else {
-                    "instance"
-                }
+            val repositoryNamesAsString = extension.repositories.joinToString(", ") { "'${it.name}'" }
+            val instanceCardinalityAwareString = if (extension.repositories.size > 1) {
+                "instances"
+            } else {
+                "instance"
+            }
+            val closeAndReleaseSimplifiedTask = rootProject.tasks.named(SIMPLIFIED_CLOSE_AND_RELEASE_TASK_NAME) {
                 description = "Closes and releases open staging repositories in the following Nexus $instanceCardinalityAwareString: $repositoryNamesAsString"
-                enabled = true
+            }
+            val closeSimplifiedTask = rootProject.tasks.named(SIMPLIFIED_CLOSE_TASK_NAME) {
+                description = "Closes open staging repositories in the following Nexus $instanceCardinalityAwareString: $repositoryNamesAsString"
+            }
+            val releaseSimplifiedTask = rootProject.tasks.named(SIMPLIFIED_RELEASE_TASK_NAME) {
+                description = "Releases open staging repositories in the following Nexus $instanceCardinalityAwareString: $repositoryNamesAsString"
             }
             extension.repositories.all {
                 val repositoryCapitalizedName = this.capitalizedName
                 val closeAndReleaseTask = rootProject.tasks.named<Task>("closeAndRelease${repositoryCapitalizedName}StagingRepository")
-                closeAndReleaseSimplifiedTask.configure {
+                closeAndReleaseSimplifiedTask {
                     dependsOn(closeAndReleaseTask)
+                }
+                val closeTask = rootProject.tasks.named<Task>("close${repositoryCapitalizedName}StagingRepository")
+                closeSimplifiedTask {
+                    dependsOn(closeTask)
+                }
+                val releaseTask = rootProject.tasks.named<Task>("release${repositoryCapitalizedName}StagingRepository")
+                releaseSimplifiedTask {
+                    dependsOn(releaseTask)
                 }
             }
         }
@@ -374,4 +399,18 @@ private inline fun <reified T : Any> Project.theExtension(): T =
     typeOf<T>().let {
         this.extensions.findByType(it)
             ?: error("The plugin cannot be applied without the publishing plugin")
+    }
+
+private fun <T> Provider<T>.forUseAtConfigurationTimeCompat(): Provider<T> =
+    if (GradleVersion.current() < GradleVersion.version("6.5")) {
+        // Gradle < 6.5 doesn't have this function.
+        this
+    } else if (GradleVersion.current() < GradleVersion.version("7.4")) {
+        // Gradle 6.5 - 7.3 requires this function to be called.
+        @Suppress("DEPRECATION")
+        this.forUseAtConfigurationTime()
+    } else {
+        // Gradle >= 7.4 deprecated this function in favor of not calling it (became no-op, and will eventually nag).
+        // https://docs.gradle.org/current/userguide/upgrading_version_7.html#for_use_at_configuration_time_deprecation
+        this
     }

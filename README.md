@@ -12,7 +12,7 @@ This plugin is intended as a replacement of the [Gradle Nexus Staging Plugin](ht
 
 ### Applying the plugin
 
-The plugin must be applied to the root project and requires Gradle 6.0 or later. It is important to
+The plugin must be applied to the root project and requires Gradle 6.2 or later. It is important to
 set the group and the version to the root project, so the plugin can detect if it is a snapshot
 version or not in order to select the correct repository where artifacts will be published.
 
@@ -210,6 +210,26 @@ So the steps to publish and release in different Gradle invocations are:
 3. Release the staging repository: `./gradlew findSonatypeStagingRepository releaseSonatypeStagingRepository`
 
 (in the above example, steps 1 and 2 could be also combined into `./gradlew publishToSonatype closeSonatypeStagingRepository`, to make only the releasing done in a separate step)
+
+### Summary Tasks
+
+If you declare multiple repositories, you get a separate set of tasks for each of the repositories.
+If you for example declared the repositories `sonatype` and `otherNexus`, you get these tasks:
+- `closeSonatypeStagingRepository`
+- `closeOtherNexusStagingRepository`
+- `releaseSonatypeStagingRepository`
+- `releaseOtherNexusStagingRepository`
+- `closeAndReleaseSonatypeStagingRepository`
+- `closeAndReleaseOtherNexusStagingRepository`
+
+For convenience there are also summary tasks generated, that group the tasks for the different repositories, which are
+- `closeStagingRepositories`
+- `releaseStagingRepositories`
+- `closeAndReleaseStagingRepositories`
+
+In the typical use-case, which is only one repository for publishing to Maven Central, these tasks still are useful,
+especially if you are using Kotlin DSL build scripts, because those summary tasks are always added, independent of
+declared repositories. Due to that there are type-safe accessors generated that can be used conveniently for task dependencies.
 
 ### Full example
 

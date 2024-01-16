@@ -7,14 +7,15 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
 plugins {
     `kotlin-dsl`
-    id("com.gradle.plugin-publish") version "1.2.0"
-    id("com.diffplug.spotless") version "6.20.0"
+    id("com.gradle.plugin-publish") version "1.2.1"
+    id("com.diffplug.spotless") version "6.23.3"
     id("com.github.johnrengelman.shadow") version "8.1.1"
     id("org.jetbrains.gradle.plugin.idea-ext")
-    id("com.github.ben-manes.versions") version "0.47.0"
-    id("org.ajoberstar.stutter") version "0.7.2"
+    id("com.github.ben-manes.versions") version "0.50.0"
+    id("org.ajoberstar.stutter") version "0.7.3"
 }
 
+base { archivesName = "publish-plugin" }
 group = "io.github.gradle-nexus"
 version = "2.0.0-SNAPSHOT"
 
@@ -85,11 +86,11 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("net.jodah:failsafe:2.4.4")
 
-    testImplementation("org.junit.jupiter:junit-jupiter:5.9.3")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("com.github.tomakehurst:wiremock:2.27.2")
     testImplementation("ru.lanwen.wiremock:wiremock-junit5:1.3.1")
-    testImplementation("org.assertj:assertj-core:3.24.2")
+    testImplementation("org.assertj:assertj-core:3.25.1")
     testImplementation("org.mockito:mockito-junit-jupiter:5.4.0")
     testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
 }
@@ -107,7 +108,7 @@ stutter {
                 languageVersion = JavaLanguageVersion.of(8)
             }
             gradleVersions {
-                compatibleRange("6.0")
+                compatibleRange("6.2")
             }
         }
         register("java11") {
@@ -115,7 +116,7 @@ stutter {
                 languageVersion = JavaLanguageVersion.of(11)
             }
             gradleVersions {
-                compatibleRange("6.0")
+                compatibleRange("6.2")
             }
         }
         register("java17") {
@@ -162,7 +163,7 @@ sourceSets {
 }
 
 kotlin.target.compilations.configureEach {
-    // Supporting Gradle 6.0+ needs to use Kotlin 1.3.
+    // Supporting Gradle 6.2+ needs to use Kotlin 1.3.
     // See https://docs.gradle.org/current/userguide/compatibility.html
     // For future maintainer: Kotlin 1.9.0 dropped support for Kotlin 1.3, it'll only support 1.4+.
     // This means Gradle 7.0 will be the lowest supportable version for plugins.
@@ -280,6 +281,7 @@ publishing {
     publications {
         afterEvaluate {
             named<MavenPublication>("pluginMaven") {
+                artifactId = base.archivesName.get()
                 pom {
                     name = readableName
                     description = project.description
@@ -306,4 +308,3 @@ publishing {
         }
     }
 }
-
