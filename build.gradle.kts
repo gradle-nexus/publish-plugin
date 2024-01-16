@@ -129,12 +129,20 @@ stutter {
                 compatibleRange("7.3")
             }
         }
+        register("java19") {
+            javaToolchain {
+                languageVersion = JavaLanguageVersion.of(19)
+            }
+            gradleVersions {
+                compatibleRange("7.6")
+            }
+        }
         register("javaauto") {
             javaToolchain {
                 languageVersion = JavaLanguageVersion.of(JavaVersion.current().majorVersion)
             }
             gradleVersions {
-                compatibleRange("7.3")
+                compatibleRange("7.6")
             }
         }
     }

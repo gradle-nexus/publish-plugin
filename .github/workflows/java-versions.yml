@@ -15,8 +15,7 @@ jobs:
   openjdk:
     strategy:
       matrix:
-        # TODO: Add 19+
-        jdk: [11, 17]
+        jdk: [11, 17, 19]
         testJdk: [auto, 8]
     name: "OpenJDK ${{ matrix.jdk }} (with testJDK ${{ matrix.testJdk }})"
     runs-on: ubuntu-latest
