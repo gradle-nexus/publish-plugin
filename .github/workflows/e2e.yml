@@ -11,13 +11,8 @@ on:
 
 jobs:
   tests:
-    name: "E2E tests on Java ${{ matrix.jdk }}"
+    name: "E2E tests"
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      max-parallel: 1
-      matrix:
-        jdk: [ 8, 11, 17 ]
     steps:
     - name: Checkout project with submodules
       uses: actions/checkout@v4
@@ -40,6 +35,5 @@ jobs:
       run: >
         ./gradlew
         --stacktrace
-        -PnexusPublishPlugin.test.java=${{ matrix.jdk }}
         -Pe2eVerboseOutput
         e2eTest

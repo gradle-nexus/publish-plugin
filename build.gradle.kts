@@ -91,7 +91,9 @@ dependencies {
     testImplementation("com.github.tomakehurst:wiremock:2.27.2")
     testImplementation("ru.lanwen.wiremock:wiremock-junit5:1.3.1")
     testImplementation("org.assertj:assertj-core:3.25.1")
-    testImplementation("org.mockito:mockito-junit-jupiter:5.4.0")
+    // This cannot be updated to 5.x as it requires Java 11,
+    // but we are running tests on CI with Java 8 in .github/workflows/java-versions.yml.
+    testImplementation("org.mockito:mockito-junit-jupiter:4.11.0")
     testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
 }
 
@@ -122,6 +124,14 @@ stutter {
         register("java17") {
             javaToolchain {
                 languageVersion = JavaLanguageVersion.of(17)
+            }
+            gradleVersions {
+                compatibleRange("7.3")
+            }
+        }
+        register("javaauto") {
+            javaToolchain {
+                languageVersion = JavaLanguageVersion.of(JavaVersion.current().majorVersion)
             }
             gradleVersions {
                 compatibleRange("7.3")
@@ -172,7 +182,7 @@ kotlin.target.compilations.configureEach {
     compilerOptions.configure {
         // Gradle fully supports running on Java 8: https://docs.gradle.org/current/userguide/compatibility.html,
         // so we should allow users to do that too.
-        jvmTarget = JvmTarget.fromTarget(JavaVersion.VERSION_1_8.toString())
+        jvmTarget = JvmTarget.fromTarget(project.java.targetCompatibility.toString())
 
         // Suppress "Language version 1.3 is deprecated and its support will be removed in a future version of Kotlin".
         freeCompilerArgs.add("-Xsuppress-version-warnings")
@@ -272,7 +282,15 @@ tasks {
     }
     named<Test>("test").configure {
         javaLauncher = project.javaToolchains.launcherFor {
-            languageVersion = JavaLanguageVersion.of(11)
+            languageVersion = providers
+                .gradleProperty("nexusPublishPlugin.test.java")
+                .map {
+                    if (it == "auto") {
+                        JavaLanguageVersion.of(JavaVersion.current().majorVersion)
+                    } else {
+                        JavaLanguageVersion.of(it)
+                    }
+                }
         }
     }
 }
