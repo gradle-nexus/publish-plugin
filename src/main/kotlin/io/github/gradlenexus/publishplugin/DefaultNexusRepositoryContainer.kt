@@ -34,9 +34,9 @@ internal open class DefaultNexusRepositoryContainer @Inject constructor(
         sonatype(Action {})
 
     override fun sonatype(action: Action<in NexusRepository>): NexusRepository = create("sonatype") {
-        nexusUrl.set(URI.create("https://oss.sonatype.org/service/local/"))
-        snapshotRepositoryUrl.set(URI.create("https://oss.sonatype.org/content/repositories/snapshots/"))
-        action.execute(this)
+        it.nexusUrl.set(URI.create("https://oss.sonatype.org/service/local/"))
+        it.snapshotRepositoryUrl.set(URI.create("https://oss.sonatype.org/content/repositories/snapshots/"))
+        action.execute(it)
     }
 
     override fun configure(configureClosure: Closure<*>): NamedDomainObjectContainer<NexusRepository> =

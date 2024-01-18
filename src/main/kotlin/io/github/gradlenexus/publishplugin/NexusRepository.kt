@@ -29,7 +29,6 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import java.net.URI
-import kotlin.reflect.KClass
 
 abstract class NexusRepository(@Input val name: String) {
 
@@ -65,8 +64,8 @@ abstract class NexusRepository(@Input val name: String) {
         ivyPatternLayout.set(action)
     }
 
-    enum class PublicationType(internal val gradleType: KClass<out Publication>, internal val publishTaskType: KClass<out DefaultTask>) {
-        MAVEN(MavenPublication::class, PublishToMavenRepository::class),
-        IVY(IvyPublication::class, PublishToIvyRepository::class)
+    enum class PublicationType(internal val gradleType: Class<out Publication>, internal val publishTaskType: Class<out DefaultTask>) {
+        MAVEN(MavenPublication::class.java, PublishToMavenRepository::class.java),
+        IVY(IvyPublication::class.java, PublishToIvyRepository::class.java)
     }
 }
