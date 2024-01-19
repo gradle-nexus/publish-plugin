@@ -92,7 +92,7 @@ dependencies {
     testImplementation("ru.lanwen.wiremock:wiremock-junit5:1.3.1")
     testImplementation("org.assertj:assertj-core:3.25.1")
     // This cannot be updated to 5.x as it requires Java 11,
-    // but we are running CI on Java 8 in .github/workflows/java-versions.yml.
+    // but we are running tests on CI with Java 8 in .github/workflows/java-versions.yml.
     testImplementation("org.mockito:mockito-junit-jupiter:4.11.0")
     testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
 
@@ -129,6 +129,22 @@ stutter {
             }
             gradleVersions {
                 compatibleRange("7.3")
+            }
+        }
+        register("java19") {
+            javaToolchain {
+                languageVersion = JavaLanguageVersion.of(19)
+            }
+            gradleVersions {
+                compatibleRange("7.6")
+            }
+        }
+        register("javaauto") {
+            javaToolchain {
+                languageVersion = JavaLanguageVersion.of(JavaVersion.current().majorVersion)
+            }
+            gradleVersions {
+                compatibleRange("7.6")
             }
         }
     }
@@ -176,7 +192,7 @@ kotlin.target.compilations.configureEach {
     compilerOptions.configure {
         // Gradle fully supports running on Java 8: https://docs.gradle.org/current/userguide/compatibility.html,
         // so we should allow users to do that too.
-        jvmTarget = JvmTarget.fromTarget(JavaVersion.VERSION_1_8.toString())
+        jvmTarget = JvmTarget.fromTarget(project.java.targetCompatibility.toString())
 
         // Suppress "Language version 1.3 is deprecated and its support will be removed in a future version of Kotlin".
         freeCompilerArgs.add("-Xsuppress-version-warnings")
@@ -254,6 +270,17 @@ tasks {
                 showStandardStreams = true
             }
         }
+        javaLauncher = project.javaToolchains.launcherFor {
+            languageVersion = providers
+                .gradleProperty("nexusPublishPlugin.test.java")
+                .map {
+                    if (it == "auto") {
+                        JavaLanguageVersion.of(JavaVersion.current().majorVersion)
+                    } else {
+                        JavaLanguageVersion.of(it)
+                    }
+                }
+        }
     }
     withType<Test>().configureEach {
         dependsOn(shadowJar)
@@ -262,6 +289,19 @@ tasks {
     }
     withType<Test>().matching { it.name.startsWith("compatTest") }.configureEach {
         systemProperty("plugin.version", project.version)
+    }
+    named<Test>("test").configure {
+        javaLauncher = project.javaToolchains.launcherFor {
+            languageVersion = providers
+                .gradleProperty("nexusPublishPlugin.test.java")
+                .map {
+                    if (it == "auto") {
+                        JavaLanguageVersion.of(JavaVersion.current().majorVersion)
+                    } else {
+                        JavaLanguageVersion.of(it)
+                    }
+                }
+        }
     }
 }
 

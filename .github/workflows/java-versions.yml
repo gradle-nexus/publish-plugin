@@ -15,8 +15,9 @@ jobs:
   openjdk:
     strategy:
       matrix:
-        jdk: [11, 17]
-    name: "OpenJDK ${{ matrix.jdk }}"
+        jdk: [11, 17, 19]
+        testJdk: [auto, 8]
+    name: "OpenJDK ${{ matrix.jdk }} (with testJDK ${{ matrix.testJdk }})"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -38,4 +39,5 @@ jobs:
       - name: Test cross Java versions compatibility
         run: |
           ./gradlew --version
-          ./gradlew --stacktrace build compatTestJava${{ matrix.jdk }}
+          ./gradlew -q javaToolchains
+          ./gradlew --stacktrace -PnexusPublishPlugin.test.java=${{ matrix.testJdk }} build compatTestJava${{ matrix.jdk }}

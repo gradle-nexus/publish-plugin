@@ -11,6 +11,7 @@ on:
 
 jobs:
   tests:
+    name: "E2E tests"
     runs-on: ubuntu-latest
     steps:
     - name: Checkout project with submodules
@@ -20,7 +21,7 @@ jobs:
     - name: Setup JDK
       uses: actions/setup-java@v4
       with:
-        java-version: 11
+        java-version: 19
         distribution: 'zulu'
     - uses: gradle/gradle-build-action@v2
     - name: Run sanity check
@@ -31,5 +32,8 @@ jobs:
         ORG_GRADLE_PROJECT_sonatypePasswordE2E: ${{ secrets.SONATYPE_PASSWORD_E2E }}
         ORG_GRADLE_PROJECT_signingKeyE2E: ${{ secrets.GPG_SIGNING_KEY_E2E }}
         ORG_GRADLE_PROJECT_signingPasswordE2E: ${{ secrets.GPG_SIGNING_KEY_PASSPHRASE_E2E }}
-      run: |
-        ./gradlew --stacktrace -Pe2eVerboseOutput e2eTest
+      run: >
+        ./gradlew
+        --stacktrace
+        -Pe2eVerboseOutput
+        e2eTest

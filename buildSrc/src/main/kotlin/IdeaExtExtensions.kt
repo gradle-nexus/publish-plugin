@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 the original author or authors.
+ * Copyright 2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,13 +24,13 @@ import java.io.File
 import kotlin.math.min
 
 fun IdeaProject.settings(configuration: ProjectSettings.() -> kotlin.Unit) =
-        (this as ExtensionAware).configure(configuration)
+    (this as ExtensionAware).configure(configuration)
 
 fun ProjectSettings.copyright(configuration: CopyrightConfiguration.() -> kotlin.Unit) =
-        (this as ExtensionAware).configure(configuration)
+    (this as ExtensionAware).configure(configuration)
 
 fun Project.readCopyrightHeader(licenseHeaderFile: File) =
-        licenseHeaderFile.readLines()
-                .map { line -> line.substring(min(line.length, 3)) }
-                .joinToString("\n")
-                .trim()
+    licenseHeaderFile.readLines()
+        .map { line -> line.substring(min(line.length, 3)) }
+        .joinToString("\n")
+        .trim()

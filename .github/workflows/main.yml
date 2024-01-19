@@ -21,8 +21,8 @@ jobs:
     - uses: actions/checkout@v4
     - uses: actions/setup-java@v4
       with:
-        java-version: 11
+        java-version: 19
         distribution: 'zulu'
     - uses: gradle/gradle-build-action@v2
       with:
-        arguments: --stacktrace build compatTestJava11
+        arguments: --stacktrace build compatTestJava17
