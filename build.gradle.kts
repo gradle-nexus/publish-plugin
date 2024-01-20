@@ -102,9 +102,8 @@ dependencies {
     testImplementation(gradleApi())
 }
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+kotlin {
+    jvmToolchain(8)
 }
 
 stutter {
@@ -178,10 +177,6 @@ kotlin.target.compilations.configureEach {
     val usedKotlinVersion = @Suppress("DEPRECATION") KotlinVersion.KOTLIN_1_3
 
     compilerOptions.configure {
-        // Gradle fully supports running on Java 8: https://docs.gradle.org/current/userguide/compatibility.html,
-        // so we should allow users to do that too.
-        jvmTarget = JvmTarget.fromTarget(JavaVersion.VERSION_1_8.toString())
-
         // Suppress "Language version 1.3 is deprecated and its support will be removed in a future version of Kotlin".
         freeCompilerArgs.add("-Xsuppress-version-warnings")
     }
