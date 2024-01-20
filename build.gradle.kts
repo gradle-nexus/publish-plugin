@@ -170,33 +170,17 @@ sourceSets {
     }
 }
 
-// Supporting Gradle 6.2+ needs to use Kotlin 1.3.
-// See https://docs.gradle.org/current/userguide/compatibility.html
-// For future maintainer: Kotlin 1.9.0 dropped support for Kotlin 1.3, it'll only support 1.4+.
-// This means Gradle 7.0 will be the lowest supportable version for plugins.
-val usedKotlinVersion = @Suppress("DEPRECATION") KotlinVersion.KOTLIN_1_3
-
-kotlin.target.compilations.configureEach {
-    compileTaskProvider.configure {
-        // Validate that we're using the right version.
-        doFirst {
-            val api = compilerOptions.apiVersion.get()
-            val language = compilerOptions.languageVersion.get()
-            if (api != usedKotlinVersion || language != usedKotlinVersion) {
-                TODO(
-                    "There's mismatch between configured and actual versions:\n" +
-                            "apiVersion=${api}, languageVersion=${language}, configured=${usedKotlinVersion}."
-                )
-            }
-        }
-    }
-}
-
 tasks {
     withType<KotlinCompilationTask<*>>().configureEach {
         compilerOptions {
             // Suppress "Language version 1.3 is deprecated and its support will be removed in a future version of Kotlin".
             freeCompilerArgs.add("-Xsuppress-version-warnings")
+
+            // Supporting Gradle 6.2+ needs to use Kotlin 1.3.
+            // See https://docs.gradle.org/current/userguide/compatibility.html
+            // For future maintainer: Kotlin 1.9.0 dropped support for Kotlin 1.3, it'll only support 1.4+.
+            // This means Gradle 7.0 will be the lowest supportable version for plugins.
+            val usedKotlinVersion = @Suppress("DEPRECATION") KotlinVersion.KOTLIN_1_3
 
             apiVersion = usedKotlinVersion
             // Theoretically we could use newer language version here,
