@@ -1,14 +1,17 @@
 import org.gradle.initialization.IGradlePropertiesLoader.ENV_PROJECT_PROPERTIES_PREFIX
 import org.gradle.initialization.IGradlePropertiesLoader.SYSTEM_PROJECT_PROPERTIES_PREFIX
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.gradle.ext.copyright
+import org.jetbrains.gradle.ext.settings
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
+import kotlin.math.min
 
 plugins {
     id("org.jetbrains.kotlin.jvm") version "1.8.22"
     id("com.gradle.plugin-publish") version "1.2.1"
     id("com.diffplug.spotless") version "6.24.0"
     id("com.github.johnrengelman.shadow") version "8.1.1"
-    id("org.jetbrains.gradle.plugin.idea-ext")
+    id("org.jetbrains.gradle.plugin.idea-ext") version "1.1.7"
     id("com.github.ben-manes.versions") version "0.50.0"
     id("org.ajoberstar.stutter") version "0.7.3"
 }
@@ -41,6 +44,10 @@ repositories {
 }
 
 val licenseHeaderFile = file("gradle/license-header.txt")
+fun readCopyrightHeader(licenseHeaderFile: File) =
+    licenseHeaderFile.readLines()
+        .joinToString("\n") { line -> line.substring(min(line.length, 3)) }
+        .trim()
 spotless {
     lineEndings = com.diffplug.spotless.LineEnding.UNIX
     kotlin {
