@@ -6,6 +6,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.gradle.ext.copyright
 import org.jetbrains.gradle.ext.settings
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
+import kotlin.math.min
 
 plugins {
     id("org.jetbrains.kotlin.jvm") version "1.8.22"
@@ -45,6 +46,10 @@ repositories {
 }
 
 val licenseHeaderFile = file("gradle/license-header.txt")
+fun readCopyrightHeader(licenseHeaderFile: File) =
+    licenseHeaderFile.readLines()
+        .joinToString("\n") { line -> line.substring(min(line.length, 3)) }
+        .trim()
 spotless {
     lineEndings = com.diffplug.spotless.LineEnding.UNIX
     kotlin {
