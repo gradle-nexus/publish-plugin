@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-import org.gradle.api.Project
 import java.io.File
 import kotlin.math.min
 
-fun Project.readCopyrightHeader(licenseHeaderFile: File) =
+fun readCopyrightHeader(licenseHeaderFile: File) =
         licenseHeaderFile.readLines()
                 .map { line -> line.substring(min(line.length, 3)) }
                 .joinToString("\n")
