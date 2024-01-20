@@ -5,6 +5,7 @@ import org.jetbrains.gradle.ext.copyright
 import org.jetbrains.gradle.ext.settings
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import kotlin.math.min
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 
 plugins {
     id("org.jetbrains.kotlin.jvm") version "1.8.22"
@@ -169,25 +170,14 @@ sourceSets {
     }
 }
 
+// Supporting Gradle 6.2+ needs to use Kotlin 1.3.
+// See https://docs.gradle.org/current/userguide/compatibility.html
+// For future maintainer: Kotlin 1.9.0 dropped support for Kotlin 1.3, it'll only support 1.4+.
+// This means Gradle 7.0 will be the lowest supportable version for plugins.
+val usedKotlinVersion = @Suppress("DEPRECATION") KotlinVersion.KOTLIN_1_3
+
 kotlin.target.compilations.configureEach {
-    // Supporting Gradle 6.2+ needs to use Kotlin 1.3.
-    // See https://docs.gradle.org/current/userguide/compatibility.html
-    // For future maintainer: Kotlin 1.9.0 dropped support for Kotlin 1.3, it'll only support 1.4+.
-    // This means Gradle 7.0 will be the lowest supportable version for plugins.
-    val usedKotlinVersion = @Suppress("DEPRECATION") KotlinVersion.KOTLIN_1_3
-
-    compilerOptions.configure {
-        // Suppress "Language version 1.3 is deprecated and its support will be removed in a future version of Kotlin".
-        freeCompilerArgs.add("-Xsuppress-version-warnings")
-    }
     compileTaskProvider.configure {
-        // These two (api & lang) needs to be here instead of in compilations.compilerOptions.configure { },
-        // to prevent KotlinDslCompilerPlugins overriding to Kotlin 1.8.
-        compilerOptions.apiVersion = usedKotlinVersion
-        // Theoretically we could use newer language version here,
-        // but sadly the @kotlin.Metadata created on the classes would be incompatible with older consumers.
-        compilerOptions.languageVersion = usedKotlinVersion
-
         // Validate that we're using the right version.
         doFirst {
             val api = compilerOptions.apiVersion.get()
@@ -203,6 +193,17 @@ kotlin.target.compilations.configureEach {
 }
 
 tasks {
+    withType<KotlinCompilationTask<*>>().configureEach {
+        compilerOptions {
+            // Suppress "Language version 1.3 is deprecated and its support will be removed in a future version of Kotlin".
+            freeCompilerArgs.add("-Xsuppress-version-warnings")
+
+            apiVersion = usedKotlinVersion
+            // Theoretically we could use newer language version here,
+            // but sadly the @kotlin.Metadata created on the classes would be incompatible with older consumers.
+            languageVersion = usedKotlinVersion
+        }
+    }
     shadowJar {
         exclude("META-INF/maven/**", "META-INF/proguard/**", "META-INF/*.kotlin_module")
         manifest {
