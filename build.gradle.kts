@@ -3,6 +3,8 @@
 import org.gradle.initialization.IGradlePropertiesLoader.ENV_PROJECT_PROPERTIES_PREFIX
 import org.gradle.initialization.IGradlePropertiesLoader.SYSTEM_PROJECT_PROPERTIES_PREFIX
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.gradle.ext.copyright
+import org.jetbrains.gradle.ext.settings
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
 plugins {

@@ -15,19 +15,8 @@
  */
 
 import org.gradle.api.Project
-import org.gradle.api.plugins.ExtensionAware
-import org.gradle.kotlin.dsl.configure
-import org.gradle.plugins.ide.idea.model.IdeaProject
-import org.jetbrains.gradle.ext.CopyrightConfiguration
-import org.jetbrains.gradle.ext.ProjectSettings
 import java.io.File
 import kotlin.math.min
-
-fun IdeaProject.settings(configuration: ProjectSettings.() -> kotlin.Unit) =
-        (this as ExtensionAware).configure(configuration)
-
-fun ProjectSettings.copyright(configuration: CopyrightConfiguration.() -> kotlin.Unit) =
-        (this as ExtensionAware).configure(configuration)
 
 fun Project.readCopyrightHeader(licenseHeaderFile: File) =
         licenseHeaderFile.readLines()
