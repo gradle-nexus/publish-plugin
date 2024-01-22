@@ -25,6 +25,10 @@ group = "com.example.library"
 version = "1.0.0"
 ```
 
+#### Java compatibility
+
+As of version 2.x, support for JDK <11 is [deprecated](https://github.com/gradle-nexus/publish-plugin/issues/171). The JDK taget compatibility is still set to 8, however, it is encouraged to use the latest possible Java version (e.g. 21+). As being deprecated, support for JDK <11 might be dropped in a future minor plugin version (i.e. 2.x).
+
 ### Publishing to Maven Central via Sonatype OSSRH
 
 In order to publish to Maven Central (aka the Central Repository or just Central) via Sonatype's OSSRH Nexus, you simply need to add the `sonatype()` repository like in the example below. Its `nexusUrl` and `snapshotRepositoryUrl` values are pre-configured.
