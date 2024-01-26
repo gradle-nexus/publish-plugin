@@ -24,7 +24,7 @@ jobs:
         with:
           java-version: ${{ matrix.jdk }}
           distribution: 'zulu'
-      - uses: gradle/gradle-build-action@v2
+      - uses: gradle/gradle-build-action@v3
       # Workaround https://github.com/ajoberstar/gradle-stutter/issues/22
       - name: Reduce number of Gradle regressions builds
         run: |

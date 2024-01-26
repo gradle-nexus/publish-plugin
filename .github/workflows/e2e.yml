@@ -22,7 +22,7 @@ jobs:
       with:
         java-version: 11
         distribution: 'zulu'
-    - uses: gradle/gradle-build-action@v2
+    - uses: gradle/gradle-build-action@v3
     - name: Run sanity check
       run: ./gradlew --stacktrace test
     - name: Run E2E tests
