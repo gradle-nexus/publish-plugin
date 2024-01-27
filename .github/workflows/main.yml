@@ -23,6 +23,6 @@ jobs:
       with:
         java-version: 11
         distribution: 'zulu'
-    - uses: gradle/gradle-build-action@v3
+    - uses: gradle/actions/setup-gradle@v3
       with:
         arguments: --stacktrace build compatTestJava11
