@@ -27,5 +27,6 @@ jobs:
         distribution: 'zulu'
 
     - uses: gradle/actions/setup-gradle@v3
-      with:
-        arguments: --stacktrace build compatTestJava11
+
+    - name: "Build and Test"
+      run: ./gradlew --stacktrace build compatTestJava11
