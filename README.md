@@ -158,7 +158,6 @@ nexusPublishing {
 publishing {
     publications {
         create<MavenPublication>("mavenJava") {
-            artifactId = "<<Artifact ID>>"
             from(components["java"])
 
             pom {
@@ -251,7 +250,6 @@ plugins {
 publishing {
     publications {
         mavenJava(MavenPublication) {
-            artifactId = "<<Artifact ID>>"
             from(components.java)
 
             pom {
@@ -310,7 +308,6 @@ plugins {
 publishing {
     publications {
         create<MavenPublication>("mavenJava") {
-            artifactId = "<<Artifact ID>>"
             from(components["java"])
 
             pom {
