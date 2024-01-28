@@ -155,7 +155,7 @@ nexusPublishing {
 
 #### Add Metadata ####
 
-Override the default identity values with [this guide](https://docs.gradle.org/current/userguide/publishing_maven.html#sec:identity_values_in_the_generated_pom).
+See the [Maven publishing page in Gradle documentation](https://docs.gradle.org/current/userguide/publishing_maven.html#publishing_maven:publications) for what these mean, default values, and how to override coordinates (`groupId:artifactId:version`).
 
 ```kotlin
 publishing {
