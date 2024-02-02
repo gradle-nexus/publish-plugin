@@ -5,7 +5,7 @@ import org.jetbrains.gradle.ext.copyright
 import org.jetbrains.gradle.ext.settings
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import kotlin.math.min
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
+import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 plugins {
     id("org.jetbrains.kotlin.jvm") version "1.8.22"
@@ -103,8 +103,9 @@ dependencies {
     testImplementation(gradleApi())
 }
 
-kotlin {
-    jvmToolchain(8)
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
 }
 
 stutter {
@@ -171,8 +172,12 @@ sourceSets {
 }
 
 tasks {
-    withType<KotlinCompilationTask<*>>().configureEach {
+    withType<KotlinJvmCompile>().configureEach {
         compilerOptions {
+            // Gradle fully supports running on Java 8: https://docs.gradle.org/current/userguide/compatibility.html,
+            // so we should allow users to do that too.
+            jvmTarget = JvmTarget.JVM_1_8
+
             // Suppress "Language version 1.3 is deprecated and its support will be removed in a future version of Kotlin".
             freeCompilerArgs.add("-Xsuppress-version-warnings")
 
