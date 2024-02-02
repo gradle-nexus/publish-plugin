@@ -146,7 +146,6 @@ val e2eTest: SourceSet by sourceSets.creating {
     runtimeClasspath += sourceSets["main"].output
 }
 
-@Suppress("UnstableApiUsage") // `configurations` container is incubating
 configurations {
     compatTestCompileClasspath {
         extendsFrom(testCompileClasspath.get())
