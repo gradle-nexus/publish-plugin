@@ -229,6 +229,7 @@ tasks {
         group = "Verification"
         testClassesDirs = e2eTest.output.classesDirs
         classpath = e2eTest.runtimeClasspath
+        outputs.doNotCacheIf("E2E tests verify the integration with external system") { true }
         // Pass E2E releasing properties to tests.
         // Prefer environment variables which are not displayed with --info
         // (unless non CI friendly properties with "." are used).
