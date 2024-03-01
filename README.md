@@ -154,6 +154,9 @@ nexusPublishing {
 ```
 
 #### Add Metadata ####
+
+See the [Maven publishing page in Gradle documentation](https://docs.gradle.org/current/userguide/publishing_maven.html#publishing_maven:publications) for what these mean, default values, and how to override coordinates (`groupId:artifactId:version`).
+
 ```kotlin
 publishing {
     publications {
