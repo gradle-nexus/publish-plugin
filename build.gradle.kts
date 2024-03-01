@@ -13,7 +13,7 @@ plugins {
     id("com.github.johnrengelman.shadow") version "8.1.1"
     id("org.jetbrains.gradle.plugin.idea-ext") version "1.1.7"
     id("com.github.ben-manes.versions") version "0.51.0"
-    id("org.ajoberstar.stutter") version "0.7.3"
+    id("org.ajoberstar.stutter") version "1.0.0"
 }
 
 base { archivesName = "publish-plugin" }
