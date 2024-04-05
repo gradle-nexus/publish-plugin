@@ -19,7 +19,7 @@ plugins {
 
 base { archivesName = "publish-plugin" }
 group = "io.github.gradle-nexus"
-version = "2.0.0"
+version = "2.0.1-SNAPSHOT"
 
 val readableName = "Nexus Publish Plugin"
 description = "Gradle Plugin for publishing to Nexus that automates creating, closing, and releasing staging repositories"
