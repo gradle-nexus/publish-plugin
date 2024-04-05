@@ -1,15 +1,15 @@
 plugins {
-    id("com.gradle.enterprise") version "3.17"
+    id("com.gradle.develocity") version "3.17"
     id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
 }
 
-val isCiBuild = System.getenv("CI") != null
-
-gradleEnterprise {
+develocity {
     buildScan {
-        termsOfServiceUrl = "https://gradle.com/terms-of-service"
-        termsOfServiceAgree = "yes"
-        publishAlwaysIf(isCiBuild)
+        termsOfUseUrl = "https://gradle.com/terms-of-service"
+        termsOfUseAgree = "yes"
+        // TODO: workaround for https://github.com/gradle/gradle/issues/22879.
+        val isCI = providers.environmentVariable("CI").isPresent
+        publishing.onlyIf { isCI }
     }
 }
 
