@@ -1,15 +1,14 @@
 plugins {
-    id("com.gradle.enterprise") version "3.17"
+    id("com.gradle.develocity") version "3.17"
     id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
 }
 
-val isCiBuild = System.getenv("CI") != null
-
-gradleEnterprise {
+develocity {
     buildScan {
-        termsOfServiceUrl = "https://gradle.com/terms-of-service"
-        termsOfServiceAgree = "yes"
-        publishAlwaysIf(isCiBuild)
+        termsOfUseUrl = "https://gradle.com/help/legal-terms-of-use"
+        termsOfUseAgree = "yes"
+        uploadInBackground = false
+        publishing.onlyIf { System.getenv("CI") != null }
     }
 }
 
