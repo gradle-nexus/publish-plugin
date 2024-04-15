@@ -2,7 +2,7 @@
 
 [![CI Status](https://github.com/gradle-nexus/publish-plugin/workflows/CI/badge.svg)](https://github.com/gradle-nexus/publish-plugin/actions?workflow=CI) [![Gradle Plugin Portal](https://img.shields.io/maven-metadata/v/https/plugins.gradle.org/m2/io.github.gradle-nexus/publish-plugin/maven-metadata.xml.svg?label=Gradle%20Plugin%20Portal)](https://plugins.gradle.org/plugin/io.github.gradle-nexus.publish-plugin)
 
-This Gradle plugin is a turn-key solution for publishing to Nexus. You can use it to publish your artifacts to any Nexus instance (internal or public). It is great for publishing your open source to Sonatype, and then to Maven Central, in a fully automated fashion.
+This Gradle plugin is a turn-key solution for publishing to Nexus. You can use it to publish your artifacts to any Nexus Repository Manager 2.x instance (internal or public). It is great for publishing your open source to Sonatype, and then to [Maven Central][maven-central], in a fully automated fashion.
 
 Vanilla Gradle is great, but it cannot fully automate publications to Nexus. This plugin enables isolation of staging repositories so that you can reliably publish from CI, and each publication uses a brand new, explicitly created staging repo ([more](https://github.com/gradle-nexus/publish-plugin/issues/63)). Moreover, the plugin provides tasks to close and release staging repositories, covering the whole releasing process to Maven Central.
 
@@ -394,6 +394,14 @@ nexusPublishing {
 - `maxRetries` default value is 60.
 - `delayBetween` default value is 10 seconds.
 
+### Compatibility
+
+| Nexus Version                                      | Compatible?        |
+|----------------------------------------------------|--------------------|
+| Sonatype [Maven Central Repository][maven-central] | Yes                |
+| Sonatype Nexus Repository Manager 2.x              | Yes                |
+| Sonatype Nexus Repository Manager 3.x              | [No][nexus-compat] / https://github.com/gradle-nexus/publish-plugin/issues/320 |
+
 ### Troubleshooting
 
 Log into your staging repository account. On the left side, expand "Build Promotion", then click "Staging Repositories".
@@ -422,3 +430,6 @@ In 2015, [Marcin Zajączkowski](https://blog.solidsoft.pl/) created [gradle-nexu
 Here, [Marc Philipp](https://github.com/marcphilipp/) entered the stage who created [Nexus Publish Plugin](https://github.com/marcphilipp/nexus-publish-plugin) which was enriching the publishing mechanism in Gradle to explicitly create staging repositories and publish (upload) artifacts directly to it.
 
 Those two plugins nicely worked together, providing a reliable way to handle publishing artifacts to Maven Central (and to other Nexus instances in general). However, the need of using two plugins was very often confusing for users. As a result, an idea to create one plugin mixing the aforementioned capabilities emerged. It materialized in 2020/2021 as Gradle Nexus Publish Plugin, an effect of combined work of Marc and Marcin, supported by a pack of [contributors](https://github.com/gradle-nexus/publish-plugin/graphs/contributors).      
+
+[nexus-compat]: https://help.sonatype.com/en/nexus-repository-2-vs--nexus-repository-3-feature-equivalency-matrix.html#:~:text=API%20documentation.-,Note,-Note%20that%20NexusRepository
+[maven-central]: https://central.sonatype.com/
