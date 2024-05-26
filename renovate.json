@@ -1,12 +1,14 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:base"
+    "config:recommended"
   ],
   "configMigration": true,
   "packageRules": [
     {
-      "matchPackagePrefixes": ["publishing:maven"],
+      "matchPackagePrefixes": [
+        "publishing:maven"
+      ],
       "enabled": false
     },
     {
