@@ -92,7 +92,7 @@ dependencies {
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    testImplementation("com.github.tomakehurst:wiremock:2.27.2")
+    testImplementation("com.github.tomakehurst:wiremock:3.0.1")
     testImplementation("ru.lanwen.wiremock:wiremock-junit5:1.3.1")
     testImplementation("org.assertj:assertj-core:3.26.0")
     // This cannot be updated to 5.x as it requires Java 11,
