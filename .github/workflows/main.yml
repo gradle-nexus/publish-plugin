@@ -26,7 +26,7 @@ jobs:
         java-version: 11
         distribution: 'zulu'
 
-    - uses: gradle/actions/setup-gradle@v3
+    - uses: gradle/actions/setup-gradle@v4
 
     - name: "Build and Test"
       run: ./gradlew --stacktrace build compatTestJava11
