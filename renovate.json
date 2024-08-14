@@ -6,16 +6,10 @@
   "configMigration": true,
   "packageRules": [
     {
-      "matchPackagePrefixes": [
-        "publishing:maven"
-      ],
-      "enabled": false
-    },
-    {
       "groupName": "Retrofit monorepo",
       "description": "Group together all dependencies of Retrofit.",
-      "matchPackagePrefixes": [
-        "com.squareup.retrofit2:"
+      "matchPackageNames": [
+        "com.squareup.retrofit2:*"
       ]
     }
   ]
