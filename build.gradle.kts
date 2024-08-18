@@ -94,7 +94,7 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("com.github.tomakehurst:wiremock:2.27.2")
     testImplementation("ru.lanwen.wiremock:wiremock-junit5:1.3.1")
-    testImplementation("org.assertj:assertj-core:3.26.0")
+    testImplementation("org.assertj:assertj-core:3.26.3")
     // This cannot be updated to 5.x as it requires Java 11,
     // but we are running CI on Java 8 in .github/workflows/java-versions.yml.
     testImplementation("org.mockito:mockito-junit-jupiter:4.11.0")
