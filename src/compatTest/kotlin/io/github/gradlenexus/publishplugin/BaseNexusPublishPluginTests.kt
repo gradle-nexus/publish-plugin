@@ -280,6 +280,67 @@ abstract class BaseNexusPublishPluginTests {
     }
 
     @Test
+    fun `publishes to Nexus from sub-project`() {
+        projectDir.resolve("settings.gradle").write(
+            """
+            rootProject.name = 'super'
+            include('sample')
+            """
+        )
+        projectDir.resolve("sample/build.gradle").write(
+            """
+            plugins {
+                id('java-library')
+                id('$publishPluginId')
+                id('io.github.gradle-nexus.publish-plugin')
+            }
+            group = 'org.example'
+            version = '0.0.1'
+            publishing {
+                publications {
+                   $publishPluginContent
+                }
+            }
+            nexusPublishing {
+                independentProjects = true
+                repositories {
+                    myNexus {
+                        publicationType = io.github.gradlenexus.publishplugin.NexusRepository.PublicationType.$publicationTypeName
+                        nexusUrl = uri('${server.baseUrl()}')
+                        snapshotRepositoryUrl = uri('${server.baseUrl()}/snapshots/')
+                        allowInsecureProtocol = true
+                        username = 'username'
+                        password = 'password'
+                    }
+                    someOtherNexus {
+                        nexusUrl = uri('http://example.org')
+                        snapshotRepositoryUrl = uri('http://example.org/snapshots/')
+                    }
+                }
+            }
+            """
+        )
+
+        stubStagingProfileRequest("/staging/profiles", mapOf("id" to STAGING_PROFILE_ID, "name" to "org.example"))
+        stubCreateStagingRepoRequest("/staging/profiles/$STAGING_PROFILE_ID/start", STAGED_REPOSITORY_ID)
+        expectArtifactUploads("/staging/deployByRepositoryId/$STAGED_REPOSITORY_ID")
+
+        val result = run("publishToMyNexus")
+
+        assertSuccess(result, ":sample:initializeMyNexusStagingRepository")
+        assertNotConsidered(result, ":initializeMyNexusStagingRepository")
+        assertThat(result.output)
+            .containsOnlyOnce("Created staging repository '$STAGED_REPOSITORY_ID' at ${server.baseUrl()}/repositories/$STAGED_REPOSITORY_ID/content/")
+        assertNotConsidered(result, ":sample:initializeSomeOtherNexusStagingRepository")
+        assertNotConsidered(result, ":initializeSomeOtherNexusStagingRepository")
+        server.verify(
+            WireMock.postRequestedFor(WireMock.urlEqualTo("/staging/profiles/$STAGING_PROFILE_ID/start"))
+                .withRequestBody(WireMock.matchingJsonPath("\$.data[?(@.description == 'org.example:sample:0.0.1')]"))
+        )
+        artifactList.forEach { assertUploadedToStagingRepo("/org/example/sample/0.0.1/$it") }
+    }
+
+    @Test
     fun `can be used with lazily applied Gradle Plugin Development Plugin`() {
         projectDir.resolve("settings.gradle").write(
             """
