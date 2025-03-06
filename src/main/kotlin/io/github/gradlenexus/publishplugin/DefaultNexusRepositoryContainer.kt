@@ -26,18 +26,20 @@ import javax.inject.Inject
 
 internal open class DefaultNexusRepositoryContainer @Inject constructor(
     delegate: NamedDomainObjectContainer<NexusRepository>
-) : NexusRepositoryContainer, NamedDomainObjectContainer<NexusRepository> by delegate {
+) : NexusRepositoryContainer,
+    NamedDomainObjectContainer<NexusRepository> by delegate {
 
     override fun sonatype(): NexusRepository =
         // `sonatype { }`, but in Kotlin 1.3 "New Inference" is not implemented yet, so we have to be explicit.
         // https://kotlinlang.org/docs/whatsnew14.html#new-more-powerful-type-inference-algorithm
         sonatype(Action {})
 
-    override fun sonatype(action: Action<in NexusRepository>): NexusRepository = create("sonatype") {
-        it.nexusUrl.set(URI.create("https://oss.sonatype.org/service/local/"))
-        it.snapshotRepositoryUrl.set(URI.create("https://oss.sonatype.org/content/repositories/snapshots/"))
-        action.execute(it)
-    }
+    override fun sonatype(action: Action<in NexusRepository>): NexusRepository =
+        create("sonatype") {
+            it.nexusUrl.set(URI.create("https://oss.sonatype.org/service/local/"))
+            it.snapshotRepositoryUrl.set(URI.create("https://oss.sonatype.org/content/repositories/snapshots/"))
+            action.execute(it)
+        }
 
     override fun configure(configureClosure: Closure<*>): NamedDomainObjectContainer<NexusRepository> =
         if (GradleVersion.current().baseVersion < GradleVersion.version("7.6")) {

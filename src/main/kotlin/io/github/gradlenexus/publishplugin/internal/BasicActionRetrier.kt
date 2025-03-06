@@ -35,9 +35,8 @@ open class BasicActionRetrier<R>(maxRetries: Int, delayBetween: Duration, stopFu
         .withMaxRetries(maxRetries)
         .withDelay(delayBetween)
 
-    override fun execute(operationToExecuteWithRetrying: () -> R): R {
-        return Failsafe.with(retrier).get(operationToExecuteWithRetrying)
-    }
+    override fun execute(operationToExecuteWithRetrying: () -> R): R =
+        Failsafe.with(retrier).get(operationToExecuteWithRetrying)
 
     companion object {
         private val log: Logger = LoggerFactory.getLogger(BasicActionRetrier::class.java)

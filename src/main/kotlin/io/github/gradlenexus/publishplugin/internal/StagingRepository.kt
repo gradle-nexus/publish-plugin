@@ -24,9 +24,8 @@ data class StagingRepository constructor(val id: String, val state: State, val t
         RELEASED,
         NOT_FOUND;
 
-        override fun toString(): String {
-            return name.toLowerCase()
-        }
+        override fun toString(): String =
+            name.toLowerCase()
 
         companion object {
             fun parseString(stateAsString: String): State {
@@ -40,8 +39,7 @@ data class StagingRepository constructor(val id: String, val state: State, val t
     }
 
     companion object {
-        fun notFound(id: String): StagingRepository {
-            return StagingRepository(id, State.NOT_FOUND, false)
-        }
+        fun notFound(id: String): StagingRepository =
+            StagingRepository(id, State.NOT_FOUND, false)
     }
 }

@@ -26,9 +26,12 @@ open class StagingRepositoryDescriptorRegistry {
         mapping[name] = descriptor
     }
 
-    operator fun get(name: String) = mapping[name] ?: error("No staging repository with name $name created")
+    operator fun get(name: String): StagingRepositoryDescriptor =
+        mapping[name] ?: error("No staging repository with name $name created")
 
-    fun tryGet(name: String) = mapping[name]
+    fun tryGet(name: String): StagingRepositoryDescriptor? =
+        mapping[name]
 
-    override fun toString() = mapping.toString()
+    override fun toString(): String =
+        mapping.toString()
 }
