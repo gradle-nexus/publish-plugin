@@ -1,5 +1,5 @@
 [versions]
-ktlint = "1.1.1"
+ktlint = "1.2.0"
 
 [libraries]
 ktlint = { module = "com.pinterest.ktlint:ktlint-cli", version.ref = "ktlint" } # Help Renovate recognize the version.
