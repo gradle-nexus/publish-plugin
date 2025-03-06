@@ -12,7 +12,7 @@ plugins {
     id("com.gradle.plugin-publish") version "1.3.1"
     id("com.diffplug.spotless") version "6.25.0"
     id("com.github.johnrengelman.shadow") version "8.1.1"
-    id("org.jetbrains.gradle.plugin.idea-ext") version "1.1.8"
+    id("org.jetbrains.gradle.plugin.idea-ext") version "1.1.10"
     id("com.github.ben-manes.versions") version "0.51.0"
     id("org.ajoberstar.stutter") version "1.0.0"
 }
@@ -90,11 +90,11 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("net.jodah:failsafe:2.4.4")
 
-    testImplementation("org.junit.jupiter:junit-jupiter:5.11.0")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.12.0")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("com.github.tomakehurst:wiremock:2.27.2")
     testImplementation("ru.lanwen.wiremock:wiremock-junit5:1.3.1")
-    testImplementation("org.assertj:assertj-core:3.26.3")
+    testImplementation("org.assertj:assertj-core:3.27.3")
     // This cannot be updated to 5.x as it requires Java 11,
     // but we are running CI on Java 8 in .github/workflows/java-versions.yml.
     testImplementation("org.mockito:mockito-junit-jupiter:4.11.0")
