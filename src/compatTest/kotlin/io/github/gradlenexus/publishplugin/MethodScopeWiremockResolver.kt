@@ -31,7 +31,8 @@ import java.lang.IllegalArgumentException
  */
 class MethodScopeWiremockResolver(
     private val inner: WiremockResolver = WiremockResolver()
-) : ParameterResolver by inner, AfterEachCallback {
+) : ParameterResolver by inner,
+    AfterEachCallback {
 
     /**
      * Checks to see if a method the parameter is annotated with [MethodScopedWiremockServer]. If it is, we first verify
@@ -57,9 +58,8 @@ class MethodScopeWiremockResolver(
     /**
      * helper method for get getting a [ExtensionContext.Store] specific to a test method
      */
-    private fun getStore(context: ExtensionContext): ExtensionContext.Store {
-        return context.getStore(ExtensionContext.Namespace.create(javaClass))
-    }
+    private fun getStore(context: ExtensionContext): ExtensionContext.Store =
+        context.getStore(ExtensionContext.Namespace.create(javaClass))
 
     /**
      * Keys for storing and accessing [MethodScopeWiremockResolver]s

@@ -80,9 +80,8 @@ internal class StagingRepositoryTransitionerTest {
         inOrder.verify(nexusClient).getStagingRepositoryStateById(TEST_STAGING_REPO_ID)
     }
 
-    private fun repositoryStatesForRelease(): List<StagingRepository.State> {
-        return listOf(StagingRepository.State.RELEASED, StagingRepository.State.NOT_FOUND)
-    }
+    private fun repositoryStatesForRelease(): List<StagingRepository.State> =
+        listOf(StagingRepository.State.RELEASED, StagingRepository.State.NOT_FOUND)
 
     @Test
     internal fun `throw meaningful exception on repository still in transition on released`() {
@@ -106,10 +105,9 @@ internal class StagingRepositoryTransitionerTest {
             .withMessageContainingAll(TEST_STAGING_REPO_ID, StagingRepository.State.OPEN.toString(), StagingRepository.State.RELEASED.toString())
     }
 
-    private fun executeFunctionPassedAsFirstArgument(): (InvocationOnMock) -> StagingRepository {
-        return { invocation: InvocationOnMock ->
+    private fun executeFunctionPassedAsFirstArgument(): (InvocationOnMock) -> StagingRepository =
+        { invocation: InvocationOnMock ->
             val passedFunction: () -> StagingRepository = invocation.getArgument(0)
             passedFunction.invoke()
         }
-    }
 }

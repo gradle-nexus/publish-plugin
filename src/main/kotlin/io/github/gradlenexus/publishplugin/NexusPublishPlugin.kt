@@ -253,9 +253,10 @@ class NexusPublishPlugin : Plugin<Project> {
         project: Project,
         extension: NexusPublishExtension,
         registry: Provider<StagingRepositoryDescriptorRegistryBuildService>
-    ): Map<NexusRepository, ArtifactRepository> = extension.repositories.associateWith { nexusRepo ->
-        createArtifactRepository(nexusRepo.publicationType.get(), project, nexusRepo, extension, registry)
-    }
+    ): Map<NexusRepository, ArtifactRepository> =
+        extension.repositories.associateWith { nexusRepo ->
+            createArtifactRepository(nexusRepo.publicationType.get(), project, nexusRepo, extension, registry)
+        }
 
     private fun createArtifactRepository(
         publicationType: PublicationType,
@@ -263,20 +264,21 @@ class NexusPublishPlugin : Plugin<Project> {
         nexusRepo: NexusRepository,
         extension: NexusPublishExtension,
         registry: Provider<StagingRepositoryDescriptorRegistryBuildService>
-    ): ArtifactRepository = when (publicationType) {
-        PublicationType.MAVEN -> project.theExtension<PublishingExtension>().repositories.maven {
-            it.configureArtifactRepo(nexusRepo, extension, registry, false)
-        }
+    ): ArtifactRepository =
+        when (publicationType) {
+            PublicationType.MAVEN -> project.theExtension<PublishingExtension>().repositories.maven {
+                it.configureArtifactRepo(nexusRepo, extension, registry, false)
+            }
 
-        PublicationType.IVY -> project.theExtension<PublishingExtension>().repositories.ivy { repository ->
-            repository.configureArtifactRepo(nexusRepo, extension, registry, true)
-            if (nexusRepo.ivyPatternLayout.isPresent) {
-                nexusRepo.ivyPatternLayout.get().let { repository.patternLayout(it) }
-            } else {
-                repository.layout("maven")
+            PublicationType.IVY -> project.theExtension<PublishingExtension>().repositories.ivy { repository ->
+                repository.configureArtifactRepo(nexusRepo, extension, registry, true)
+                if (nexusRepo.ivyPatternLayout.isPresent) {
+                    nexusRepo.ivyPatternLayout.get().let { repository.patternLayout(it) }
+                } else {
+                    repository.layout("maven")
+                }
             }
         }
-    }
 
     private fun <T> T.configureArtifactRepo(
         nexusRepo: NexusRepository,

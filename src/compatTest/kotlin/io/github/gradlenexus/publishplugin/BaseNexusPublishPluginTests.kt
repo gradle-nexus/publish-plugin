@@ -1034,13 +1034,12 @@ abstract class BaseNexusPublishPluginTests {
     private fun runAndFail(vararg arguments: String): BuildResult =
         gradleRunner(*arguments).buildAndFail()
 
-    private fun gradleRunner(vararg arguments: String): GradleRunner {
-        return gradleRunner
+    private fun gradleRunner(vararg arguments: String): GradleRunner =
+        gradleRunner
 //            .withDebug(true)
             .withProjectDir(projectDir.toFile())
             .withArguments(*arguments, "--stacktrace", "--warning-mode=fail")
             .forwardOutput()
-    }
 
     @SafeVarargs
     protected fun stubStagingProfileRequest(
@@ -1245,8 +1244,8 @@ abstract class BaseNexusPublishPluginTests {
         )
     }
 
-    private fun getOneStagingProfileWithGivenIdShrunkJsonResponseAsString(stagingProfileId: String): String {
-        return """
+    private fun getOneStagingProfileWithGivenIdShrunkJsonResponseAsString(stagingProfileId: String): String =
+        """
             {
               "data": [
                 {
@@ -1264,26 +1263,24 @@ abstract class BaseNexusPublishPluginTests {
               ]
             }
         """.trimIndent()
-    }
 
     private fun getStagingReposWithOneStagingRepoWithGivenIdJsonResponseAsString(
         stagingRepository: StagingRepository,
         stagingProfileId: String = STAGING_PROFILE_ID
-    ): String {
-        return """
+    ): String =
+        """
             {
                 "data": [
                     ${getOneStagingRepoWithGivenIdJsonResponseAsString(stagingRepository, stagingProfileId)}
                 ]
             }
         """.trimIndent()
-    }
 
     private fun getOneStagingRepoWithGivenIdJsonResponseAsString(
         stagingRepository: StagingRepository,
         stagingProfileId: String = STAGING_PROFILE_ID
-    ): String {
-        return """
+    ): String =
+        """
             {
               "profileId": "$stagingProfileId",
               "profileName": "some.profile.id",
@@ -1309,5 +1306,4 @@ abstract class BaseNexusPublishPluginTests {
               "transitioning": ${stagingRepository.transitioning}
             }
         """.trimIndent()
-    }
 }

@@ -32,17 +32,15 @@ abstract class BaseGradleTest {
     @TempDir
     protected lateinit var projectDir: File
 
-    protected fun run(vararg arguments: String): BuildResult {
-        return gradleRunner(*arguments).build()
-    }
+    protected fun run(vararg arguments: String): BuildResult =
+        gradleRunner(*arguments).build()
 
-    protected fun gradleRunner(vararg arguments: String): GradleRunner {
-        return gradleRunner
-//                .withDebug(true)
+    protected fun gradleRunner(vararg arguments: String): GradleRunner =
+        gradleRunner
+//            .withDebug(true)
             .withProjectDir(projectDir)
             .withArguments(*arguments, "--stacktrace")
             .forwardOutput()
-    }
 
     protected fun BuildResult.assertSuccess(taskPath: String) {
         assertSuccess { it.path == taskPath }

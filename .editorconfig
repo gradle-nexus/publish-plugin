@@ -9,12 +9,14 @@ end_of_line = lf
 [*.{kt,kts}]
 ij_kotlin_code_style_defaults = KOTLIN_OFFICIAL
 ij_java_use_single_class_imports = true
-max_line_length = off
 trim_trailing_whitespace = true
 # Trailing comma language feature requires Kotlin plugin 1.4+, at the moment the compilation is done with Kotlin 1.3.
 # This helps IDEA to format the code properly, see also spotless { } in build.gradle.kts.
 ij_kotlin_allow_trailing_comma = false # Only used for declaration site
 ij_kotlin_allow_trailing_comma_on_call_site = false
+
+# Ensure the method signature and implementing code are on separate lines.
+ktlint_function_signature_body_expression_wrapping = always
 
 [*.bat]
 end_of_line = crlf

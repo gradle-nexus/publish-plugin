@@ -185,5 +185,6 @@ class TaskOrchestrationTest {
         return tasks.first()
     }
 
-    private fun transitioningTaskNamesForSonatype(): List<String> = listOf("closeSonatypeStagingRepository", "releaseSonatypeStagingRepository")
+    private fun transitioningTaskNamesForSonatype(): List<String> =
+        listOf("closeSonatypeStagingRepository", "releaseSonatypeStagingRepository")
 }
