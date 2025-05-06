@@ -29,7 +29,42 @@ version = "1.0.0"
 
 As of version 2.x, support for JDK <11 is [deprecated](https://github.com/gradle-nexus/publish-plugin/issues/171). The JDK taget compatibility is still set to 8, however, it is encouraged to use the latest possible Java version (e.g. 21+). As being deprecated, support for JDK <11 might be dropped in a future minor plugin version (i.e. 2.x).
 
+### Publishing to Maven Central via Sonatype Central
+
+In order to publish to Maven Central (aka the Central Repository or just Central) via [Sonatype Central], you need to add the `sonatype()` repository like in the example below. Its `nexusUrl` and `snapshotRepositoryUrl` values must be configured as below, see [Sonatype's site](https://central.sonatype.org/publish/publish-portal-ossrh-staging-api/#configuration).
+
+```groovy
+nexusPublishing {
+    repositories {
+        sonatype()
+    }
+    repositories {
+        // see https://central.sonatype.org/publish/publish-portal-ossrh-staging-api/#configuration
+        sonatype {
+            nexusUrl.set(uri("https://ossrh-staging-api.central.sonatype.com/service/local/"))
+            snapshotRepositoryUrl.set(uri("https://central.sonatype.com/repository/maven-snapshots/"))
+        }
+    }
+}
+```
+
+You need to set your Nexus credentials. To increase security, it is advised to use the [user token's username and password pair](https://blog.solidsoft.pl/2015/09/08/deploy-to-maven-central-using-api-key-aka-auth-token/) (instead of regular username and password). Those values should be set as the `sonatypeUsername` and `sonatypePassword` project properties, e.g. in `~/.gradle/gradle.properties` or via the `ORG_GRADLE_PROJECT_sonatypeUsername` and `ORG_GRADLE_PROJECT_sonatypePassword` environment variables.
+
+Alternatively, you can configure credentials in the `sonatype` block:
+
+```groovy
+nexusPublishing {
+    repositories {
+        sonatype {
+            username = "your-user-token-username"
+            password = "your-user-token-password"
+        }
+    }
+}
+```
 ### Publishing to Maven Central via Sonatype OSSRH
+
+**[OSSRH reaches end-of-life on June 30, 2025!](https://central.sonatype.org/news/20250326_ossrh_sunset/)** You should migrate to Sonatype Central. The migration is straightforward, only [configure the correct URLs](#publishing-to-maven-central-via-sonatype-central).
 
 In order to publish to Maven Central (aka the Central Repository or just Central) via Sonatype's OSSRH Nexus, you simply need to add the `sonatype()` repository like in the example below. Its `nexusUrl` and `snapshotRepositoryUrl` values are pre-configured.
 
