@@ -50,7 +50,7 @@ nexusPublishing {
 
 You need to set your Nexus credentials. To increase security, it is advised to use the [user token's username and password pair](https://blog.solidsoft.pl/2015/09/08/deploy-to-maven-central-using-api-key-aka-auth-token/) (instead of regular username and password). Those values should be set as the `sonatypeUsername` and `sonatypePassword` project properties, e.g. in `~/.gradle/gradle.properties` or via the `ORG_GRADLE_PROJECT_sonatypeUsername` and `ORG_GRADLE_PROJECT_sonatypePassword` environment variables.
 
-Alternatively, you can configure credentials in the `sonatype` block:
+Alternatively (e.g. for local testing), you can configure credentials in the `sonatype` block directly:
 
 ```groovy
 nexusPublishing {
@@ -62,10 +62,15 @@ nexusPublishing {
     }
 }
 ```
-### Publishing to Maven Central via Sonatype OSSRH
+### ~~Publishing to Maven Central via Sonatype OSSRH~~
 
-**[OSSRH reaches end-of-life on June 30, 2025!](https://central.sonatype.org/news/20250326_ossrh_sunset/)** You should migrate to Sonatype Central. The migration is straightforward, only [configure the correct URLs](#publishing-to-maven-central-via-sonatype-central).
+**DEPRECATED. [OSSRH reaches end-of-life on June 30, 2025!](https://central.sonatype.org/news/20250326_ossrh_sunset/)** You should migrate to Sonatype Central. The migration is straightforward, only [configure the correct URLs](#publishing-to-maven-central-via-sonatype-central) ↑↑↑.
 
+<details>
+<summary>
+Deprecated configuration for historical purpose only.
+</summary>
+<br />
 In order to publish to Maven Central (aka the Central Repository or just Central) via Sonatype's OSSRH Nexus, you simply need to add the `sonatype()` repository like in the example below. Its `nexusUrl` and `snapshotRepositoryUrl` values are pre-configured.
 
 ```groovy
@@ -92,7 +97,7 @@ nexusPublishing {
 
 In addition, for both groups of users, you need to set your Nexus credentials. To increase security, it is advised to use the [user token's username and password pair](https://blog.solidsoft.pl/2015/09/08/deploy-to-maven-central-using-api-key-aka-auth-token/) (instead of regular username and password). Those values should be set as the `sonatypeUsername` and `sonatypePassword` project properties, e.g. in `~/.gradle/gradle.properties` or via the `ORG_GRADLE_PROJECT_sonatypeUsername` and `ORG_GRADLE_PROJECT_sonatypePassword` environment variables.
 
-Alternatively, you can configure credentials in the `sonatype` block:
+Alternatively (e.g. for local testing), you can configure credentials in the `sonatype` block directly:
 
 ```groovy
 nexusPublishing {
@@ -104,6 +109,8 @@ nexusPublishing {
     }
 }
 ```
+
+</details>
 
 #### Configure [Signing](https://docs.gradle.org/current/userguide/signing_plugin.html#sec:signing_publications) ####
 
