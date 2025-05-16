@@ -48,7 +48,7 @@ nexusPublishing {
 }
 ```
 
-You need to set your Nexus credentials. To increase security, it is advised to use the [user token's username and password pair](https://blog.solidsoft.pl/2015/09/08/deploy-to-maven-central-using-api-key-aka-auth-token/) (instead of regular username and password). One can generate that pair at the [Sonatype Account Page](https://central.sonatype.com/account). Those values should be set as the `sonatypeUsername` and `sonatypePassword` project properties, e.g. in `~/.gradle/gradle.properties` or via the `ORG_GRADLE_PROJECT_sonatypeUsername` and `ORG_GRADLE_PROJECT_sonatypePassword` environment variables.
+You need to set your Nexus credentials. To increase security, it is advised to use the [user token's username and password pair](https://central.sonatype.org/publish/generate-portal-token/) (instead of regular username and password). Those values should be set as the `sonatypeUsername` and `sonatypePassword` project properties, e.g. in `~/.gradle/gradle.properties` or via the `ORG_GRADLE_PROJECT_sonatypeUsername` and `ORG_GRADLE_PROJECT_sonatypePassword` environment variables.
 
 Alternatively (e.g. for local testing), you can configure credentials in the `sonatype` block directly:
 
