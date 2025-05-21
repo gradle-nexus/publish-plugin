@@ -48,7 +48,7 @@ nexusPublishing {
 }
 ```
 
-You need to set your Nexus credentials. To increase security, it is advised to use the [user token's username and password pair](https://central.sonatype.org/publish/generate-portal-token/) (instead of regular username and password). Those values should be set as the `sonatypeUsername` and `sonatypePassword` project properties, e.g. in `~/.gradle/gradle.properties` or via the `ORG_GRADLE_PROJECT_sonatypeUsername` and `ORG_GRADLE_PROJECT_sonatypePassword` environment variables.
+You need to set your **Central credentials** (those are [different from the legacy OSSRH ones](https://central.sonatype.org/faq/what-is-different-between-central-portal-and-legacy-ossrh/#authentication)). To increase security, it is advised to use the [user token's username and password pair](https://central.sonatype.org/publish/generate-portal-token/) (instead of regular username and password). Those values should be set as the `sonatypeUsername` and `sonatypePassword` project properties, e.g. in `~/.gradle/gradle.properties` or via the `ORG_GRADLE_PROJECT_sonatypeUsername` and `ORG_GRADLE_PROJECT_sonatypePassword` environment variables.
 
 Alternatively (e.g. for local testing), you can configure credentials in the `sonatype` block directly:
 
