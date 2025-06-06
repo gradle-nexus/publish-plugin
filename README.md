@@ -36,9 +36,6 @@ In order to publish to Maven Central (aka the Central Repository or just Central
 ```groovy
 nexusPublishing {
     repositories {
-        sonatype()
-    }
-    repositories {
         // see https://central.sonatype.org/publish/publish-portal-ossrh-staging-api/#configuration
         sonatype {
             nexusUrl.set(uri("https://ossrh-staging-api.central.sonatype.com/service/local/"))
