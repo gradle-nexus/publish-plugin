@@ -17,6 +17,7 @@
 package io.github.gradlenexus.publishplugin
 
 import org.gradle.api.Action
+import org.gradle.api.Incubating
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Nested
@@ -37,6 +38,9 @@ abstract class NexusPublishExtension(objects: ObjectFactory) {
     abstract val clientTimeout: Property<Duration>
 
     abstract val connectTimeout: Property<Duration>
+
+    @get:Incubating
+    abstract val independentProjects: Property<Boolean>
 
     @get:Nested
     abstract val transitionCheckOptions: TransitionCheckOptions
