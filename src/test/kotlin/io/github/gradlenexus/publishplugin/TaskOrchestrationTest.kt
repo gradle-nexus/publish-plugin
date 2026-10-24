@@ -23,7 +23,6 @@ import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.junit.jupiter.params.ParameterizedTest
@@ -70,10 +69,6 @@ class TaskOrchestrationTest {
         // expect
         assertGivenTaskMustNotRunAfterAnother(transitioningTaskName, "publishToMyNexus")
     }
-
-    @Test
-    @Disabled("TODO")
-    internal fun `close task should run after all related publish tasks in multi-project build`() {}
 
     @Test
     internal fun `release task should run after close`() {
@@ -130,6 +125,28 @@ class TaskOrchestrationTest {
             .hasSize(2)
             .contains(sonatypeTaskName)
             .contains(otherNexusTaskName)
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @CsvSource(
+        textBlock = """
+            closeAndReleaseStagingRepositories, closeAndReleaseSonatypeStagingRepository
+            closeStagingRepositories          , closeSonatypeStagingRepository
+            releaseStagingRepositories        , releaseSonatypeStagingRepository"""
+    )
+    internal fun `simplified tasks exclude removed repositories`(
+        simplifiedTaskName: String,
+        remainingTaskName: String
+    ) {
+        initSingleProjectWithDefaultConfiguration()
+        project.extensions.configure(NexusPublishExtension::class.java) {
+            it.repositories.remove(it.repositories.create("removedNexus"))
+        }
+
+        val task = getJustOneTaskByNameOrFail(simplifiedTaskName)
+
+        assertThat(task.taskDependencies.getDependencies(task).map { it.name })
+            .containsExactly(remainingTaskName)
     }
 
     @ParameterizedTest(name = "{0}")

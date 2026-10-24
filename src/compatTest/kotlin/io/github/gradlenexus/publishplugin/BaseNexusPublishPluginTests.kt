@@ -17,6 +17,7 @@
 package io.github.gradlenexus.publishplugin
 
 import com.github.tomakehurst.wiremock.WireMockServer
+import com.github.tomakehurst.wiremock.client.BasicCredentials
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.stubbing.Scenario
 import com.google.gson.Gson
@@ -31,6 +32,8 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.io.TempDir
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import ru.lanwen.wiremock.ext.WiremockResolver
 import java.nio.file.Files
 import java.nio.file.Path
@@ -348,6 +351,7 @@ abstract class BaseNexusPublishPluginTests {
 
     @Test
     fun `must be applied to root project`() {
+        Files.createDirectory(projectDir.resolve("sub"))
         projectDir.resolve("settings.gradle").append(
             """
             include('sub')
@@ -422,8 +426,8 @@ abstract class BaseNexusPublishPluginTests {
                 }
                 repositories {
                     maven {
-                        name 'someOtherRepo'
-                        url 'someOtherRepo'
+                        name = 'someOtherRepo'
+                        url = uri('someOtherRepo')
                     }
                 }
             }
@@ -445,6 +449,198 @@ abstract class BaseNexusPublishPluginTests {
         assertSkipped(result, ":publishToMyNexus")
         assertSkipped(result, ":${publishGoalPrefix}PublicationToMyNexusRepository")
         assertNotConsidered(result, ":${publishGoalPrefix}PublicationToSomeOtherRepoRepository")
+    }
+
+    @Test
+    fun `native publishing tasks retain customizations and skip disabled publications`() {
+        writeDefaultSingleProjectConfiguration()
+        writeMockedSonatypeNexusPublishingConfiguration()
+        val publicationClass = if (publicationTypeName == "MAVEN") "MavenPublication" else "IvyPublication"
+        val identityProperty = if (publicationTypeName == "MAVEN") "artifactId" else "module"
+        val publishTaskType = if (publicationTypeName == "MAVEN") {
+            "org.gradle.api.publish.maven.tasks.PublishToMavenRepository"
+        } else {
+            "org.gradle.api.publish.ivy.tasks.PublishToIvyRepository"
+        }
+        val activeTaskName = "${publishGoalPrefix}PublicationToSonatypeRepository"
+        val disabledTaskName = "publishDisabledPublicationToSonatypeRepository"
+        buildGradle.append(
+            """
+            publishing.publications.create('disabled', $publicationClass) {
+                from(components.java)
+                $identityProperty = 'disabled'
+            }
+            def beforeUpload = tasks.register('beforeUpload') {
+                doLast { logger.lifecycle('User upload prerequisite') }
+            }
+            tasks.withType($publishTaskType).configureEach { task ->
+                if (task.name.endsWith('ToSonatypeRepository')) {
+                    task.doFirst { logger.lifecycle('before-' + task.name) }
+                    task.doLast { logger.lifecycle('after-' + task.name) }
+                    if (task.name == '$activeTaskName') {
+                        task.dependsOn(beforeUpload)
+                    } else if (task.name == '$disabledTaskName') {
+                        task.enabled = false
+                    }
+                }
+            }
+            """
+        )
+        stubCreateStagingRepoRequest("/staging/profiles/$STAGING_PROFILE_ID/start", STAGED_REPOSITORY_ID)
+        expectArtifactUploads("/staging/deployByRepositoryId/$STAGED_REPOSITORY_ID")
+
+        val result = run("publishToSonatype")
+
+        assertSuccess(result, ":initializeSonatypeStagingRepository")
+        assertSuccess(result, ":beforeUpload")
+        assertSuccess(result, ":$activeTaskName")
+        assertSkipped(result, ":$disabledTaskName")
+        assertThat(result.tasks.map { it.path }).containsSubsequence(":beforeUpload", ":$activeTaskName")
+        assertThat(result.output)
+            .containsOnlyOnce("before-$activeTaskName")
+            .containsOnlyOnce("after-$activeTaskName")
+            .doesNotContain("before-$disabledTaskName", "after-$disabledTaskName")
+        assertThat(result.output.indexOf("before-$activeTaskName"))
+            .isLessThan(result.output.indexOf("after-$activeTaskName"))
+        artifactList.forEach { assertUploadedToStagingRepo("/org/example/sample/0.0.1/$it") }
+        server.verify(
+            0,
+            WireMock.putRequestedFor(WireMock.urlMatching("/staging/deployByRepositoryId/$STAGED_REPOSITORY_ID/org/example/disabled/.*"))
+        )
+    }
+
+    @Test
+    fun `combined transition runs after publications from all publishing projects`() {
+        projectDir.resolve("settings.gradle").write(
+            """
+            rootProject.name = 'sample'
+            include('first', 'second')
+            """
+        )
+        buildGradle.write(
+            """
+            plugins {
+                id('io.github.gradle-nexus.publish-plugin')
+            }
+            group = 'org.example'
+            version = '0.0.1'
+            """
+        )
+        writeMockedSonatypeNexusPublishingConfiguration()
+        listOf("first", "second").forEach { name ->
+            projectDir.resolve("$name/build.gradle").write(
+                """
+                plugins {
+                    id('java-library')
+                    id('$publishPluginId')
+                }
+                group = 'org.example'
+                version = '0.0.1'
+                publishing {
+                    publications {
+                        $publishPluginContent
+                    }
+                }
+                """
+            )
+        }
+        stubCreateStagingRepoRequest("/staging/profiles/$STAGING_PROFILE_ID/start", STAGED_REPOSITORY_ID)
+        expectArtifactUploads("/staging/deployByRepositoryId/$STAGED_REPOSITORY_ID")
+        stubCloseAndReleaseStagingRepoRequests()
+
+        val result = run("closeAndReleaseSonatypeStagingRepository", "publishToSonatype")
+
+        val initializePath = ":initializeSonatypeStagingRepository"
+        val closePath = ":closeSonatypeStagingRepository"
+        val releasePath = ":releaseSonatypeStagingRepository"
+        assertSuccess(result, initializePath)
+        assertSuccess(result, closePath)
+        assertSuccess(result, releasePath)
+        assertThat(result.task(":closeAndReleaseSonatypeStagingRepository")).isNotNull
+        val taskPaths = result.tasks.map { it.path }
+        listOf("first", "second").forEach { name ->
+            val uploadPath = ":$name:${publishGoalPrefix}PublicationToSonatypeRepository"
+            assertSuccess(result, uploadPath)
+            assertThat(taskPaths).containsSubsequence(initializePath, uploadPath, closePath, releasePath)
+            artifactList.forEach { artifact ->
+                assertUploadedToStagingRepo("/org/example/$name/0.0.1/${artifact.replace("sample", name)}")
+            }
+        }
+        server.verify(1, WireMock.postRequestedFor(WireMock.urlEqualTo("/staging/profiles/$STAGING_PROFILE_ID/start")))
+        assertCloseOfStagingRepo()
+        assertReleaseOfStagingRepo()
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [false, true])
+    fun `repository credentials use project properties unless explicitly configured`(explicitCredentials: Boolean) {
+        writeDefaultSingleProjectConfiguration()
+        projectDir.resolve("gradle.properties").write(
+            """
+            sonatypeUsername=property-user
+            sonatypePassword=property-password
+            """.trimIndent() + "\n"
+        )
+        val repositoryCredentials = if (explicitCredentials) {
+            "username = 'explicit-user'; password = 'explicit-password'"
+        } else {
+            ""
+        }
+        buildGradle.append(
+            """
+            nexusPublishing {
+                repositories {
+                    sonatype {
+                        publicationType = io.github.gradlenexus.publishplugin.NexusRepository.PublicationType.$publicationTypeName
+                        nexusUrl = uri('${server.baseUrl()}')
+                        allowInsecureProtocol = true
+                        stagingProfileId = '$STAGING_PROFILE_ID'
+                        $repositoryCredentials
+                    }
+                }
+            }
+            """
+        )
+        val username = if (explicitCredentials) "explicit-user" else "property-user"
+        val password = if (explicitCredentials) "explicit-password" else "property-password"
+        val credentials = BasicCredentials(username, password)
+        val startPath = "/staging/profiles/$STAGING_PROFILE_ID/start"
+        val uploadPrefix = "/staging/deployByRepositoryId/$STAGED_REPOSITORY_ID"
+        server.stubFor(
+            WireMock.any(WireMock.anyUrl())
+                .atPriority(10)
+                .willReturn(WireMock.aResponse().withStatus(401).withHeader("WWW-Authenticate", "Basic realm=\"test\""))
+        )
+        server.stubFor(
+            WireMock.post(WireMock.urlEqualTo(startPath))
+                .withBasicAuth(username, password)
+                .willReturn(
+                    WireMock.aResponse()
+                        .withBody(gson.toJson(mapOf("data" to mapOf("stagedRepositoryId" to STAGED_REPOSITORY_ID))))
+                )
+        )
+        server.stubFor(
+            WireMock.put(WireMock.urlMatching("$uploadPrefix/.+"))
+                .withBasicAuth(username, password)
+                .willReturn(WireMock.aResponse().withStatus(201))
+        )
+        server.stubFor(
+            WireMock.get(WireMock.urlMatching("$uploadPrefix/.+/maven-metadata.xml"))
+                .withBasicAuth(username, password)
+                .willReturn(WireMock.aResponse().withStatus(404))
+        )
+
+        val result = run("publishToSonatype")
+
+        assertSuccess(result, ":initializeSonatypeStagingRepository")
+        assertSuccess(result, ":${publishGoalPrefix}PublicationToSonatypeRepository")
+        server.verify(WireMock.postRequestedFor(WireMock.urlEqualTo(startPath)).withBasicAuth(credentials))
+        artifactList.forEach { artifact ->
+            server.verify(
+                WireMock.putRequestedFor(WireMock.urlMatching("$uploadPrefix/org/example/sample/0.0.1/$artifact"))
+                    .withBasicAuth(credentials)
+            )
+        }
     }
 
     @Test
@@ -690,6 +886,49 @@ abstract class BaseNexusPublishPluginTests {
         )
     }
 
+    private fun stubCloseAndReleaseStagingRepoRequests() {
+        val scenario = "Close and release staging repository"
+        server.stubFor(
+            WireMock.post(WireMock.urlEqualTo("/staging/bulk/close"))
+                .inScenario(scenario)
+                .whenScenarioStateIs(Scenario.STARTED)
+                .withRequestBody(WireMock.matchingJsonPath("\$.data[?(@.stagedRepositoryIds[0] == '$STAGED_REPOSITORY_ID')]"))
+                .willReturn(WireMock.aResponse().withHeader("Content-Type", "application/json").withBody("{}"))
+                .willSetStateTo("CLOSED")
+        )
+        server.stubFor(
+            WireMock.get(WireMock.urlEqualTo("/staging/repository/$STAGED_REPOSITORY_ID"))
+                .inScenario(scenario)
+                .whenScenarioStateIs("CLOSED")
+                .willReturn(
+                    WireMock.aResponse().withHeader("Content-Type", "application/json")
+                        .withBody(
+                            getOneStagingRepoWithGivenIdJsonResponseAsString(
+                                StagingRepository(
+                                    STAGED_REPOSITORY_ID,
+                                    StagingRepository.State.CLOSED,
+                                    false
+                                )
+                            )
+                        )
+                )
+        )
+        server.stubFor(
+            WireMock.post(WireMock.urlEqualTo("/staging/bulk/promote"))
+                .inScenario(scenario)
+                .whenScenarioStateIs("CLOSED")
+                .withRequestBody(WireMock.matchingJsonPath("\$.data[?(@.stagedRepositoryIds[0] == '$STAGED_REPOSITORY_ID')]"))
+                .willReturn(WireMock.aResponse().withHeader("Content-Type", "application/json").withBody("{}"))
+                .willSetStateTo("RELEASED")
+        )
+        server.stubFor(
+            WireMock.get(WireMock.urlEqualTo("/staging/repository/$STAGED_REPOSITORY_ID"))
+                .inScenario(scenario)
+                .whenScenarioStateIs("RELEASED")
+                .willReturn(WireMock.aResponse().withStatus(404).withBody("No such repository: $STAGED_REPOSITORY_ID"))
+        )
+    }
+
     private fun stubTransitToDesiredStateStagingRepoRequestWithSubsequentQueryAboutItsState(
         operation: StagingRepoTransitionOperation,
         stagingRepositoryId: String
@@ -717,7 +956,7 @@ abstract class BaseNexusPublishPluginTests {
     }
 
     @Test
-    fun `should close and release staging repository`() {
+    fun `should initialize and release staging repository`() {
         writeDefaultSingleProjectConfiguration()
         writeMockedSonatypeNexusPublishingConfiguration()
 
@@ -744,6 +983,8 @@ abstract class BaseNexusPublishPluginTests {
 
         assertSuccess(result, ":closeSonatypeStagingRepository")
         assertCloseOfStagingRepo(OVERRIDDEN_STAGED_REPOSITORY_ID)
+        assertNoPublishingOrDiscovery(result)
+        assertNotConsidered(result, ":releaseSonatypeStagingRepository")
     }
 
     @Test
@@ -757,6 +998,8 @@ abstract class BaseNexusPublishPluginTests {
 
         assertSuccess(result, ":releaseSonatypeStagingRepository")
         assertReleaseOfStagingRepo(OVERRIDDEN_STAGED_REPOSITORY_ID)
+        assertNoPublishingOrDiscovery(result)
+        assertNotConsidered(result, ":closeSonatypeStagingRepository")
     }
 
     @Test
@@ -854,9 +1097,19 @@ abstract class BaseNexusPublishPluginTests {
             """
         )
 
-        val result = run("initializeMyNexusStagingRepository")
+        val taskNames = listOf(
+            "initializeMyNexusStagingRepository",
+            "findMyNexusStagingRepository",
+            "closeMyNexusStagingRepository",
+            "releaseMyNexusStagingRepository",
+            "closeAndReleaseMyNexusStagingRepository"
+        )
+        val result = run(*taskNames.toTypedArray())
 
-        assertSkipped(result, ":initializeMyNexusStagingRepository")
+        taskNames.forEach { assertSkipped(result, ":$it") }
+        server.verify(0, WireMock.getRequestedFor(WireMock.anyUrl()))
+        server.verify(0, WireMock.postRequestedFor(WireMock.anyUrl()))
+        server.verify(0, WireMock.putRequestedFor(WireMock.anyUrl()))
     }
 
     @Test
@@ -1197,6 +1450,15 @@ abstract class BaseNexusPublishPluginTests {
 
     protected fun assertNotConsidered(result: BuildResult, taskPath: String) {
         assertThat(result.task(taskPath)).describedAs("Task $taskPath").isNull()
+    }
+
+    private fun assertNoPublishingOrDiscovery(result: BuildResult) {
+        assertNotConsidered(result, ":initializeSonatypeStagingRepository")
+        assertNotConsidered(result, ":findSonatypeStagingRepository")
+        assertNotConsidered(result, ":publishToSonatype")
+        assertNotConsidered(result, ":${publishGoalPrefix}PublicationToSonatypeRepository")
+        server.verify(0, WireMock.postRequestedFor(WireMock.urlMatching("/staging/profiles/.+/start")))
+        server.verify(0, WireMock.putRequestedFor(WireMock.anyUrl()))
     }
 
     private fun assertGetStagingProfile(count: Int = 1) {

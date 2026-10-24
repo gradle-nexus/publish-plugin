@@ -1,0 +1,12 @@
+# Historical public JVM signatures; no historical implementation or artifact is required.
+io/github/gradlenexus/publishplugin/NexusPublishPlugin|field 8 Companion Lio/github/gradlenexus/publishplugin/NexusPublishPlugin$Companion;
+io/github/gradlenexus/publishplugin/NexusPublishPlugin|method 0 apply (Lorg/gradle/api/Project;)V
+io/github/gradlenexus/publishplugin/NexusPublishPlugin|method 0 apply (Ljava/lang/Object;)V
+io/github/gradlenexus/publishplugin/NexusPublishPlugin|method 0 <init> ()V
+io/github/gradlenexus/publishplugin/NexusPublishPlugin|method 8 access$configureRepositoryTasks (Lio/github/gradlenexus/publishplugin/NexusPublishPlugin;Lorg/gradle/api/tasks/TaskContainer;Lio/github/gradlenexus/publishplugin/NexusPublishExtension;Lio/github/gradlenexus/publishplugin/NexusRepository;Lorg/gradle/api/provider/Provider;)V
+io/github/gradlenexus/publishplugin/NexusPublishPlugin|method 8 access$addPublicationRepositories (Lio/github/gradlenexus/publishplugin/NexusPublishPlugin;Lorg/gradle/api/Project;Lio/github/gradlenexus/publishplugin/NexusPublishExtension;Lorg/gradle/api/provider/Provider;)Ljava/util/Map;
+io/github/gradlenexus/publishplugin/NexusPublishPlugin|method 8 access$configureTaskDependencies (Lio/github/gradlenexus/publishplugin/NexusPublishPlugin;Lorg/gradle/api/Project;Lorg/gradle/api/tasks/TaskProvider;Lorg/gradle/api/tasks/TaskProvider;Lorg/gradle/api/tasks/TaskProvider;Lorg/gradle/api/tasks/TaskProvider;Lorg/gradle/api/tasks/TaskProvider;Lorg/gradle/api/artifacts/repositories/ArtifactRepository;Lio/github/gradlenexus/publishplugin/NexusRepository$PublicationType;)V
+io/github/gradlenexus/publishplugin/NexusPublishPlugin|method 8 access$configureSimplifiedCloseAndReleaseTasks (Lio/github/gradlenexus/publishplugin/NexusPublishPlugin;Lorg/gradle/api/Project;Lio/github/gradlenexus/publishplugin/NexusPublishExtension;)V
+io/github/gradlenexus/publishplugin/NexusPublishPlugin|method 8 access$configureArtifactRepo (Lio/github/gradlenexus/publishplugin/NexusPublishPlugin;Lorg/gradle/api/artifacts/repositories/UrlArtifactRepository;Lio/github/gradlenexus/publishplugin/NexusRepository;Lio/github/gradlenexus/publishplugin/NexusPublishExtension;Lorg/gradle/api/provider/Provider;Z)V
+io/github/gradlenexus/publishplugin/NexusPublishPlugin$Companion|method 0 <init> (Lio/github/gradlenexus/publishplugin/shadow/kotlin/jvm/internal/DefaultConstructorMarker;)V
+io/github/gradlenexus/publishplugin/NexusPublishPluginKt|method 8 access$theExtension (Lorg/gradle/api/Project;)Ljava/lang/Object;

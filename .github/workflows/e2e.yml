@@ -19,6 +19,20 @@ jobs:
       with:
         submodules: true
 
+    - name: Setup compiler JDK 8
+      id: java8
+      uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4
+      with:
+        java-version: 8
+        distribution: 'zulu'
+
+    - name: Setup compiler JDK 17
+      id: java17
+      uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4
+      with:
+        java-version: 17
+        distribution: 'zulu'
+
     - name: Setup JDK
       uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4
       with:
@@ -28,13 +42,18 @@ jobs:
     - uses: gradle/actions/setup-gradle@748248ddd2a24f49513d8f472f81c3a07d4d50e1 # v4
 
     - name: Run sanity check
-      run: ./gradlew --stacktrace test
+      env:
+        NEXUS_JAVA8_HOME: ${{ steps.java8.outputs.path }}
+        NEXUS_JAVA17_HOME: ${{ steps.java17.outputs.path }}
+      run: ./gradlew --stacktrace test "-Porg.gradle.java.installations.fromEnv=NEXUS_JAVA8_HOME,NEXUS_JAVA17_HOME,JAVA_HOME" -Porg.gradle.java.installations.auto-download=false -Porg.gradle.java.installations.auto-detect=false
 
     - name: Run E2E tests
       env:
+        NEXUS_JAVA8_HOME: ${{ steps.java8.outputs.path }}
+        NEXUS_JAVA17_HOME: ${{ steps.java17.outputs.path }}
         ORG_GRADLE_PROJECT_sonatypeUsernameE2E: ${{ secrets.SONATYPE_USERNAME_E2E }}
         ORG_GRADLE_PROJECT_sonatypePasswordE2E: ${{ secrets.SONATYPE_PASSWORD_E2E }}
         ORG_GRADLE_PROJECT_signingKeyE2E: ${{ secrets.GPG_SIGNING_KEY_E2E }}
         ORG_GRADLE_PROJECT_signingPasswordE2E: ${{ secrets.GPG_SIGNING_KEY_PASSPHRASE_E2E }}
       run: |
-        ./gradlew --stacktrace -Pe2eVerboseOutput e2eTest
+        ./gradlew --stacktrace -Pe2eVerboseOutput e2eTest "-Porg.gradle.java.installations.fromEnv=NEXUS_JAVA8_HOME,NEXUS_JAVA17_HOME,JAVA_HOME" -Porg.gradle.java.installations.auto-download=false -Porg.gradle.java.installations.auto-detect=false

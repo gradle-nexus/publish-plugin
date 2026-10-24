@@ -8,6 +8,8 @@ Vanilla Gradle is great, but it cannot fully automate publications to Nexus. Thi
 
 This plugin is intended as a replacement of the [Gradle Nexus Staging Plugin](https://github.com/Codearte/gradle-nexus-staging-plugin/) and [Nexus Publish Plugin](https://github.com/marcphilipp/nexus-publish-plugin) duo. See a dedicated [migration guide](https://github.com/gradle-nexus/publish-plugin/wiki/Migration-from-gradle_nexus_staging-plugin---nexus_publish-plugin-duo).
 
+For contributor verification commands and test groups, see [Testing](TESTING.md).
+
 ## Usage
 
 ### Applying the plugin

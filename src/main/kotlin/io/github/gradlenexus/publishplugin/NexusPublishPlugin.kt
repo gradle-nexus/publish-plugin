@@ -17,13 +17,16 @@
 package io.github.gradlenexus.publishplugin
 
 import io.github.gradlenexus.publishplugin.NexusRepository.PublicationType
+import io.github.gradlenexus.publishplugin.internal.PluginDispatch
 import io.github.gradlenexus.publishplugin.internal.StagingRepositoryDescriptorRegistryBuildService
+import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.artifacts.repositories.ArtifactRepository
 import org.gradle.api.artifacts.repositories.AuthenticationSupported
 import org.gradle.api.artifacts.repositories.UrlArtifactRepository
+import org.gradle.api.initialization.Settings
 import org.gradle.api.provider.Provider
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.plugins.PublishingPlugin
@@ -34,15 +37,20 @@ import org.gradle.util.GradleVersion
 import java.net.URI
 import java.time.Duration
 
-class NexusPublishPlugin : Plugin<Project> {
-
-    companion object {
-        private const val SIMPLIFIED_CLOSE_AND_RELEASE_TASK_NAME = "closeAndReleaseStagingRepositories"
-        private const val SIMPLIFIED_CLOSE_TASK_NAME = "closeStagingRepositories"
-        private const val SIMPLIFIED_RELEASE_TASK_NAME = "releaseStagingRepositories"
-    }
-
-    override fun apply(project: Project) {
+/** One public ID, with newer Settings APIs loaded only on explicit Settings application. */
+@Suppress("ACCIDENTAL_OVERRIDE") // The JVM-named erased method deliberately overrides PluginDispatch.apply.
+class NexusPublishPlugin :
+    PluginDispatch<Project>(),
+    Plugin<Project> {
+    // Keep both historical JVM entry points. Declaring override apply(Project) here would
+    // generate another apply(Object) that casts Settings to Project before dispatch.
+    @JvmName("apply")
+    fun applyProject(project: Project) {
+        if (GradleVersion.current() >= GradleVersion.version("6.2") &&
+            project.gradle.sharedServices.registrations.findByName("io.github.gradle-nexus.publish-plugin.settings-mode") != null
+        ) {
+            throw GradleException("Remove project application of io.github.gradle-nexus.publish-plugin; settings mode is already active")
+        }
         require(project == project.rootProject) {
             "Plugin must be applied to the root project but was applied to ${project.path}"
         }
@@ -56,6 +64,40 @@ class NexusPublishPlugin : Plugin<Project> {
         configureExtension(project, extension)
         configureNexusTasks(project, extension, registry)
         configurePublishingForAllProjects(project, extension, registry)
+    }
+
+    @JvmName("apply")
+    fun applyErased(target: Any?) =
+        dispatchTarget(target)
+
+    override fun dispatchTarget(target: Any?) {
+        when (target) {
+            is Project -> applyProject(target)
+
+            is Settings -> {
+                if (GradleVersion.current() < GradleVersion.version("9.7.1")) {
+                    throw GradleException("Settings application of io.github.gradle-nexus.publish-plugin requires Gradle 9.7.1+ and Java 17+")
+                }
+                val adapter = try {
+                    @Suppress("UNCHECKED_CAST")
+                    (
+                        Class.forName("io.github.gradlenexus.publishplugin.internal.modern.SettingsPlugin", true, javaClass.classLoader)
+                            .getDeclaredConstructor().newInstance() as Plugin<Settings>
+                        )
+                } catch (failure: ReflectiveOperationException) {
+                    throw GradleException("Could not load Nexus publishing settings support", failure)
+                }
+                adapter.apply(target)
+            }
+
+            else -> throw GradleException("io.github.gradle-nexus.publish-plugin supports only Settings or Project targets")
+        }
+    }
+
+    companion object {
+        private const val SIMPLIFIED_CLOSE_AND_RELEASE_TASK_NAME = "closeAndReleaseStagingRepositories"
+        private const val SIMPLIFIED_CLOSE_TASK_NAME = "closeStagingRepositories"
+        private const val SIMPLIFIED_RELEASE_TASK_NAME = "releaseStagingRepositories"
     }
 
     private fun configureExtension(project: Project, extension: NexusPublishExtension) {
